@@ -1,0 +1,4 @@
+uint32 id
+geometry_msgs/PoseStamped pose_camera
+geometry_msgs/PoseStamped pose_base
+float32 reproj_error_px

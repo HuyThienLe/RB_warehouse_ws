@@ -1,0 +1,15 @@
+uint32 slot_tag_id
+float32 target_standoff
+float32 tol_lateral
+float32 tol_yaw
+---
+bool success
+float32 final_lateral_err
+float32 final_dist_err
+float32 final_yaw_err
+string message
+---
+float32 lateral_err
+float32 dist_err
+float32 yaw_err
+uint32 iteration

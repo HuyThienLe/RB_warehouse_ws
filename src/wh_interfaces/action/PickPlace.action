@@ -1,0 +1,10 @@
+string mode
+uint32 slot_tag_id
+uint32 expected_box_tag
+uint8 tier
+---
+bool success
+uint32 box_tag_read
+string message
+---
+string phase

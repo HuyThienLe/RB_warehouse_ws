@@ -1,0 +1,10 @@
+string state
+uint32 task_id
+string slot_id
+float32 x
+float32 y
+float32 yaw
+float32 battery_pct
+bool holding_box
+uint32 held_box_tag
+string last_error

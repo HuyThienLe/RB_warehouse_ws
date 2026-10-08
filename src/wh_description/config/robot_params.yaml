@@ -1,0 +1,66 @@
+# robot_params.yaml - Nguon tham so robot duy nhat
+robot:
+  chassis:
+    length: 0.45       # chieu dai than xe (m)
+    width: 0.32        # chieu rong than xe (m)
+    height: 0.12       # chieu cao than xe (m)
+    mass: 6.0          # khoi luong than xe (kg)
+  wheels:
+    type: "mecanum"
+    radius: 0.05       # ban kinh banh xe (m)
+    width: 0.04        # be rong banh xe (m)
+    track_width: 0.38  # khoang cach banh trai - phai (2 * 0.19)
+    wheel_base: 0.30   # khoang cach banh truoc - sau (2 * 0.15)
+    positions:
+      front_left:  {x: 0.15, y: 0.19, z: 0.0}
+      front_right: {x: 0.15, y: -0.19, z: 0.0}
+      rear_left:   {x: -0.15, y: 0.19, z: 0.0}
+      rear_right:  {x: -0.15, y: -0.19, z: 0.0}
+  arm:
+    type: "SCARA_TRR"  # Z tinh tien -> vai quay -> khuyu quay
+    base_position: {x: 0.15, y: 0.0, z: 0.12} # de tay tai x=+0.15 tren mat truoc than
+    link1_length: 0.18 # l1: vai den khuyu (m)
+    link2_length: 0.18 # l2: khuyu den tool/gripper (m)
+    joint_limits:
+      prismatic_z:
+        min: 0.0
+        max: 0.35
+      shoulder_pan_q1:
+        min_deg: -150.0
+        max_deg: 150.0
+        min_rad: -2.617993877991494
+        max_rad: 2.617993877991494
+      elbow_pan_q2:
+        min_deg: -140.0
+        max_deg: 140.0
+        min_rad: -2.443460952792061
+        max_rad: 2.443460952792061
+    gripper:
+      type: "vacuum_gripper"
+  sensors:
+    lidar:
+      samples: 360
+      frequency: 10.0  # Hz
+      range_min: 0.15  # m
+      range_max: 12.0  # m
+      position: {x: 0.0, y: 0.0, z: 0.15}
+    imu:
+      frequency: 100.0 # Hz
+      position: {x: 0.0, y: 0.0, z: 0.05}
+    dock_camera:
+      description: "Gan tren toa nang (lift_carriage_link), nhin thang ve truoc"
+      fov_deg: 60.0
+      width: 640
+      height: 480
+    hand_camera:
+      description: "Gan o dau tay may (tool_link), nhin vuong goc xuong duoi"
+      fov_deg: 60.0
+      width: 640
+      height: 480
+  standoff:
+    waiting_point: 0.55   # khoang cach dung diem cho (tam robot cach mat ke, m)
+    working_point: 0.32   # khoang cach dung diem lam viec (tam robot cach mat ke, m)
+  tolerance:
+    fine_alignment:
+      max_position_error_m: 0.005 # <= 5 mm
+      max_yaw_error_rad: 0.0349   # <= 2 deg (~0.0349 rad)
