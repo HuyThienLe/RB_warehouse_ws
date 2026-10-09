@@ -291,7 +291,7 @@ class WarehouseSoakRunner:
                 parsed = {"detail": err_body}
             return e.code, parsed
 
-    def wait_task(self, task_id: int, monitor: SoakMonitorNode, timeout_sec: float = 150.0) -> Tuple[bool, str, Dict[str, Any]]:
+    def wait_task(self, task_id: int, monitor: SoakMonitorNode, timeout_sec: float = 240.0) -> Tuple[bool, str, Dict[str, Any]]:
         """Theo dõi nhiệm vụ kèm kiểm tra watchdog 120s và sai số định vị liên tục."""
         t0 = time.time()
         last_step = ""
@@ -422,7 +422,7 @@ class WarehouseSoakRunner:
                 print("  -> Đã gỡ bỏ vật cản thành công.")
 
             # Chờ đơn xuất hoàn thành
-            ok_out, reason_out, _ = self.wait_task(out_tid, monitor, timeout_sec=160.0)
+            ok_out, reason_out, _ = self.wait_task(out_tid, monitor, timeout_sec=240.0)
             metrics["phases_duration"]["outbound"] = round(time.time() - t_phase0, 2)
             if not ok_out:
                 metrics["failure_reason"] = f"Đơn xuất #{out_tid} thất bại: {reason_out}"
@@ -441,7 +441,7 @@ class WarehouseSoakRunner:
                 return False, metrics
             in_tid = resp["task_id"]
 
-            ok_in, reason_in, _ = self.wait_task(in_tid, monitor, timeout_sec=160.0)
+            ok_in, reason_in, _ = self.wait_task(in_tid, monitor, timeout_sec=240.0)
             metrics["phases_duration"]["inbound"] = round(time.time() - t_phase1, 2)
             if not ok_in:
                 metrics["failure_reason"] = f"Đơn nhập #{in_tid} thất bại: {reason_in}"

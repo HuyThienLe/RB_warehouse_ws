@@ -16,6 +16,6 @@ dock_server:
     sign_w: 1.0                    # Dấu điều khiển wz (1.0 là hồi tiếp âm chuẩn: khi lệch CCW thì e_yaw < 0 -> wz < 0 để quay CW)
     consecutive_frames_stop: 10    # Số frame liên tiếp thỏa dung sai để kết luận hoàn tất
     timeout_sec: 25.0              # Timeout tổng của hành động dock (25s để kịp các ca lệch góc cực đại 10 độ)
-    tag_lost_timeout_sec: 1.0      # Thời gian mất tag trước khi kích hoạt hồi phục
-    max_retries: 2                 # Số lần thử lại sau khi lùi về vị trí chờ
+    tag_lost_timeout_sec: 2.0      # Thời gian mất tag trước khi kích hoạt hồi phục
+    max_retries: 3                 # Số lần thử lại sau khi lùi về vị trí chờ
     cmd_topic: "/cmd_vel_servo"

@@ -138,8 +138,8 @@
   <joint name="dock_camera_joint" type="fixed">
     <parent link="lift_carriage_link"/>
     <child link="dock_camera_link"/>
-    <!-- Tâm quang học đặt tại đỉnh toa trượt, nghiêng góc 0.20 rad (11.5 deg) để bao quát cả tầng 1 (z=0.11m) và tầng 2 (z=0.36m) -->
-    <origin xyz="0.075 0.0 0.040" rpy="0 0.20 0"/>
+    <!-- Tâm quang học đặt tại đỉnh toa trượt, nghiêng góc 0.10 rad (5.7 deg) để căn giữa hoàn hảo cả tầng 1 (z=0.11m) và tầng 2 (z=0.36m) -->
+    <origin xyz="0.075 0.0 0.040" rpy="0 0.10 0"/>
   </joint>
 
   <link name="dock_camera_link">
