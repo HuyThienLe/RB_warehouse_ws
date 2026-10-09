@@ -255,6 +255,16 @@ class WarehouseSoakRunner:
         res = subprocess.run(["bash", "-c", wait_cmd], text=True)
         return res.returncode == 0
 
+    def sleep_and_spin(self, duration_sec: float, monitor: Optional[SoakMonitorNode] = None):
+        """Chờ một khoảng thời gian đồng thời spin ROS node để cập nhật TF và topic liên tục."""
+        t0 = time.time()
+        while time.time() - t0 < duration_sec:
+            if monitor:
+                rclpy.spin_once(monitor, timeout_sec=0.05)
+                monitor.check_localization()
+            else:
+                time.sleep(0.05)
+
     def api_get(self, endpoint: str) -> Dict[str, Any]:
         url = f"{self.base_url}{endpoint}"
         req = urllib.request.Request(url, headers={"User-Agent": "SoakRunner"})
@@ -385,10 +395,12 @@ class WarehouseSoakRunner:
             has_obs = (run_idx % 4 == 0)
             if has_obs:
                 print("  ⚠️ LẦN CHẠY CÓ VẬT CẢN BẤT NGỜ! Chuẩn bị chèn vật cản...")
-                time.sleep(4.0)
-                obs_spawned = monitor.spawn_obstacle(x=0.0, y=0.0, z=0.15)
-                print(f"  -> Đã chèn vật cản tại (0.0, 0.0): {'✅' if obs_spawned else '❌'}")
-                time.sleep(6.0)
+                self.sleep_and_spin(3.0, monitor)
+                rx = monitor.gt_robot_pose[0] if monitor.gt_robot_pose else -2.4
+                obs_x = max(rx + 0.8, 0.0)
+                obs_spawned = monitor.spawn_obstacle(x=obs_x, y=0.0, z=0.15)
+                print(f"  -> Đã chèn vật cản tại ({obs_x:.2f}, 0.0): {'✅' if obs_spawned else '❌'}")
+                self.sleep_and_spin(6.0, monitor)
                 monitor.clear_obstacle()
                 print("  -> Đã gỡ bỏ vật cản thành công.")
 
@@ -439,8 +451,8 @@ class WarehouseSoakRunner:
             # c. Đối chiếu tồn kho DB khớp 100% với Gazebo
             slots_now = db.get_all_slots()
             col_x_map = {0: 0.75, 1: 1.25, 2: 1.75}
-            rack_y_map = {"rack_a": 0.60, "rack_b": -0.60}
-            tier_z_map = {1: 0.15, 2: 0.40}
+            rack_y_map = {"rack_a": 0.71, "rack_b": -0.71}
+            tier_z_map = {1: 0.171, 2: 0.421}
 
             matches = 0
             for s in slots_now:
@@ -450,7 +462,7 @@ class WarehouseSoakRunner:
                 has_box = False
                 for bname, pos in monitor.gt_models.items():
                     if bname.startswith("box_"):
-                        if abs(pos[0] - cx) <= 0.18 and abs(pos[1] - cy) <= 0.18 and abs(pos[2] - cz) <= 0.18:
+                        if abs(pos[0] - cx) <= 0.15 and abs(pos[1] - cy) <= 0.15 and abs(pos[2] - cz) <= 0.15:
                             has_box = True
                             break
                 if (s["state"] == "FULL" and has_box) or (s["state"] == "EMPTY" and not has_box):
@@ -497,50 +509,50 @@ def main():
 
         all_history = []
 
-    while consecutive_success < max_consecutive_needed:
-        total_runs_attempted += 1
-        current_run_idx = consecutive_success + 1
+        while consecutive_success < max_consecutive_needed:
+            total_runs_attempted += 1
+            current_run_idx = consecutive_success + 1
 
-        success, run_metrics = runner.run_single_iteration(current_run_idx)
-        all_history.append(run_metrics)
+            success, run_metrics = runner.run_single_iteration(current_run_idx)
+            all_history.append(run_metrics)
 
-        # Lưu JSON từng lần chạy
-        json_path = os.path.join(runner.results_dir, f"soak_run_{current_run_idx}.json")
-        with open(json_path, "w") as f:
-            json.dump(run_metrics, f, indent=2)
+            # Lưu JSON từng lần chạy
+            json_path = os.path.join(runner.results_dir, f"soak_run_{current_run_idx}.json")
+            with open(json_path, "w") as f:
+                json.dump(run_metrics, f, indent=2)
 
-        if success:
-            consecutive_success += 1
-            print(f"\n🎉 LẦN CHẠY [{consecutive_success}/{max_consecutive_needed}] THÀNH CÔNG VẺ VANG!")
-            print(f"  • Thời gian chạy: {run_metrics['total_duration_sec']}s")
-            print(f"  • Sai số định vị trung bình: {run_metrics['mean_loc_err_m']*100:.2f} cm")
-            print(f"  • Độ khớp tồn kho DB vs Gazebo: {run_metrics['inventory_match_pct']}%")
-        else:
-            print(f"\n❌ LẦN CHẠY [{current_run_idx}] THẤT BẠI: {run_metrics['failure_reason']}")
-            # Chụp snapshot chẩn đoán theo Mục 10.7.4.a
-            diag_cmd = f"{ws_dir}/scripts/diag_snapshot.sh fail_run_{total_runs_attempted}"
-            subprocess.run(["bash", "-c", diag_cmd], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            if success:
+                consecutive_success += 1
+                print(f"\n🎉 LẦN CHẠY [{consecutive_success}/{max_consecutive_needed}] THÀNH CÔNG VẺ VANG!")
+                print(f"  • Thời gian chạy: {run_metrics['total_duration_sec']}s")
+                print(f"  • Sai số định vị trung bình: {run_metrics['mean_loc_err_m']*100:.2f} cm")
+                print(f"  • Độ khớp tồn kho DB vs Gazebo: {run_metrics['inventory_match_pct']}%")
+            else:
+                print(f"\n❌ LẦN CHẠY [{current_run_idx}] THẤT BẠI: {run_metrics['failure_reason']}")
+                # Chụp snapshot chẩn đoán theo Mục 10.7.4.a
+                diag_cmd = f"{ws_dir}/scripts/diag_snapshot.sh fail_run_{total_runs_attempted}"
+                subprocess.run(["bash", "-c", diag_cmd], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
-            # Đặt bộ đếm về 0 theo Mục 10.7.4.d
-            print(f"  ⚠️ ĐẶT BỘ ĐẾM VỀ 0 THEO QUY TẮC CỨNG MỤC 10.1 & 10.7!")
-            consecutive_success = 0
+                # Đặt bộ đếm về 0 theo Mục 10.7.4.d
+                print(f"  ⚠️ ĐẶT BỘ ĐẾM VỀ 0 THEO QUY TẮC CỨNG MỤC 10.1 & 10.7!")
+                consecutive_success = 0
 
-            # Giới hạn kiên nhẫn nếu lặp quá 8 lần sửa
-            if total_runs_attempted >= 28:
-                print("\n⛔ ĐÃ ĐẠT GIỚI HẠN KIÊN NHẪN (Mục 10.1.5). Dừng và báo cáo người dùng.")
-                break
+                # Giới hạn kiên nhẫn nếu lặp quá 8 lần sửa
+                if total_runs_attempted >= 28:
+                    print("\n⛔ ĐÃ ĐẠT GIỚI HẠN KIÊN NHẪN (Mục 10.1.5). Dừng và báo cáo người dùng.")
+                    break
 
-    # Ghi file summary CSV
-    with open(summary_csv, "w", newline="") as f:
-        fieldnames = [
-            "run_idx", "seed", "git_hash", "success", "failure_reason",
-            "total_duration_sec", "mean_loc_err_m", "max_loc_err_m",
-            "min_obstacle_dist_m", "inventory_match_pct"
-        ]
-        writer = csv.DictWriter(f, fieldnames=fieldnames, extrasaction="ignore")
-        writer.writeheader()
-        for r in all_history:
-            writer.writerow(r)
+        # Ghi file summary CSV
+        with open(summary_csv, "w", newline="") as f:
+            fieldnames = [
+                "run_idx", "seed", "git_hash", "success", "failure_reason",
+                "total_duration_sec", "mean_loc_err_m", "max_loc_err_m",
+                "min_obstacle_dist_m", "inventory_match_pct"
+            ]
+            writer = csv.DictWriter(f, fieldnames=fieldnames, extrasaction="ignore")
+            writer.writeheader()
+            for r in all_history:
+                writer.writerow(r)
 
     finally:
         try:
