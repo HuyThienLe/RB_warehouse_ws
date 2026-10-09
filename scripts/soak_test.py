@@ -521,6 +521,18 @@ def main():
             with open(json_path, "w") as f:
                 json.dump(run_metrics, f, indent=2)
 
+            # Cập nhật ngay file summary CSV sau mỗi lần chạy
+            with open(summary_csv, "w", newline="") as f:
+                fieldnames = [
+                    "run_idx", "seed", "git_hash", "success", "failure_reason",
+                    "total_duration_sec", "mean_loc_err_m", "max_loc_err_m",
+                    "min_obstacle_dist_m", "inventory_match_pct"
+                ]
+                writer = csv.DictWriter(f, fieldnames=fieldnames, extrasaction="ignore")
+                writer.writeheader()
+                for r in all_history:
+                    writer.writerow(r)
+
             if success:
                 consecutive_success += 1
                 print(f"\n🎉 LẦN CHẠY [{consecutive_success}/{max_consecutive_needed}] THÀNH CÔNG VẺ VANG!")
