@@ -215,13 +215,16 @@ class WarehouseSoakRunner:
         """Dọn sạch mọi tiến trình ROS 2, Gazebo, Uvicorn, port 8000."""
         print("  🧹 Đang dọn sạch môi trường cũ...")
         cmds = [
+            "pkill -9 -f warehouse_ws || true",
             "pkill -9 -f gzserver || true",
             "pkill -9 -f gzclient || true",
-            "pkill -9 -f 'ros2 launch' || true",
+            "pkill -9 -f 'wh_' || true",
+            "pkill -9 -f nav2_ || true",
             "pkill -9 -f uvicorn || true",
             "pkill -9 -f rviz2 || true",
-            "pkill -9 -f nav2 || true",
             "pkill -9 -f amcl || true",
+            "pkill -9 -f robot_state_publisher || true",
+            "pkill -9 -f ros2 || true",
             "fuser -k 8000/tcp || true",
             "rm -f ~/.warehouse/inventory.db* || true",
         ]
@@ -236,10 +239,12 @@ class WarehouseSoakRunner:
             f"source {self.ws_dir}/install/setup.bash && "
             f"exec ros2 launch wh_bringup full_system.launch.py headless:=true rviz:=false"
         )
+        log_path = os.path.join(self.failures_dir, "current_run.log")
+        self._current_log_file = open(log_path, "w")
         proc = subprocess.Popen(
             ["bash", "-c", launch_cmd],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
+            stdout=self._current_log_file,
+            stderr=subprocess.STDOUT,
             preexec_fn=os.setsid
         )
         return proc
@@ -301,26 +306,38 @@ class WarehouseSoakRunner:
 
             # Kiểm tra nhiệm vụ qua API
             try:
-                tasks = self.api_get("/api/tasks")
-                active = tasks.get("active")
-                if active and active.get("task_id") == task_id:
-                    st = active.get("status", "")
-                    step = active.get("fsm_step", "")
-                    if step != last_step:
+                tasks_data = self.api_get("/api/tasks")
+                target_task = None
+                if isinstance(tasks_data, list):
+                    for t in tasks_data:
+                        if t.get("task_id") == task_id:
+                            target_task = t
+                            break
+                elif isinstance(tasks_data, dict):
+                    active = tasks_data.get("active")
+                    if active and active.get("task_id") == task_id:
+                        target_task = active
+
+                if target_task:
+                    st = target_task.get("status", "")
+                    step = target_task.get("fsm_step", "") or getattr(monitor, "fsm_step", "")
+                    if step and step != last_step:
                         print(f"      [Task #{task_id}] Trạng thái: {st} | FSM: {step}")
                         last_step = step
-                    if st in ("DONE", "COMPLETED"):
-                        return True, "DONE", active
+                    if st in ("SUCCEEDED", "DONE", "COMPLETED"):
+                        return True, "SUCCEEDED", target_task
                     elif st in ("FAILED", "CANCELLED"):
-                        return False, f"Task {st}: {active.get('error_message', '')}", active
+                        return False, f"Task {st}: {target_task.get('error', '')}", target_task
 
-                # Kiểm tra trong DB
+                # Kiểm tra trực tiếp trong DB
                 db = InventoryDB(self.db_path)
                 t_db = db.get_task(task_id)
-                if t_db and t_db.get("status") in ("DONE", "COMPLETED"):
-                    return True, "DONE", t_db
-                elif t_db and t_db.get("status") in ("FAILED", "CANCELLED"):
-                    return False, f"Task {t_db.get('status')}", t_db
+                if t_db:
+                    st_db = t_db.get("status", "")
+                    if st_db in ("SUCCEEDED", "DONE", "COMPLETED"):
+                        return True, "SUCCEEDED", t_db
+                    elif st_db in ("FAILED", "CANCELLED"):
+                        return False, f"Task {st_db}: {t_db.get('error', '')}", t_db
             except Exception:
                 pass
 
@@ -481,6 +498,12 @@ class WarehouseSoakRunner:
             return True, metrics
 
         finally:
+            if hasattr(self, "_current_log_file") and self._current_log_file:
+                try:
+                    self._current_log_file.flush()
+                    self._current_log_file.close()
+                except Exception:
+                    pass
             if monitor:
                 try:
                     monitor.destroy_node()

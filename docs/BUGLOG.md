@@ -60,3 +60,24 @@ Theo quy tắc cứng mục 10.1:
   - Robot hoàn thành trọn vẹn cả 10 chặng thử nghiệm và các tác vụ docking không bị gián đoạn.
 - **Git Commit:** `a6b834e`
 
+---
+
+## 4. BUG-04: Mất Tag Tầng 1 Khi Docking & Lỗi Luồng WebBridge (Triệu Chứng 1 & 3)
+
+- **Triệu chứng:** Khi tiếp cận điểm chờ trước ô kệ tầng 1 (ví dụ slot 0), robot dừng lại và báo lỗi `TAG_LOST`, liên tục lùi thử lại và FSM bị treo; luồng ROS của WebBridge báo lỗi crash `reproj_error`.
+- **Bằng chứng thu thập:**
+  1. Trích xuất ảnh từ `/dock_camera/image_raw` tại vị trí robot (x=0.836, y=0.048): Camera nằm ở độ cao Z=0.34m và hướng ngang hoàn toàn (`rpy="0 0 0"`). Ở khoảng cách 0.32m tới kệ, góc nhìn dưới của camera chỉ đạt Z=0.172m, trong khi tag ô kệ tầng 1 (Tag 0) ở độ cao Z=0.11m (thấp hơn mép nhìn 6.2cm). Tag 0 chỉ hiển thị 8 pixel sát mép đáy và bị bộ phát hiện ArUco xếp vào nhóm `rejected candidate`.
+  2. Node `dock_server` không nhận được tag 0 nên hủy và báo `TAG_LOST`, FSM thử lại vô hạn.
+  3. Log Uvicorn: `AttributeError: 'TagDetection' object has no attribute 'reproj_error'` do trường đúng trong định nghĩa `.msg` là `reproj_error_px`.
+  4. Bộ kiểm thử `soak_test.py` dùng `tasks.get("active")` trên kết quả dạng danh sách và chỉ chờ trạng thái `"DONE"`, trong khi hệ thống gán trạng thái hoàn tất là `"SUCCEEDED"`.
+- **Nguyên nhân gốc:** Khớp camera `dock_camera_joint` thiếu góc nghiêng chúc xuống để bao quát tầm thấp; sai tên thuộc tính trong `web_bridge.py`; thiếu chuẩn hóa trạng thái hoàn thành trong harness test.
+- **Cách sửa:**
+  1. `src/wh_description/urdf/sensors.xacro`: Điều chỉnh `dock_camera_joint` nghiêng chúc xuống 11.5° (`rpy="0 0.20 0"`), mở rộng trường nhìn thấp xuống Z=0.085m, thu trọn vẹn cả tag tầng 1 (Z=0.11m) và tầng 2 (Z=0.36m).
+  2. `src/wh_web/wh_web/web_bridge.py`: Truy cập an toàn trường `reproj_error_px`.
+  3. `scripts/soak_test.py`: Hỗ trợ duyệt cả list và dict từ `/api/tasks`, chấp nhận trạng thái `"SUCCEEDED"`, dọn sạch triệt để các tiến trình bằng `pkill -9 -f warehouse_ws`.
+- **Cách kiểm chứng:**
+  - Tag 0 và Tag 3 đều hiển thị đầy đủ, nguyên vẹn trên ảnh camera dock.
+  - Tác vụ docking và đơn xuất/nhập hoàn thành trọn vẹn.
+- **Git Commit:** `5dc2ff0`
+
+

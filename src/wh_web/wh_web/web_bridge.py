@@ -696,7 +696,7 @@ class WebBridge(Node):
             tag_list.append({
                 "id": int(t.id),
                 "type": "shelf" if t.id < 20 else ("station" if t.id in (30, 31) else "box"),
-                "reproj_error": round(float(t.reproj_error), 2),
+                "reproj_error": round(float(getattr(t, "reproj_error_px", getattr(t, "reproj_error", 0.0))), 2),
                 "dist": round(math.sqrt(t.pose_base.pose.position.x**2 + t.pose_base.pose.position.y**2), 3),
             })
         with self.lock:
