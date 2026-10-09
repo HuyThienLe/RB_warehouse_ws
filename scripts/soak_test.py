@@ -215,16 +215,15 @@ class WarehouseSoakRunner:
         """Dọn sạch mọi tiến trình ROS 2, Gazebo, Uvicorn, port 8000."""
         print("  🧹 Đang dọn sạch môi trường cũ...")
         cmds = [
-            "pkill -9 -f warehouse_ws || true",
+            "pkill -9 -f 'wh_' || true",
             "pkill -9 -f gzserver || true",
             "pkill -9 -f gzclient || true",
-            "pkill -9 -f 'wh_' || true",
             "pkill -9 -f nav2_ || true",
             "pkill -9 -f uvicorn || true",
             "pkill -9 -f rviz2 || true",
             "pkill -9 -f amcl || true",
             "pkill -9 -f robot_state_publisher || true",
-            "pkill -9 -f ros2 || true",
+            "pkill -9 -f 'ros2 launch' || true",
             "fuser -k 8000/tcp || true",
             "rm -f ~/.warehouse/inventory.db* || true",
         ]
