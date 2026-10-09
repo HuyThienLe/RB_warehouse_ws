@@ -22,7 +22,7 @@ Theo quy tắc cứng mục 10.1:
 - **Cách kiểm chứng:**
   - Tầng L2 PASS: Tần số hand camera 26.4 Hz, pixel mean 57.6 > 10.0, ảnh rõ nét, không bị che khuất.
   - Chạy `test_step5_accuracy.py`: Nhận diện tag chính xác, sai số < 3 mm.
-- **Git Commit:** `0a18814`
+- **Git Commit:** `d017f80`
 
 ---
 
@@ -39,7 +39,7 @@ Theo quy tắc cứng mục 10.1:
   2. `src/wh_navigation/config/nav2_params.yaml`: Điều chỉnh AMCL `transform_tolerance: 0.2`, giảm độ nhiễu hạt `alpha1..5: 0.05`, tăng `max_beams: 100` để quét hạt chính xác hơn.
 - **Cách kiểm chứng:**
   - Chạy `scripts/test_localization.py`: Robot hoàn thành 10/10 chặng, sai số vị trí trung bình 3.69 cm (< 5.0 cm PASS), sai số góc trung bình 0.40° (< 5.0° PASS).
-- **Git Commit:** `0a18814`
+- **Git Commit:** `d017f80`
 
 ---
 
@@ -58,5 +58,5 @@ Theo quy tắc cứng mục 10.1:
   3. Tăng timeout trong `task_manager_node.py`: nav=75s, dock=45s, pick_place=60s.
 - **Cách kiểm chứng:**
   - Robot hoàn thành trọn vẹn cả 10 chặng thử nghiệm và các tác vụ docking không bị gián đoạn.
-- **Git Commit:** `0a18814`
+- **Git Commit:** `d017f80`
 

@@ -345,6 +345,7 @@ class WarehouseSoakRunner:
         # 1. Khởi động sạch
         self.clean_processes()
         proc = self.launch_system()
+        monitor = None
         try:
             if not self.wait_system_ready(timeout_sec=120.0):
                 metrics["failure_reason"] = "Hệ thống không sẵn sàng trong 120s"
@@ -468,6 +469,11 @@ class WarehouseSoakRunner:
             return True, metrics
 
         finally:
+            if monitor:
+                try:
+                    monitor.destroy_node()
+                except Exception:
+                    pass
             try:
                 os.killpg(os.getpgid(proc.pid), signal.SIGTERM)
             except Exception:
@@ -479,15 +485,17 @@ def main():
     print("  🏆 BỘ CHẠY LẶP 20 LẦN LIÊN TIẾP – WAREHOUSE SOAK TEST (BÀI 10.7)")
     print("=" * 78)
 
-    ws_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    runner = WarehouseSoakRunner(ws_dir)
-    summary_csv = os.path.join(runner.results_dir, "soak_summary.csv")
+    rclpy.init()
+    try:
+        ws_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        runner = WarehouseSoakRunner(ws_dir)
+        summary_csv = os.path.join(runner.results_dir, "soak_summary.csv")
 
-    consecutive_success = 0
-    total_runs_attempted = 0
-    max_consecutive_needed = 20
+        consecutive_success = 0
+        total_runs_attempted = 0
+        max_consecutive_needed = 20
 
-    all_history = []
+        all_history = []
 
     while consecutive_success < max_consecutive_needed:
         total_runs_attempted += 1
@@ -533,6 +541,12 @@ def main():
         writer.writeheader()
         for r in all_history:
             writer.writerow(r)
+
+    finally:
+        try:
+            rclpy.shutdown()
+        except Exception:
+            pass
 
     print("\n" + "=" * 78)
     if consecutive_success >= max_consecutive_needed:
