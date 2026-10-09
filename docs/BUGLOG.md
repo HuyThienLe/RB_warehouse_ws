@@ -78,6 +78,6 @@ Theo quy tắc cứng mục 10.1:
 - **Cách kiểm chứng:**
   - Tag 0 và Tag 3 đều hiển thị đầy đủ, nguyên vẹn trên ảnh camera dock.
   - Tác vụ docking và đơn xuất/nhập hoàn thành trọn vẹn.
-- **Git Commit:** `5dc2ff0`
+- **Git Commit:** `d5c47bb`
 
 
