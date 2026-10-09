@@ -77,12 +77,12 @@ class GripperNode(Node):
 
     def cb_link_states(self, msg: LinkStates):
         for name, pose in zip(msg.name, msg.pose):
-            if "gripper_grasp_link" in name or "suction_link" in name or "tool_link" in name:
+            if any(k in name for k in ("gripper_grasp_link", "suction_link", "tool_link", "left_finger_link", "right_finger_link")):
                 self.link_poses[name] = pose
 
     def cb_model_states(self, msg: ModelStates):
         for name, pose in zip(msg.name, msg.pose):
-            if name.startswith("box_"):
+            if "box" in name.lower():
                 self.model_poses[name] = pose
 
     def get_gripper_pose(self):
@@ -91,6 +91,9 @@ class GripperNode(Node):
                 return self.link_poses[key]
         for key in self.link_poses:
             if "suction_link" in key:
+                return self.link_poses[key]
+        for key in self.link_poses:
+            if "tool_link" in key:
                 return self.link_poses[key]
         return None
 
@@ -114,12 +117,12 @@ class GripperNode(Node):
             response.message = "Gripper OFF (đã nhả hộp)"
             return response
 
-        # Khi bật kẹp, tìm hộp gần nhất trong bán kính 8 cm
+        # Khi bật kẹp, tìm hộp gần nhất trong bán kính mở rộng 25 cm
         g_pose = self.get_gripper_pose()
         if g_pose is not None:
             gx, gy, gz = g_pose.position.x, g_pose.position.y, g_pose.position.z
             closest_box = None
-            min_dist = 0.085  # 8.5 cm
+            min_dist = 0.25  # 25 cm
 
             for b_name, b_pose in self.model_poses.items():
                 bx, by, bz = b_pose.position.x, b_pose.position.y, b_pose.position.z
@@ -134,18 +137,44 @@ class GripperNode(Node):
                 self.get_logger().info(
                     f"Kẹp dính thành công hộp: {closest_box} (khoảng cách = {min_dist*1000.0:.1f} mm)"
                 )
+        else:
+            # Nếu chưa đọc được link pose nhưng có lệnh hút, đánh dấu sẵn sàng bắt hộp
+            self.is_grasping = True
 
         response.success = True
         response.message = f"Gripper ON (hộp={self.grasped_box_name})"
         return response
 
     def sync_grasped_box(self):
-        """Khóa cứng tọa độ hộp theo gripper khi đang kẹp."""
-        if not self.is_active or not self.grasped_box_name:
+        """Khóa cứng tọa độ hộp theo gripper khi đang kẹp, tự động bắt hộp khi tiếp cận."""
+        if not self.is_active:
             return
 
         g_pose = self.get_gripper_pose()
         if g_pose is None or not self.cli_set_entity.service_is_ready():
+            return
+
+        # Quét tìm hộp liên tục nếu đang bật hút mà chưa khóa hộp
+        if not self.grasped_box_name:
+            gx, gy, gz = g_pose.position.x, g_pose.position.y, g_pose.position.z
+            closest_box = None
+            min_dist = 0.25  # 25 cm
+
+            for b_name, b_pose in self.model_poses.items():
+                bx, by, bz = b_pose.position.x, b_pose.position.y, b_pose.position.z
+                dist = math.sqrt((gx - bx) ** 2 + (gy - by) ** 2 + (gz - bz) ** 2)
+                if dist < min_dist:
+                    min_dist = dist
+                    closest_box = b_name
+
+            if closest_box:
+                self.grasped_box_name = closest_box
+                self.is_grasping = True
+                self.get_logger().info(
+                    f"Hút dính thành công hộp: {closest_box} (tự động khóa ở khoảng cách {min_dist*1000.0:.1f} mm)"
+                )
+
+        if not self.grasped_box_name:
             return
 
         req = SetEntityState.Request()

@@ -441,7 +441,7 @@ class TaskManagerNode(Node):
 
         res_future = gh.get_result_async()
         t1 = time.time()
-        while not res_future.done() and (time.time() - t1 < 30.0):
+        while not res_future.done() and (time.time() - t1 < 75.0):
             time.sleep(0.1)
         res = res_future.result() if res_future.done() else None
         return Event.OK if (res and res.status == GoalStatus.STATUS_SUCCEEDED) else Event.FAIL
@@ -471,7 +471,7 @@ class TaskManagerNode(Node):
 
         rfut = gh.get_result_async()
         t1 = time.time()
-        while not rfut.done() and (time.time() - t1 < 15.0):
+        while not rfut.done() and (time.time() - t1 < 45.0):
             time.sleep(0.1)
         res = rfut.result() if rfut.done() else None
         return Event.OK if (res and res.result.success) else Event.FAIL
@@ -498,7 +498,7 @@ class TaskManagerNode(Node):
         return Event.FAIL
 
     def handle_in_pick_station(self, ctx: FSMContext) -> Event:
-        ok, tag_read = self._call_pick_place("PICK_FROM_STATION", 0, ctx.expected_box_tag, 1)
+        ok, tag_read = self._call_pick_place("PICK_FROM_STATION", 30, ctx.expected_box_tag, 1)
         if ok:
             ctx.holding_box = True
             ctx.held_box_tag = tag_read if tag_read > 0 else ctx.expected_box_tag
@@ -537,7 +537,7 @@ class TaskManagerNode(Node):
         return Event.FAIL
 
     def handle_out_place_station(self, ctx: FSMContext) -> Event:
-        ok, _ = self._call_pick_place("PLACE_TO_STATION", 0, ctx.held_box_tag, 1)
+        ok, _ = self._call_pick_place("PLACE_TO_STATION", 31, ctx.held_box_tag, 1)
         if ok:
             ctx.holding_box = False
             ctx.held_box_tag = 0
@@ -588,7 +588,7 @@ class TaskManagerNode(Node):
 
         rfut = gh.get_result_async()
         t1 = time.time()
-        while not rfut.done() and (time.time() - t1 < 45.0):
+        while not rfut.done() and (time.time() - t1 < 60.0):
             time.sleep(0.1)
         res = rfut.result() if rfut.done() else None
         if res and res.result.success:

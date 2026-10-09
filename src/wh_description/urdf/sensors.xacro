@@ -222,22 +222,22 @@
   <joint name="hand_camera_joint" type="fixed">
     <parent link="tool_link"/>
     <child link="hand_camera_link"/>
-    <!-- Gắn tại tâm đế kẹp trùng trục với đầu hút TCP, nhìn vuông góc thẳng xuống dưới -->
-    <origin xyz="0 0 -0.042" rpy="0 1.57079632679 0"/>
+    <!-- Gắn lùi về sau 4cm (-x) trên đế kẹp, nhìn vuông góc thẳng xuống dưới (-z tool_link) -->
+    <origin xyz="-0.040 0.0 -0.042" rpy="0 1.57079632679 0"/>
   </joint>
 
   <link name="hand_camera_link">
-    <!-- Ngàm đỡ bắt bulông vào mặt trước đế tay kẹp -->
+    <!-- Ngàm đỡ bắt bulông vào mặt sau đế tay kẹp (nằm phía sau sensor) -->
     <visual>
-      <origin xyz="-0.008 0 0" rpy="0 0 0"/>
+      <origin xyz="-0.015 0 0" rpy="0 0 0"/>
       <geometry>
         <box size="0.016 0.032 0.016"/>
       </geometry>
       <material name="cam_bracket"/>
     </visual>
-    <!-- Thân vỏ camera -->
+    <!-- Thân vỏ camera (nằm phía sau sensor) -->
     <visual>
-      <origin xyz="0.006 0 0" rpy="0 0 0"/>
+      <origin xyz="-0.005 0 0" rpy="0 0 0"/>
       <geometry>
         <box size="0.020 0.036 0.020"/>
       </geometry>
@@ -245,7 +245,7 @@
     </visual>
     <!-- Ống kính nhìn thẳng theo trục quang học -->
     <visual>
-      <origin xyz="0.018 0 0" rpy="0 1.57079632679 0"/>
+      <origin xyz="0.005 0 0" rpy="0 1.57079632679 0"/>
       <geometry>
         <cylinder radius="0.007" length="0.006"/>
       </geometry>
@@ -261,7 +261,7 @@
   <joint name="hand_camera_optical_joint" type="fixed">
     <parent link="hand_camera_link"/>
     <child link="hand_camera_optical_frame"/>
-    <origin xyz="0 0 0" rpy="-1.57079632679 0 -1.57079632679"/>
+    <origin xyz="0.010 0 0" rpy="-1.57079632679 0 -1.57079632679"/>
   </joint>
 
   <link name="hand_camera_optical_frame"/>
@@ -270,7 +270,7 @@
     <material>Gazebo/Black</material>
     <selfCollide>false</selfCollide>
     <sensor name="hand_camera" type="camera">
-      <pose>0 0 0 0 0 0</pose>
+      <pose>0.010 0 0 0 0 0</pose>
       <always_on>true</always_on>
       <update_rate>30</update_rate>
       <camera>

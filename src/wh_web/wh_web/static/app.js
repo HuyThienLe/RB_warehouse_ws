@@ -100,6 +100,7 @@ document.addEventListener("DOMContentLoaded", () => {
   fetchItems();
   fetchTasks();
   fetchTransactions();
+  setInterval(pollVisionStatus, 1000);
 
   // Polling dự phòng nhẹ (mỗi 10s làm mới bảng nếu websocket có độ trễ)
   setInterval(() => {
@@ -500,8 +501,10 @@ function drawMap() {
 
   // 5. Lớp Ô kệ kho & Trạm dịch vụ (Racks & Stations)
   if (activeLayers.racks) {
-    drawStation(ctx, -2.40, 0.45, "IN", "#10b981");
-    drawStation(ctx, -2.40, -0.45, "OUT", "#f59e0b");
+    drawPickupTable(ctx, -2.40, 1.20, "TRẠM IN #30", "#10b981");
+    drawPickupTable(ctx, -2.40, -1.20, "TRẠM OUT #31", "#f59e0b");
+    drawStation(ctx, -2.40, 0.88, "work IN", "#34d399");
+    drawStation(ctx, -2.40, -0.88, "work OUT", "#fbbf24");
     drawStation(ctx, -2.40, 0.00, "HOME", "#6366f1");
     drawRacksOnMap(ctx);
   }
@@ -511,6 +514,24 @@ function drawMap() {
     drawRobotOnMap(ctx);
   }
 
+  ctx.restore();
+}
+
+function drawPickupTable(ctx, x, y, label, color) {
+  const { px, py } = worldToCanvas(x, y);
+  ctx.save();
+  ctx.fillStyle = color + "55";
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.2;
+  ctx.fillRect(px - 12, py - 7, 24, 14);
+  ctx.strokeRect(px - 12, py - 7, 24, 14);
+  // Hộp hàng trên bàn
+  ctx.fillStyle = color;
+  ctx.fillRect(px - 4, py - 4, 8, 8);
+  ctx.font = "bold 7px sans-serif";
+  ctx.fillStyle = "#fff";
+  ctx.textAlign = "center";
+  ctx.fillText(label, px, py + (y > 0 ? -10 : 17));
   ctx.restore();
 }
 
@@ -763,7 +784,7 @@ async function submitInboundOrder() {
       fetchInventory();
       fetchItems();
       fetchTasks();
-      switchTab("tab-tasks", document.querySelectorAll(".nav-item")[3]);
+      switchTabById("tab-tasks");
     } else {
       showToast(`Lỗi ${res.status}: ${data.detail || data.message}`, "error");
     }
@@ -792,7 +813,7 @@ async function submitOutboundOrder() {
       fetchInventory();
       fetchItems();
       fetchTasks();
-      switchTab("tab-tasks", document.querySelectorAll(".nav-item")[3]);
+      switchTabById("tab-tasks");
     } else {
       showToast(`Lỗi ${res.status}: ${data.detail || data.message}`, "error");
     }
@@ -1030,6 +1051,11 @@ async function executeResetEStop() {
 }
 
 // ── 9. TIỆN ÍCH CHUYỂN TAB & TOAST ──────────────────────────────────────────
+function switchTabById(tabId) {
+  const btn = document.querySelector(`.nav-item[onclick*="'${tabId}'"]`);
+  switchTab(tabId, btn);
+}
+
 function switchTab(tabId, navBtn) {
   // Ẩn tất cả panes
   document.querySelectorAll(".tab-pane").forEach((pane) => {
@@ -1363,4 +1389,134 @@ async function confirmNavGoal() {
   const { x, y } = pendingNavGoal;
   closeNavGoalModal();
   showToast(`Mục tiêu (x: ${x.toFixed(2)}, y: ${y.toFixed(2)}) đã được ghi nhận.`, "info");
+}
+
+// ── 14. THỊ GIÁC (CAMERA STREAMS) & TRẠM IN/OUT & TAY MÁY THỦ CÔNG ───────────
+const TAG_TYPE_LABEL = { shelf: "Ô kệ", station: "Trạm IN/OUT", box: "Hộp hàng" };
+
+async function pollVisionStatus() {
+  // Chỉ gọi API khi đang mở tab Thị giác để tiết kiệm băng thông
+  const pane = document.getElementById("tab-vision");
+  if (!pane || !pane.classList.contains("active")) return;
+  try {
+    const res = await fetch("/api/vision/status");
+    if (!res.ok) return;
+    renderVisionStatus(await res.json());
+  } catch (err) {
+    /* bỏ qua lỗi mạng tạm thời */
+  }
+}
+
+function tagHudText(tags, emptyText) {
+  if (!tags || tags.length === 0) return emptyText;
+  return tags.map((t) => `#${t.id} (${t.dist.toFixed(2)}m)`).join("  ·  ");
+}
+
+function renderVisionStatus(v) {
+  const dockHud = document.getElementById("dock-tags-hud");
+  const handHud = document.getElementById("hand-tags-hud");
+  if (dockHud) dockHud.textContent = v.has_dock_feed
+    ? tagHudText(v.dock_tags, "Không thấy tag nào")
+    : "Chưa có ảnh từ Dock Camera";
+  if (handHud) handHud.textContent = v.has_hand_feed
+    ? tagHudText(v.hand_tags, "Không thấy tag nào")
+    : "Chưa có ảnh từ Hand Camera";
+
+  const grasp = document.getElementById("cam-grasp-status");
+  if (grasp) grasp.textContent = currentRobot.holding_box ? `Đang giữ hộp #${currentRobot.held_box_tag}` : "Chưa gắp";
+
+  const rows = [];
+  (v.dock_tags || []).forEach((t) => rows.push({ ...t, cam: "Dock" }));
+  (v.hand_tags || []).forEach((t) => rows.push({ ...t, cam: "Hand" }));
+
+  const badge = document.getElementById("tags-count-badge");
+  if (badge) badge.textContent = `${rows.length} thẻ nhìn thấy`;
+
+  const tbody = document.getElementById("vision-tags-table-body");
+  if (!tbody) return;
+  if (rows.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="5" class="text-center">Chưa phát hiện mã ArUco nào trong tầm nhìn hiện tại.</td></tr>`;
+    return;
+  }
+  const now = new Date().toLocaleTimeString("vi-VN");
+  tbody.innerHTML = rows.map((t) => `
+    <tr>
+      <td><strong>#${t.id}</strong></td>
+      <td>${TAG_TYPE_LABEL[t.type] || t.type}</td>
+      <td>${t.cam}</td>
+      <td>${t.dist.toFixed(3)} m</td>
+      <td>${t.reproj_error} px • ${now}</td>
+    </tr>`).join("");
+}
+
+function refreshVisionStreams() {
+  const ts = Date.now();
+  const dock = document.getElementById("dock-stream-img");
+  const hand = document.getElementById("hand-stream-img");
+  if (dock) dock.src = `/api/vision/dock/stream?t=${ts}`;
+  if (hand) hand.src = `/api/vision/hand/stream?t=${ts}`;
+  showToast("Đã làm mới luồng camera", "info");
+}
+
+function onStreamError(img, which) {
+  // Thử nối lại luồng MJPEG sau 3 giây
+  setTimeout(() => {
+    img.src = `/api/vision/${which}/stream?t=${Date.now()}`;
+  }, 3000);
+}
+
+function snapshotCamera(which) {
+  window.open(`/api/vision/${which}/live.jpg?t=${Date.now()}`, "_blank");
+}
+
+// Mở nhanh tab tạo lệnh Nhập / Xuất từ thẻ Trạm IN / OUT
+function quickNavToInbound() {
+  switchTabById("tab-orders");
+  showToast("Chọn mặt hàng rồi bấm 'LẤY HÀNG TRẠM IN BỎ LÊN KỆ'", "info");
+}
+
+function quickNavToOutbound() {
+  switchTabById("tab-orders");
+  showToast("Chọn mặt hàng rồi bấm 'LẤY HÀNG TỪ KỆ XUẤT RA TRẠM OUT'", "info");
+}
+
+async function triggerWebGripper(state) {
+  try {
+    const res = await fetch("/api/arm/gripper", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ state }),
+    });
+    const data = await res.json();
+    const badge = document.getElementById("manual-gripper-badge");
+    if (res.ok && data.success) {
+      if (badge) {
+        badge.textContent = state ? "Tay gắp: ON" : "Tay gắp: OFF";
+        badge.className = "status-pill " + (state ? "running" : "idle");
+      }
+      showToast(data.message, "info");
+    } else {
+      showToast(data.message || data.detail || "Lỗi điều khiển tay gắp", "error");
+    }
+  } catch (err) {
+    showToast("Không thể kết nối máy chủ để điều khiển tay gắp!", "error");
+  }
+}
+
+async function triggerWebPose(pose) {
+  try {
+    const res = await fetch("/api/arm/pose", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ pose }),
+    });
+    const data = await res.json();
+    if (res.ok) {
+      showToast(data.message || `Tay máy → ${pose}`, "info");
+    } else {
+      showToast(data.detail || "Lỗi điều khiển tay máy", "error");
+    }
+  } catch (err) {
+    showToast("Không thể kết nối máy chủ để điều khiển tay máy!", "error");
+  }
 }

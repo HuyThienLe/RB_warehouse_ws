@@ -1,2 +1,2 @@
 test,response_time_ms,threshold_ms,result
-estop_trigger,1.8,300.0,PASS
+estop_trigger,0.8,300.0,PASS

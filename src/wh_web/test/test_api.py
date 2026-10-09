@@ -202,3 +202,42 @@ def test_websocket_stream(client):
                 pong = m
                 break
         assert pong == {"type": "pong"}
+
+
+# ── TEST 7: Vision & Arm Manipulation Endpoints ──────────────────────────────
+def test_vision_and_arm_endpoints(client):
+    """Kiểm tra API thị giác và điều khiển cánh tay gắp trên Web."""
+    # 1. Vision status
+    res_vis = client.get("/api/vision/status")
+    assert res_vis.status_code == 200
+    vis_data = res_vis.json()
+    assert "has_dock_feed" in vis_data
+    assert "has_hand_feed" in vis_data
+    assert "dock_tags" in vis_data
+    assert "hand_tags" in vis_data
+
+    # 2. Camera snapshots
+    res_dock_snap = client.get("/api/vision/dock/live.jpg")
+    assert res_dock_snap.status_code == 200
+    assert "image/jpeg" in res_dock_snap.headers["content-type"]
+    assert len(res_dock_snap.content) > 100
+
+    res_hand_snap = client.get("/api/vision/hand/live.jpg")
+    assert res_hand_snap.status_code == 200
+    assert "image/jpeg" in res_hand_snap.headers["content-type"]
+    assert len(res_hand_snap.content) > 100
+
+    # 3. Arm gripper control
+    res_grip_on = client.post("/api/arm/gripper", json={"state": True})
+    assert res_grip_on.status_code == 200
+    assert "success" in res_grip_on.json()
+
+    res_grip_off = client.post("/api/arm/gripper", json={"state": False})
+    assert res_grip_off.status_code == 200
+    assert "success" in res_grip_off.json()
+
+    # 4. Arm pose control
+    res_pose = client.post("/api/arm/pose", json={"pose": "OBSERVE_TIER_1"})
+    assert res_pose.status_code == 200
+    assert "success" in res_pose.json()
+

@@ -23,13 +23,13 @@ from pydantic import BaseModel, field_validator
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, Query, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, StreamingResponse
 import rclpy
 from rclpy.executors import MultiThreadedExecutor
 
 from wh_task_manager.inventory_db import InventoryDB
 from wh_task_manager.task_manager_node import find_config_path
-from wh_web.web_bridge import WebBridge
+from wh_web.web_bridge import WebBridge, make_placeholder_frame
 
 
 # ── Pydantic Request Models ──────────────────────────────────────────────────
@@ -549,6 +549,103 @@ async def stop_auto_mapping():
         })
         return {"success": True, "message": "Đã dừng AutoMapper"}
     return {"success": True, "message": "AutoMapper hiện không chạy"}
+
+
+# ── Vision & Arm Endpoints (Mục 8.4 & Vision Live Stream) ─────────────────────
+class ArmGripperIn(BaseModel):
+    state: bool = True
+
+
+class ArmPoseIn(BaseModel):
+    pose: str = "STOW"
+
+
+async def mjpeg_frame_generator(is_dock: bool):
+    """Generator phát luồng video MJPEG liên tục cho trình duyệt."""
+    while True:
+        if bridge:
+            frame = bridge.get_dock_frame() if is_dock else bridge.get_hand_frame()
+        else:
+            frame = make_placeholder_frame("Đang kết nối ROS 2...")
+        yield (
+            b"--frame\r\n"
+            b"Content-Type: image/jpeg\r\n\r\n" + frame + b"\r\n"
+        )
+        await asyncio.sleep(0.08)  # ~12 FPS mượt mà và nhẹ tải mạng
+
+
+@app.get("/api/vision/dock/stream")
+async def stream_dock_camera():
+    """Luồng video trực tiếp từ Dock Camera (Camera sườn xe căn chỉnh ArUco)."""
+    return StreamingResponse(
+        mjpeg_frame_generator(is_dock=True),
+        media_type="multipart/x-mixed-replace; boundary=frame",
+    )
+
+
+@app.get("/api/vision/hand/stream")
+async def stream_hand_camera():
+    """Luồng video trực tiếp từ Hand Camera (Camera bàn tay SCARA Eye-in-Hand)."""
+    return StreamingResponse(
+        mjpeg_frame_generator(is_dock=False),
+        media_type="multipart/x-mixed-replace; boundary=frame",
+    )
+
+
+@app.get("/api/vision/dock/live.jpg")
+async def get_dock_frame_snapshot():
+    """Ảnh tĩnh tức thời từ Dock Camera."""
+    frame = bridge.get_dock_frame() if bridge else make_placeholder_frame("Chưa kết nối ROS")
+    return Response(content=frame, media_type="image/jpeg", headers={"Cache-Control": "no-cache"})
+
+
+@app.get("/api/vision/hand/live.jpg")
+async def get_hand_frame_snapshot():
+    """Ảnh tĩnh tức thời từ Hand Camera."""
+    frame = bridge.get_hand_frame() if bridge else make_placeholder_frame("Chưa kết nối ROS")
+    return Response(content=frame, media_type="image/jpeg", headers={"Cache-Control": "no-cache"})
+
+
+@app.get("/api/vision/status")
+async def get_vision_telemetry():
+    """Dữ liệu nhận diện ArUco tags từ cả 2 camera."""
+    if not bridge:
+        return {"dock_tags": [], "hand_tags": [], "has_dock_feed": False, "has_hand_feed": False}
+    return bridge.get_vision_telemetry()
+
+
+@app.post("/api/arm/gripper")
+async def control_arm_gripper(req: ArmGripperIn):
+    """Điều khiển bật / tắt giác hút chân không từ web."""
+    if not bridge:
+        raise HTTPException(status_code=503, detail="WebBridge chưa sẵn sàng")
+    ok, msg = bridge.trigger_gripper(req.state)
+    await broadcast({
+        "type": "notification",
+        "data": {
+            "level": "info" if ok else "warn",
+            "text": f"Tay kẹp: {msg}",
+        },
+    })
+    return {"success": ok, "message": msg}
+
+
+@app.post("/api/arm/pose")
+async def control_arm_pose(req: ArmPoseIn):
+    """Điều khiển tay máy SCARA về tư thế cấu hình trước."""
+    if not bridge:
+        raise HTTPException(status_code=503, detail="WebBridge chưa sẵn sàng")
+    ok, msg = bridge.trigger_arm_pose(req.pose)
+    if not ok:
+        raise HTTPException(status_code=400, detail=msg)
+    await broadcast({
+        "type": "notification",
+        "data": {
+            "level": "info",
+            "text": f"Tay máy: {msg}",
+        },
+    })
+    return {"success": ok, "message": msg}
 
 
 # ── WebSocket Endpoint (Mục 8.3 & 8b.3) ─────────────────────────────────────

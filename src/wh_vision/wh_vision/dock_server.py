@@ -98,6 +98,15 @@ class DockServer(Node):
             cancel_callback=self.cancel_callback,
             callback_group=self.callback_group
         )
+        self._action_server_wh = ActionServer(
+            self,
+            DockToSlot,
+            "/wh/dock_to_slot",
+            execute_callback=self.execute_callback,
+            goal_callback=self.goal_callback,
+            cancel_callback=self.cancel_callback,
+            callback_group=self.callback_group
+        )
 
         self.get_logger().info(
             f"DockServer đã khởi động. Lệnh servo ra: {self.cmd_topic}, "

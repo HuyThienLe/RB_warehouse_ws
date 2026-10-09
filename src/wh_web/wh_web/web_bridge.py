@@ -25,15 +25,29 @@ from rclpy.node import Node
 from rclpy.callback_groups import ReentrantCallbackGroup
 from rclpy.qos import QoSProfile, DurabilityPolicy, ReliabilityPolicy
 from std_msgs.msg import Bool, Empty, String
+from std_srvs.srv import SetBool
 from geometry_msgs.msg import Twist
 from nav_msgs.msg import OccupancyGrid, Path
-from sensor_msgs.msg import LaserScan
+from sensor_msgs.msg import LaserScan, Image
+from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
+from cv_bridge import CvBridge
 import tf2_ros
 
-from wh_interfaces.msg import RobotStatus
+from wh_interfaces.msg import RobotStatus, TagArray, TagDetection
 from wh_interfaces.srv import SubmitTask, CancelTask
 from slam_toolbox.srv import SaveMap, SerializePoseGraph, Clear
 from wh_task_manager.inventory_db import InventoryDB
+
+
+def make_placeholder_frame(text: str) -> bytes:
+    """Sinh ảnh frame placeholder khi chưa nhận luồng camera."""
+    img = np.zeros((240, 320, 3), dtype=np.uint8)
+    img[:] = (20, 24, 32)
+    cv2.rectangle(img, (2, 2), (317, 237), (0, 210, 255), 1)
+    cv2.putText(img, text, (20, 115), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 210, 255), 1, cv2.LINE_AA)
+    cv2.putText(img, "Waiting for video stream...", (20, 145), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (140, 160, 180), 1, cv2.LINE_AA)
+    ok, buf = cv2.imencode(".jpg", img)
+    return buf.tobytes() if ok else b""
 
 
 def grid_to_png(msg: OccupancyGrid) -> bytes:
@@ -61,7 +75,12 @@ class WebBridge(Node):
         db: InventoryDB,
         push_callback: Optional[Callable[[Dict[str, Any]], None]] = None,
     ):
-        super().__init__("web_bridge_node")
+        super().__init__(
+            "web_bridge_node",
+            parameter_overrides=[
+                rclpy.parameter.Parameter("use_sim_time", rclpy.Parameter.Type.BOOL, True)
+            ]
+        )
         self.db = db
         self.push_callback = push_callback
         self.cbg = ReentrantCallbackGroup()
@@ -170,13 +189,41 @@ class WebBridge(Node):
             callback_group=self.cbg,
         )
 
+        # ── 1b. Camera & Vision Subscriptions ────────────────────────────────
+        self.bridge = CvBridge()
+        self.latest_dock_jpeg: Optional[bytes] = None
+        self.latest_hand_jpeg: Optional[bytes] = None
+        self.last_dock_img_time = 0.0
+        self.last_hand_img_time = 0.0
+        self.dock_tags_detected: List[Dict[str, Any]] = []
+        self.hand_tags_detected: List[Dict[str, Any]] = []
+
+        self.sub_dock_debug = self.create_subscription(
+            Image, "/vision/debug_dock", self.cb_dock_debug_image, 5, callback_group=self.cbg
+        )
+        self.sub_dock_raw = self.create_subscription(
+            Image, "/dock_camera/image_raw", self.cb_dock_raw_image, 5, callback_group=self.cbg
+        )
+        self.sub_hand_debug = self.create_subscription(
+            Image, "/vision/debug_hand", self.cb_hand_debug_image, 5, callback_group=self.cbg
+        )
+        self.sub_hand_raw = self.create_subscription(
+            Image, "/hand_camera/image_raw", self.cb_hand_raw_image, 5, callback_group=self.cbg
+        )
+        self.sub_vision_tags = self.create_subscription(
+            TagArray, "/vision/tags", self.cb_vision_tags, 10, callback_group=self.cbg
+        )
+
         # ── 2. Publishers ────────────────────────────────────────────────────
         self.pub_estop = self.create_publisher(Bool, "/estop", 10)
         self.pub_estop_reset = self.create_publisher(Empty, "/estop_reset", 10)
         self.pub_teleop = self.create_publisher(Twist, "/cmd_vel_teleop", 10)
+        self.pub_arm_traj = self.create_publisher(JointTrajectory, "/arm_controller/joint_trajectory", 10)
 
         # ── 3. Timers ────────────────────────────────────────────────────────
         self.timer_watchdog = self.create_timer(0.1, self.teleop_watchdog)
+        self.has_tf_pose = False
+        self.timer_tf_pose = self.create_timer(0.05, self.update_tf_pose, callback_group=self.cbg)
 
         # ── 4. Service Clients ───────────────────────────────────────────────
         self.cli_submit = self.create_client(
@@ -204,8 +251,13 @@ class WebBridge(Node):
             "/slam_toolbox/clear",
             callback_group=self.cbg,
         )
+        self.cli_gripper = self.create_client(
+            SetBool,
+            "/gripper/switch",
+            callback_group=self.cbg,
+        )
 
-        self.get_logger().info("WebBridge node khởi động thành công.")
+        self.get_logger().info("WebBridge node (Vision & Arm Enhanced) khởi động thành công.")
 
     def push(self, msg_type: str, data: Any):
         """Đẩy thông điệp WebSocket dạng {'type': ..., 'data': ...}."""
@@ -306,6 +358,34 @@ class WebBridge(Node):
         pts.append([round(p_last.x, 3), round(p_last.y, 3)])
         self.push("path", {"points": pts})
 
+    def update_tf_pose(self):
+        """Lấy pose map -> base_footprint từ TF2 tại thời điểm mới nhất (chuẩn hóa theo Bài 10.5.1)."""
+        try:
+            t = self.tf_buffer.lookup_transform("map", "base_footprint", rclpy.time.Time())
+            x = float(t.transform.translation.x)
+            y = float(t.transform.translation.y)
+            q = t.transform.rotation
+            siny_cosp = 2.0 * (q.w * q.z + q.x * q.y)
+            cosy_cosp = 1.0 - 2.0 * (q.y * q.y + q.z * q.z)
+            yaw = math.atan2(siny_cosp, cosy_cosp)
+
+            with self.lock:
+                self.latest_status["x"] = x
+                self.latest_status["y"] = y
+                self.latest_status["yaw"] = yaw
+                self.has_tf_pose = True
+
+            dist_moved = math.hypot(x - self.last_trail_x, y - self.last_trail_y)
+            if dist_moved >= 0.05:
+                self.last_trail_x = x
+                self.last_trail_y = y
+                self.trail.append([round(x, 3), round(y, 3)])
+                if len(self.trail) > 1000:
+                    self.trail.pop(0)
+                self.push("trail", {"points": self.trail})
+        except Exception:
+            pass
+
     def cb_robot_status(self, msg: RobotStatus):
         now = time.time()
         curr_state = msg.state
@@ -315,10 +395,7 @@ class WebBridge(Node):
 
         with self.lock:
             effective_state = "ESTOP" if self.is_estopped else curr_state
-            self.latest_status.update({
-                "x": float(msg.x),
-                "y": float(msg.y),
-                "yaw": float(msg.yaw),
+            status_update = {
                 "state": effective_state,
                 "task_id": int(curr_task_id),
                 "slot_id": curr_slot_id,
@@ -327,21 +404,30 @@ class WebBridge(Node):
                 "held_box_tag": int(msg.held_box_tag),
                 "last_error": curr_error,
                 "is_estopped": self.is_estopped,
-            })
+            }
+            # Chỉ ghi đè x, y, yaw từ topic nếu TF map->base_footprint chưa sẵn sàng
+            if not self.has_tf_pose:
+                status_update.update({
+                    "x": float(msg.x),
+                    "y": float(msg.y),
+                    "yaw": float(msg.yaw),
+                })
+            self.latest_status.update(status_update)
             if curr_state == "ESTOP":
                 self.is_estopped = True
 
-        # Cập nhật Quỹ đạo robot (trail: thêm điểm mỗi khi di chuyển >= 5 cm)
-        rx = float(msg.x)
-        ry = float(msg.y)
-        dist_moved = math.hypot(rx - self.last_trail_x, ry - self.last_trail_y)
-        if dist_moved >= 0.05:
-            self.last_trail_x = rx
-            self.last_trail_y = ry
-            self.trail.append([round(rx, 3), round(ry, 3)])
-            if len(self.trail) > 1000:
-                self.trail.pop(0)
-            self.push("trail", {"points": self.trail})
+        # Nếu chưa có TF, cập nhật trail từ topic
+        if not self.has_tf_pose:
+            rx = float(msg.x)
+            ry = float(msg.y)
+            dist_moved = math.hypot(rx - self.last_trail_x, ry - self.last_trail_y)
+            if dist_moved >= 0.05:
+                self.last_trail_x = rx
+                self.last_trail_y = ry
+                self.trail.append([round(rx, 3), round(ry, 3)])
+                if len(self.trail) > 1000:
+                    self.trail.pop(0)
+                self.push("trail", {"points": self.trail})
 
         # 1. Phát hiện sự kiện chuyển trạng thái nhiệm vụ (FSM Step)
         if curr_state != self.prev_state:
@@ -601,3 +687,120 @@ class WebBridge(Node):
     def get_live_map_png(self) -> Optional[bytes]:
         with self.lock:
             return self.live_map_png
+
+    # ── Camera & Vision Handlers ─────────────────────────────────────────────
+    def cb_vision_tags(self, msg: TagArray):
+        cam = msg.camera
+        tag_list = []
+        for t in msg.tags:
+            tag_list.append({
+                "id": int(t.id),
+                "type": "shelf" if t.id < 20 else ("station" if t.id in (30, 31) else "box"),
+                "reproj_error": round(float(t.reproj_error), 2),
+                "dist": round(math.sqrt(t.pose_base.pose.position.x**2 + t.pose_base.pose.position.y**2), 3),
+            })
+        with self.lock:
+            if "dock" in cam:
+                self.dock_tags_detected = tag_list
+            elif "hand" in cam:
+                self.hand_tags_detected = tag_list
+
+    def cb_dock_debug_image(self, msg: Image):
+        self._process_image(msg, is_dock=True)
+
+    def cb_dock_raw_image(self, msg: Image):
+        if time.time() - self.last_dock_img_time > 0.5:
+            self._process_image(msg, is_dock=True)
+
+    def cb_hand_debug_image(self, msg: Image):
+        self._process_image(msg, is_dock=False)
+
+    def cb_hand_raw_image(self, msg: Image):
+        if time.time() - self.last_hand_img_time > 0.5:
+            self._process_image(msg, is_dock=False)
+
+    def _process_image(self, msg: Image, is_dock: bool):
+        now = time.time()
+        last_t = self.last_dock_img_time if is_dock else self.last_hand_img_time
+        if now - last_t < 0.06:
+            return
+        if is_dock:
+            self.last_dock_img_time = now
+        else:
+            self.last_hand_img_time = now
+
+        try:
+            cv_img = self.bridge.imgmsg_to_cv2(msg, desired_encoding="bgr8")
+            ok, buf = cv2.imencode(".jpg", cv_img, [int(cv2.IMWRITE_JPEG_QUALITY), 65])
+            if ok:
+                with self.lock:
+                    if is_dock:
+                        self.latest_dock_jpeg = buf.tobytes()
+                    else:
+                        self.latest_hand_jpeg = buf.tobytes()
+        except Exception:
+            pass
+
+    def get_dock_frame(self) -> bytes:
+        with self.lock:
+            if self.latest_dock_jpeg:
+                return self.latest_dock_jpeg
+        return make_placeholder_frame("DOCK CAMERA: Đang kết nối...")
+
+    def get_hand_frame(self) -> bytes:
+        with self.lock:
+            if self.latest_hand_jpeg:
+                return self.latest_hand_jpeg
+        return make_placeholder_frame("HAND CAMERA: Đang kết nối...")
+
+    def get_vision_telemetry(self) -> Dict[str, Any]:
+        with self.lock:
+            return {
+                "dock_tags": list(self.dock_tags_detected),
+                "hand_tags": list(self.hand_tags_detected),
+                "has_dock_feed": bool(self.latest_dock_jpeg and time.time() - self.last_dock_img_time < 3.0),
+                "has_hand_feed": bool(self.latest_hand_jpeg and time.time() - self.last_hand_img_time < 3.0),
+            }
+
+    # ── Điều khiển Tay Máy & Kẹp Chân Không từ Web ───────────────────────────
+    def trigger_gripper(self, state: bool) -> Tuple[bool, str]:
+        if not self.cli_gripper.wait_for_service(timeout_sec=1.5):
+            return False, "Dịch vụ /gripper/switch không sẵn sàng"
+        req = SetBool.Request()
+        req.data = bool(state)
+        self.cli_gripper.call_async(req)
+        return True, "Đã gửi lệnh bật hút" if state else "Đã gửi lệnh nhả hút"
+
+    def trigger_arm_pose(self, pose_name: str) -> Tuple[bool, str]:
+        POSES = {
+            "STOW": [0.050, -1.5708, -2.3562],
+            "PRE_SLOT_1": [0.040, -1.1719, 2.3438],
+            "OBSERVE_1": [0.040, -0.8411, 1.6821],
+            "TOUCH_1": [0.015, -0.8411, 1.6821],
+            "PRE_SLOT_2": [0.300, -1.1719, 2.3438],
+            "OBSERVE_2": [0.300, -0.8411, 1.6821],
+            "TOUCH_2": [0.265, -0.8411, 1.6821],
+            "TRAY_HOVER": [0.080, -1.5378, -2.1268],
+            "TRAY_TOUCH": [0.045, -1.5378, -2.1268],
+            "PRE_SLOT_TIER_1": [0.040, -1.1719, 2.3438],
+            "OBSERVE_TIER_1": [0.040, -0.8411, 1.6821],
+            "TOUCH_TIER_1": [0.015, -0.8411, 1.6821],
+            "PRE_SLOT_TIER_2": [0.300, -1.1719, 2.3438],
+            "OBSERVE_TIER_2": [0.300, -0.8411, 1.6821],
+            "TOUCH_TIER_2": [0.265, -0.8411, 1.6821],
+            "STATION_IN_HOVER": [0.040, -0.8411, 1.6821],
+            "STATION_OUT_HOVER": [0.040, -0.8411, 1.6821],
+        }
+        p_upper = pose_name.upper()
+        if p_upper not in POSES:
+            return False, f"Tư thế '{pose_name}' không hợp lệ"
+
+        q = POSES[p_upper]
+        traj = JointTrajectory()
+        traj.joint_names = ["lift_joint", "shoulder_joint", "elbow_joint"]
+        p = JointTrajectoryPoint()
+        p.positions = q
+        p.time_from_start.sec = 2
+        traj.points.append(p)
+        self.pub_arm_traj.publish(traj)
+        return True, f"Đã gửi lệnh tay máy về tư thế {p_upper}"

@@ -251,3 +251,46 @@ slots:
       x: 1.75
       y: -0.28
       yaw: -1.5708
+  30:
+    rack: station_in
+    col: 0
+    tier: 1
+    tag_pose:
+      x: -2.40
+      y: 1.049
+      z: 0.15
+      yaw: 3.141592653589793
+    box_center_pose:
+      x: -2.40
+      y: 1.20
+      z: 0.17
+    staging_pose:
+      x: -2.40
+      y: 0.45
+      yaw: 1.5708
+    work_pose:
+      x: -2.40
+      y: 0.88
+      yaw: 1.5708
+  31:
+    rack: station_out
+    col: 0
+    tier: 1
+    tag_pose:
+      x: -2.40
+      y: -1.049
+      z: 0.15
+      yaw: 0.0
+    box_center_pose:
+      x: -2.40
+      y: -1.20
+      z: 0.17
+    staging_pose:
+      x: -2.40
+      y: -0.45
+      yaw: -1.5708
+    work_pose:
+      x: -2.40
+      y: -0.88
+      yaw: -1.5708
+

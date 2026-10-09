@@ -21,6 +21,7 @@ import json
 import rclpy
 from rclpy.node import Node
 from rclpy.action import ActionClient
+from rclpy.qos import QoSProfile, DurabilityPolicy, ReliabilityPolicy, qos_profile_sensor_data
 
 from nav2_msgs.action import NavigateToPose
 from wh_interfaces.action import DockToSlot, PickPlace
@@ -42,12 +43,14 @@ class SystemReadinessChecker(Node):
         self.seen_dock_cam = False
         self.seen_hand_cam = False
 
+        qos_map = QoSProfile(depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL, reliability=ReliabilityPolicy.RELIABLE)
+
         # Subscribers
         self.create_subscription(RobotStatus, "/robot_status", lambda m: setattr(self, "seen_robot_status", True), 10)
-        self.create_subscription(OccupancyGrid, "/map", lambda m: setattr(self, "seen_map", True), 10)
-        self.create_subscription(LaserScan, "/scan", lambda m: setattr(self, "seen_scan", True), 10)
-        self.create_subscription(Image, "/dock_camera/image_raw", lambda m: setattr(self, "seen_dock_cam", True), 10)
-        self.create_subscription(Image, "/hand_camera/image_raw", lambda m: setattr(self, "seen_hand_cam", True), 10)
+        self.create_subscription(OccupancyGrid, "/map", lambda m: setattr(self, "seen_map", True), qos_map)
+        self.create_subscription(LaserScan, "/scan", lambda m: setattr(self, "seen_scan", True), qos_profile_sensor_data)
+        self.create_subscription(Image, "/dock_camera/image_raw", lambda m: setattr(self, "seen_dock_cam", True), qos_profile_sensor_data)
+        self.create_subscription(Image, "/hand_camera/image_raw", lambda m: setattr(self, "seen_hand_cam", True), qos_profile_sensor_data)
 
         # Service Clients (navigation mode)
         if self.mode == "navigation":

@@ -52,7 +52,7 @@ class AutoInitialPose(Node):
         arm_msg = JointTrajectory()
         arm_msg.joint_names = ["lift_joint", "shoulder_joint", "elbow_joint"]
         pt = JointTrajectoryPoint()
-        pt.positions = [0.07, -1.8, 2.2]
+        pt.positions = [0.050, -1.5708, -2.3562]
         pt.time_from_start.sec = 1
         arm_msg.points = [pt]
         self.arm_pub.publish(arm_msg)

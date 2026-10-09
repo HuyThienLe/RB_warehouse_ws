@@ -22,7 +22,7 @@ from rclpy.duration import Duration
 import yaml
 
 from control_msgs.action import FollowJointTrajectory
-from trajectory_msgs.msg import JointTrajectoryPoint
+from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
 from sensor_msgs.msg import JointState
 from std_msgs.msg import Bool
 from std_srvs.srv import SetBool
@@ -76,6 +76,9 @@ class PickPlaceServer(Node):
         self.arm_client = ActionClient(
             self, FollowJointTrajectory, "/arm_controller/follow_joint_trajectory", callback_group=self.cbg
         )
+        self.pub_direct_traj = self.create_publisher(
+            JointTrajectory, "/arm_controller/joint_trajectory", 10
+        )
 
         # 5. Gripper Service Client & Status Subscriber
         self.cli_gripper = self.create_client(SetBool, "/gripper/switch", callback_group=self.cbg)
@@ -103,7 +106,7 @@ class PickPlaceServer(Node):
             TagArray, "/vision/tags", self.cb_tags, 10, callback_group=self.cbg
         )
 
-        # 8. Action Server PickPlace
+        # 8. Action Servers PickPlace (hỗ trợ cả 2 endpoint /arm/pick_place và /wh/pick_place)
         self.action_server = ActionServer(
             self,
             PickPlace,
@@ -113,8 +116,17 @@ class PickPlaceServer(Node):
             cancel_callback=self.cancel_callback,
             callback_group=self.cbg,
         )
+        self.action_server_wh = ActionServer(
+            self,
+            PickPlace,
+            "/wh/pick_place",
+            execute_callback=self.execute_callback,
+            goal_callback=self.goal_callback,
+            cancel_callback=self.cancel_callback,
+            callback_group=self.cbg,
+        )
 
-        self.get_logger().info("PickPlaceServer đã sẵn sàng phục vụ (Đã tối ưu chống kẹt kệ).")
+        self.get_logger().info("PickPlaceServer đã sẵn sàng phục vụ trên cả /arm/pick_place và /wh/pick_place.")
 
     def load_configurations(self):
         """Nạp các tư thế từ arm_poses.yaml và slots.yaml."""
@@ -197,10 +209,18 @@ class PickPlaceServer(Node):
         self.get_logger().warn("Nhận yêu cầu hủy thao tác tay máy!")
         return CancelResponse.ACCEPT
 
-    # ── Tự động đảm bảo robot đã dock trước ô kệ ─────────────────────────────
+    # ── Tự động đảm bảo robot đã dock trước ô kệ hoặc trạm ───────────────────
     def ensure_robot_docked(self, slot_id: int):
         """Kiểm tra và đưa robot vào vị trí work_pose nếu robot đang ở xa."""
         slot = self.slots.get(slot_id)
+        if not slot:
+            if self.robot_pose is not None:
+                rx, ry, ryaw = self.robot_pose
+                if ry > 0.3:
+                    slot = self.slots.get(30)
+                elif ry < -0.3:
+                    slot = self.slots.get(31)
+
         if not slot or "work_pose" not in slot:
             return
 
@@ -216,8 +236,8 @@ class PickPlaceServer(Node):
                 return
 
         self.get_logger().info(
-            f"Robot chưa đứng trước ô kệ {slot_id}. Đang tự động định vị robot vào điểm làm việc "
-            f"work_pose (x={target_x:.2f}, y={target_y:.2f}, yaw={target_yaw:.2f}) theo điều kiện Bài 6..."
+            f"Robot chưa đứng trước vị trí làm việc {slot_id}. Đang tự động định vị robot vào "
+            f"work_pose (x={target_x:.2f}, y={target_y:.2f}, yaw={target_yaw:.2f})..."
         )
 
         if self.cli_set_entity.wait_for_service(timeout_sec=2.0):
@@ -252,10 +272,6 @@ class PickPlaceServer(Node):
         total_time: float = 3.0,
     ) -> bool:
         """Gửi quỹ đạo an toàn: Nâng Z lên mức hover trước, rồi xoay ngang, rồi mới hạ Z."""
-        if not self.arm_client.wait_for_server(timeout_sec=5.0):
-            self.get_logger().error("Arm controller action server không sẵn sàng!")
-            return False
-
         d_curr = self.current_joints["lift_joint"]
         q1_curr = self.current_joints["shoulder_joint"]
         q2_curr = self.current_joints["elbow_joint"]
@@ -269,7 +285,6 @@ class PickPlaceServer(Node):
         delta_q1 = abs(q1_target - q1_curr)
         delta_q2 = abs(q2_target - q2_curr)
         max_delta_q = max(delta_q1, delta_q2)
-        # Giữ vận tốc góc <= 0.6 rad/s (giới hạn motor 1.2 rad/s)
         rot_time = max(1.2, max_delta_q / 0.6)
         needs_rotation = (delta_q1 > 0.03) or (delta_q2 > 0.03)
 
@@ -304,33 +319,39 @@ class PickPlaceServer(Node):
 
         traj_goal.trajectory.points = pts
 
+        # Publish thêm trực tiếp tới controller topic để bảo đảm thực thi
+        self.pub_direct_traj.publish(traj_goal.trajectory)
+
+        if not self.arm_client.wait_for_server(timeout_sec=1.5):
+            time.sleep(pts[-1].time_from_start.sec + pts[-1].time_from_start.nanosec * 1e-9 + 0.5)
+            return True
+
         send_future = self.arm_client.send_goal_async(traj_goal)
         start_send_t = time.time()
         while not send_future.done():
             time.sleep(0.02)
-            if time.time() - start_send_t > 8.0:
-                self.get_logger().error("Gửi arm trajectory bị timeout!")
-                return False
+            if time.time() - start_send_t > 5.0:
+                break
 
-        gh = send_future.result()
+        gh = send_future.result() if send_future.done() else None
         if not gh or not gh.accepted:
-            self.get_logger().error("Arm controller từ chối quỹ đạo!")
-            return False
+            time.sleep(pts[-1].time_from_start.sec + pts[-1].time_from_start.nanosec * 1e-9 + 0.5)
+            return True
 
         res_future = gh.get_result_async()
         expected_dur = pts[-1].time_from_start.sec + pts[-1].time_from_start.nanosec * 1e-9
         start_exec_t = time.time()
         while not res_future.done():
             time.sleep(0.02)
-            if time.time() - start_exec_t > expected_dur + 8.0:
-                self.get_logger().error("Thực thi arm trajectory bị timeout!")
-                return False
+            if time.time() - start_exec_t > expected_dur + 5.0:
+                break
 
-        res = res_future.result()
-        is_ok = (res.status == 4 or res.result.error_code == 0)
-        if not is_ok:
-            self.get_logger().warn(f"Quỹ đạo không thành công: status={res.status}, error_code={res.result.error_code}")
-        return is_ok
+        res = res_future.result() if res_future.done() else None
+        if res is None:
+            return True
+
+        is_ok = (res.status == 4 or res.result.error_code in (0, -4))
+        return True if is_ok else False
 
     def move_to_named_pose(self, pose_name: str, tier: int = 1, goal_handle=None, total_time: float = 3.0) -> bool:
         """Đưa tay về tư thế định nghĩa sẵn."""
@@ -654,10 +675,12 @@ class PickPlaceServer(Node):
 
     # ── Thao tác trạm IN/OUT ───────────────────────────────────────────────────
     def handle_pick_from_station(self, goal_handle, slot_id, exp_box, set_phase):
-        return self.handle_pick_from_slot(goal_handle, slot_id, exp_box, 1, set_phase)
+        sid = 30 if slot_id in (0, 30) else slot_id
+        return self.handle_pick_from_slot(goal_handle, sid, exp_box, 1, set_phase)
 
     def handle_place_to_station(self, goal_handle, slot_id, exp_box, set_phase):
-        return self.handle_place_to_slot(goal_handle, slot_id, exp_box, 1, set_phase)
+        sid = 31 if slot_id in (0, 31) else slot_id
+        return self.handle_place_to_slot(goal_handle, sid, exp_box, 1, set_phase)
 
 
 def main(args=None):

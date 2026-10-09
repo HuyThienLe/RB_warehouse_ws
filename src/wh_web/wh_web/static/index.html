@@ -174,7 +174,7 @@
               </button>
             </div>
 
-            <!-- Khối Teleop Điều Khiển Thủ Công (Watchdog 0.3s) -->
+            <!-- Khối Điều Khiển Teleop -->
             <div class="teleop-section">
               <div class="teleop-header">
                 <h3>Điều Khiển Robot Thủ Công (Teleop)</h3>
@@ -199,6 +199,148 @@
               </div>
             </div>
           </div>
+
+          <!-- Thẻ Giám Sát Vị Trí Hàng Vào / Ra (Trạm IN & OUT) -->
+          <div class="card stations-card">
+            <div class="card-header">
+              <h2>Vị Trí Hàng Vào / Ra (Trạm IN - OUT)</h2>
+              <span class="badge highlight">2 Trạm Sẵn Sàng</span>
+            </div>
+
+            <div class="stations-grid">
+              <!-- Trạm Hàng Vào (IN) -->
+              <div class="station-box station-in-box">
+                <div class="station-header">
+                  <span class="station-badge in">TRẠM IN (HÀNG VÀO)</span>
+                  <span class="station-tag">Tag #30</span>
+                </div>
+                <div class="station-coords">Tọa độ bàn: <strong>(-2.40, 1.20)</strong></div>
+                <p class="station-desc">Nơi nhập hàng vào kho. Robot đến trạm IN gắp hộp và xếp lên kệ.</p>
+                <div class="station-action-row">
+                  <button class="btn-sm btn-primary w-100" onclick="quickNavToInbound()">
+                    📥 Đến Lấy Hàng Bỏ Lên Kệ
+                  </button>
+                </div>
+              </div>
+
+              <!-- Trạm Hàng Ra (OUT) -->
+              <div class="station-box station-out-box">
+                <div class="station-header">
+                  <span class="station-badge out">TRẠM OUT (HÀNG RA)</span>
+                  <span class="station-tag">Tag #31</span>
+                </div>
+                <div class="station-coords">Tọa độ bàn: <strong>(-2.40, -1.20)</strong></div>
+                <p class="station-desc">Nơi xuất hàng ra khỏi kho. Robot lấy thùng từ kệ và mang ra trạm OUT.</p>
+                <div class="station-action-row">
+                  <button class="btn-sm btn-secondary w-100" onclick="quickNavToOutbound()">
+                    📤 Đến Xuất Hàng Ra Trạm
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB: CAMERA & THỊ GIÁC (Vision & Image Processing) -->
+    <section class="tab-pane" id="tab-vision">
+      <div class="card vision-header-card">
+        <div class="card-header">
+          <div>
+            <h2>Xử Lý Ảnh & Giám Sát Thị Giác (Live Vision Streams)</h2>
+            <p class="section-subtitle">Luồng video trực tiếp từ Dock Camera (dò trạm & ô kệ) và Hand Camera (dò hộp hàng & tay gắp)</p>
+          </div>
+          <div class="vision-actions">
+            <button class="btn-sm btn-secondary" onclick="refreshVisionStreams()">🔄 Làm mới luồng</button>
+            <span class="live-indicator"><span class="pulse-dot"></span> LIVE MJPEG</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="vision-streams-grid">
+        <!-- Luồng Camera Gầm (Dock Camera) -->
+        <div class="card camera-card">
+          <div class="card-header">
+            <div class="camera-title-group">
+              <span class="camera-badge">CAMERA GẦM (DOCK)</span>
+              <h3>Dò Trạm Vào/Ra & Ô Kệ</h3>
+            </div>
+            <div class="camera-meta">
+              <span class="badge" id="dock-cam-fps">30 FPS</span>
+              <button class="btn-icon" onclick="snapshotCamera('dock')" title="Tải ảnh tức thời">📷</button>
+            </div>
+          </div>
+          <div class="camera-feed-wrapper">
+            <img id="dock-stream-img" src="/api/vision/dock/stream" alt="Dock Camera Stream" class="camera-stream-img" onerror="onStreamError(this, 'dock')">
+            <div class="camera-overlay">
+              <div class="cam-crosshair"></div>
+              <div class="cam-tags-hud" id="dock-tags-hud">
+                <span class="hud-item">Đang quét ArUco Tag (0-11, 30, 31)...</span>
+              </div>
+            </div>
+          </div>
+          <div class="camera-details">
+            <div class="cam-info-row">
+              <span>Độ phân giải: <strong>640×480</strong></span>
+              <span>Góc nhìn: <strong>80° FOV</strong></span>
+              <span>Mục tiêu: <strong>Kệ 0-11 • Trạm IN 30 • Trạm OUT 31</strong></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Luồng Camera Tay Gắp (Hand Camera) -->
+        <div class="card camera-card">
+          <div class="card-header">
+            <div class="camera-title-group">
+              <span class="camera-badge highlight">CAMERA TAY GẮP (HAND)</span>
+              <h3>Dò Hộp Hàng & Căn Chỉnh Gắp</h3>
+            </div>
+            <div class="camera-meta">
+              <span class="badge" id="hand-cam-fps">30 FPS</span>
+              <button class="btn-icon" onclick="snapshotCamera('hand')" title="Tải ảnh tức thời">📷</button>
+            </div>
+          </div>
+          <div class="camera-feed-wrapper">
+            <img id="hand-stream-img" src="/api/vision/hand/stream" alt="Hand Camera Stream" class="camera-stream-img" onerror="onStreamError(this, 'hand')">
+            <div class="camera-overlay">
+              <div class="cam-crosshair"></div>
+              <div class="cam-tags-hud" id="hand-tags-hud">
+                <span class="hud-item">Đang quét ArUco Tag hộp (20-39)...</span>
+              </div>
+            </div>
+          </div>
+          <div class="camera-details">
+            <div class="cam-info-row">
+              <span>Độ phân giải: <strong>640×480</strong></span>
+              <span>Góc nhìn: <strong>Eye-in-Hand</strong></span>
+              <span>Trạng thái gắp: <strong id="cam-grasp-status">Chưa gắp</strong></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bảng Thống kê Nhận diện Dấu ArUco Thời Gian Thực -->
+      <div class="card mt-4">
+        <div class="card-header">
+          <h2>Danh Sách Dấu ArUco Đang Nhận Diện Được</h2>
+          <span class="badge" id="tags-count-badge">0 Thẻ nhìn thấy</span>
+        </div>
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>ID Tag</th>
+                <th>Phân loại</th>
+                <th>Nguồn Camera</th>
+                <th>Khoảng cách tới tay/xe</th>
+                <th>Sai số tái chiếu • Cập nhật</th>
+              </tr>
+            </thead>
+            <tbody id="vision-tags-table-body">
+              <tr><td colspan="5" class="text-center">Chưa phát hiện mã ArUco nào trong tầm nhìn hiện tại.</td></tr>
+            </tbody>
+          </table>
         </div>
       </div>
     </section>
@@ -330,17 +472,85 @@
               <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M12 5v14M5 12l7 7 7-7"/>
               </svg>
-              <span>NHẬP KHO (INBOUND)</span>
+              <span>LẤY HÀNG TRẠM IN BỎ LÊN KỆ (NHẬP KHO)</span>
             </button>
 
             <button type="button" class="btn-submit btn-outbound" onclick="submitOutboundOrder()">
               <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M12 19V5M5 12l7-7 7 7"/>
               </svg>
-              <span>XUẤT KHO (OUTBOUND)</span>
+              <span>LẤY HÀNG TỪ KỆ XUẤT RA TRẠM OUT (XUẤT KHO)</span>
             </button>
           </div>
         </form>
+      </div>
+
+      <!-- Thẻ Điều Khiển Tay Gắp & Cánh Tay Thủ Công -->
+      <div class="card mt-4 manual-arm-card">
+        <div class="card-header">
+          <div>
+            <h2>Điều Khiển Cánh Tay SCARA & Tay Gắp Thủ Công</h2>
+            <p class="section-subtitle">Can thiệp khẩn cấp hoặc kiểm tra lực hút / tư thế tay máy</p>
+          </div>
+          <span class="status-pill idle" id="manual-gripper-badge">Tay gắp: OFF</span>
+        </div>
+
+        <div class="manual-arm-body">
+          <!-- Điều khiển tay gắp -->
+          <div class="arm-control-group">
+            <h3>Cơ chế Bám dính / Hút chân không</h3>
+            <div class="btn-grid-2">
+              <button class="btn-arm-action btn-grip-on" onclick="triggerWebGripper(true)">
+                <span class="arm-btn-icon">🧲</span>
+                <div>
+                  <strong>BẬT TAY GẮP (HÚT/KẸP)</strong>
+                  <div class="btn-sub">Khóa cứng hộp gần nhất</div>
+                </div>
+              </button>
+              <button class="btn-arm-action btn-grip-off" onclick="triggerWebGripper(false)">
+                <span class="arm-btn-icon">❌</span>
+                <div>
+                  <strong>TẮT TAY GẮP (NHẢ HỘP)</strong>
+                  <div class="btn-sub">Ngắt hút để nhả hàng</div>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          <!-- Các tư thế cánh tay nhanh -->
+          <div class="arm-control-group mt-3">
+            <h3>Tư Thế Cánh Tay Cấu Hình Sẵn (Presets)</h3>
+            <div class="arm-poses-grid">
+              <button class="btn-pose" onclick="triggerWebPose('STOW')">
+                <span>⌂</span> STOW (Gấp Gọn)
+              </button>
+              <button class="btn-pose" onclick="triggerWebPose('TRAY_HOVER')">
+                <span>📦</span> TRAY_HOVER (Treo Khay)
+              </button>
+              <button class="btn-pose" onclick="triggerWebPose('TRAY_TOUCH')">
+                <span>📥</span> TRAY_TOUCH (Khay Xe)
+              </button>
+              <button class="btn-pose" onclick="triggerWebPose('OBSERVE_TIER_1')">
+                <span>🔍</span> Kệ Tầng 1 (Hover)
+              </button>
+              <button class="btn-pose" onclick="triggerWebPose('TOUCH_TIER_1')">
+                <span>👇</span> Kệ Tầng 1 (Chạm Hộp)
+              </button>
+              <button class="btn-pose" onclick="triggerWebPose('OBSERVE_TIER_2')">
+                <span>🔍</span> Kệ Tầng 2 (Hover)
+              </button>
+              <button class="btn-pose" onclick="triggerWebPose('TOUCH_TIER_2')">
+                <span>👇</span> Kệ Tầng 2 (Chạm Hộp)
+              </button>
+              <button class="btn-pose" onclick="triggerWebPose('STATION_IN_HOVER')">
+                <span>📥</span> Vươn Trạm IN
+              </button>
+              <button class="btn-pose" onclick="triggerWebPose('STATION_OUT_HOVER')">
+                <span>📤</span> Vươn Trạm OUT
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -437,6 +647,14 @@
         <rect x="3" y="14" width="7" height="7"/>
       </svg>
       <span>Tổng quan</span>
+    </button>
+
+    <button class="nav-item" onclick="switchTab('tab-vision', this)">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+        <circle cx="12" cy="13" r="4"/>
+      </svg>
+      <span>Thị giác</span>
     </button>
 
     <button class="nav-item" onclick="switchTab('tab-inventory', this)">
