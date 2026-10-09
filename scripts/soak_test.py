@@ -114,8 +114,8 @@ class SoakMonitorNode(Node):
                         self.last_robot_move_time = time.time()
 
     def _cb_status(self, msg: RobotStatus):
-        step = msg.fsm_step or msg.state
-        if step != self.fsm_step:
+        step = getattr(msg, "fsm_step", None) or getattr(msg, "state", "")
+        if step and step != self.fsm_step:
             self.fsm_step = step
             self.last_fsm_change_time = time.time()
 
