@@ -72,12 +72,12 @@ Theo quy tắc cứng mục 10.1:
   4. Bộ kiểm thử `soak_test.py` dùng `tasks.get("active")` trên kết quả dạng danh sách và chỉ chờ trạng thái `"DONE"`, trong khi hệ thống gán trạng thái hoàn tất là `"SUCCEEDED"`.
 - **Nguyên nhân gốc:** Khớp camera `dock_camera_joint` thiếu góc nghiêng chúc xuống để bao quát tầm thấp; sai tên thuộc tính trong `web_bridge.py`; thiếu chuẩn hóa trạng thái hoàn thành trong harness test.
 - **Cách sửa:**
-  1. `src/wh_description/urdf/sensors.xacro`: Điều chỉnh `dock_camera_joint` nghiêng chúc xuống 11.5° (`rpy="0 0.20 0"`), mở rộng trường nhìn thấp xuống Z=0.085m, thu trọn vẹn cả tag tầng 1 (Z=0.11m) và tầng 2 (Z=0.36m).
+  1. `src/wh_description/urdf/sensors.xacro`: Điều chỉnh `dock_camera_joint` nghiêng chúc xuống 0.10 rad (~5.7°) (`rpy="0 0.10 0"`), mở rộng trường nhìn thấp, thu trọn vẹn và cân bằng cả tag tầng 1 (Z=0.11m, y ≈ 408px) và tầng 2 (Z=0.36m, y ≈ 87px).
   2. `src/wh_web/wh_web/web_bridge.py`: Truy cập an toàn trường `reproj_error_px`.
   3. `scripts/soak_test.py`: Hỗ trợ duyệt cả list và dict từ `/api/tasks`, chấp nhận trạng thái `"SUCCEEDED"`, dọn sạch triệt để các tiến trình bằng `pkill -9 -f warehouse_ws`.
 - **Cách kiểm chứng:**
-  - Tag 0 và Tag 3 đều hiển thị đầy đủ, nguyên vẹn trên ảnh camera dock.
+  - Tag 0 và Tag 3 đều hiển thị đầy đủ, nguyên vẹn trên ảnh camera dock trong khung hình 480p.
   - Tác vụ docking và đơn xuất/nhập hoàn thành trọn vẹn.
-- **Git Commit:** `3c68380`
+- **Git Commit:** `90bd219`
 
 
