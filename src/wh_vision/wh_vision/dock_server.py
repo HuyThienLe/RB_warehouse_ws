@@ -120,15 +120,27 @@ class DockServer(Node):
             self.latest_tags[tag.id] = (tag, now_sec)
         self.last_tag_time = now_sec
 
+    def get_column_partner_tag(self, tag_id: int) -> Optional[int]:
+        """Lấy tag cùng cột (tầng đối diện) để dự phòng khi một tầng bị che/khuất mép."""
+        if 0 <= tag_id <= 2 or 6 <= tag_id <= 8:
+            return tag_id + 3
+        elif 3 <= tag_id <= 5 or 9 <= tag_id <= 11:
+            return tag_id - 3
+        return None
+
     def verify_slot(self, expected_id: int) -> bool:
         """Kiểm tra tag ID ô kệ hiện tại có đúng id yêu cầu không."""
         now_sec = self.get_clock().now().nanoseconds * 1e-9
-        if expected_id not in self.latest_tags:
-            return False
-        tag, stamp = self.latest_tags[expected_id]
-        if (now_sec - stamp) > 1.0:
-            return False
-        return tag.id == expected_id
+        if expected_id in self.latest_tags:
+            tag, stamp = self.latest_tags[expected_id]
+            if (now_sec - stamp) <= 1.5 and tag.id == expected_id:
+                return True
+        alt_id = self.get_column_partner_tag(expected_id)
+        if alt_id is not None and alt_id in self.latest_tags:
+            tag, stamp = self.latest_tags[alt_id]
+            if (now_sec - stamp) <= 1.5 and tag.id == alt_id:
+                return True
+        return False
 
     def goal_callback(self, goal_request):
         self.get_logger().info(f"Nhận yêu cầu DockToSlot: slot_tag_id={goal_request.slot_tag_id}")
@@ -217,9 +229,16 @@ class DockServer(Node):
                 self.get_logger().error(result.message)
                 return result
 
-            # Tra cứu tag yêu cầu
+            # Tra cứu tag yêu cầu (với dự phòng tag cùng cột kệ)
             tag_data = self.latest_tags.get(slot_id, None)
             is_tag_fresh = (tag_data is not None) and ((now_sec - tag_data[1]) < tag_lost_timeout)
+            if not is_tag_fresh:
+                alt_id = self.get_column_partner_tag(slot_id)
+                if alt_id is not None:
+                    alt_data = self.latest_tags.get(alt_id, None)
+                    if (alt_data is not None) and ((now_sec - alt_data[1]) < tag_lost_timeout):
+                        tag_data = alt_data
+                        is_tag_fresh = True
 
             if not is_tag_fresh:
                 consec_ok = 0
