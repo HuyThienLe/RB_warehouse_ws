@@ -1,0 +1,8 @@
+string task_type
+string item_code
+uint8 priority
+uint32 quantity
+---
+bool success
+uint32 task_id
+string message

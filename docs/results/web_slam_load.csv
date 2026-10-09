@@ -1,0 +1,2 @@
+timestamp,layers_enabled,duration_sec,scan_hz,map_hz,robot_hz,path_hz,bandwidth_kbps,bandwidth_kbs,cpu_percent,verdict
+2026-10-09T09:55:07,all_layers_active,10.07,4.86,0.89,9.83,1.89,189.39,23.67,3.0,PASS

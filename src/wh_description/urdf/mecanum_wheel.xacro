@@ -1,0 +1,101 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  
+  <xacro:macro name="mecanum_wheel" params="prefix x_reflect y_reflect roller_dir">
+    <link name="wheel_${prefix}_link">
+      <visual>
+        
+        <origin xyz="0 0 0" rpy="${pi/2.0} 0 0"/>
+        <geometry>
+          <cylinder radius="${p['robot']['wheels']['radius']}"
+                    length="${p['robot']['wheels']['width']}"/>
+        </geometry>
+        <material name="wheel_rim">
+          <color rgba="0.1 0.1 0.1 1.0"/>
+        </material>
+      </visual>
+
+      
+      <visual>
+        <origin xyz="0 0 0" rpy="0 ${roller_dir * pi/4.0} 0"/>
+        <geometry>
+          <box size="0.08 0.042 0.012"/>
+        </geometry>
+        <material name="roller_color">
+          <color rgba="0.9 0.5 0.1 1.0"/>
+        </material>
+      </visual>
+      <visual>
+        <origin xyz="0 0 0" rpy="0 ${-roller_dir * pi/4.0} 0"/>
+        <geometry>
+          <box size="0.08 0.042 0.012"/>
+        </geometry>
+        <material name="roller_color"/>
+      </visual>
+
+      <!-- Nắp chụp tâm mâm bánh xe (Axle Hub Cap màu bạc kim loại) -->
+      <visual>
+        <origin xyz="0 ${y_reflect * 0.021} 0" rpy="${pi/2.0} 0 0"/>
+        <geometry>
+          <cylinder radius="0.020" length="0.004"/>
+        </geometry>
+        <material name="hub_cap_mat">
+          <color rgba="0.75 0.78 0.82 1.0"/>
+        </material>
+      </visual>
+      <!-- Khớp nối moay-ơ trục motor ở mặt trong bánh xe -->
+      <visual>
+        <origin xyz="0 ${-y_reflect * 0.020} 0" rpy="${pi/2.0} 0 0"/>
+        <geometry>
+          <cylinder radius="0.022" length="0.006"/>
+        </geometry>
+        <material name="hub_coupling_mat">
+          <color rgba="0.25 0.28 0.32 1.0"/>
+        </material>
+      </visual>
+
+      
+
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <sphere radius="${p['robot']['wheels']['radius']}"/>
+        </geometry>
+      </collision>
+
+      <inertial>
+        <origin xyz="0 0 0" rpy="${pi/2.0} 0 0"/>
+        <mass value="0.3"/>
+        <xacro:cyl_inertia_y m="0.3"
+                             r="${p['robot']['wheels']['radius']}"
+                             w="${p['robot']['wheels']['width']}"/>
+      </inertial>
+    </link>
+
+    <joint name="wheel_${prefix}_joint" type="continuous">
+      <parent link="base_link"/>
+      <child link="wheel_${prefix}_link"/>
+      <origin xyz="${x_reflect * 0.15} ${y_reflect * 0.19} -0.04" rpy="0 0 0"/>
+      <axis xyz="0 1 0"/>
+      <limit effort="10.0" velocity="20.0"/>
+      <dynamics damping="0.05" friction="0.05"/>
+    </joint>
+
+    <gazebo reference="wheel_${prefix}_link">
+      <material>Gazebo/Orange</material>
+      <mu1>0.0</mu1>
+      <mu2>0.0</mu2>
+      <kp>1000000.0</kp>
+      <kd>10.0</kd>
+      <minDepth>0.001</minDepth>
+    </gazebo>
+  </xacro:macro>
+
+  
+  <xacro:mecanum_wheel prefix="fl" x_reflect="1"  y_reflect="1"  roller_dir="1"/>
+  <xacro:mecanum_wheel prefix="fr" x_reflect="1"  y_reflect="-1" roller_dir="-1"/>
+  <xacro:mecanum_wheel prefix="rl" x_reflect="-1" y_reflect="1"  roller_dir="-1"/>
+  <xacro:mecanum_wheel prefix="rr" x_reflect="-1" y_reflect="-1" roller_dir="1"/>
+
+</robot>

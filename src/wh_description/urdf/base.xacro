@@ -1,0 +1,254 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  
+  <link name="base_footprint"/>
+
+  
+  <joint name="base_footprint_joint" type="fixed">
+    <parent link="base_footprint"/>
+    <child link="base_link"/>
+    <origin xyz="0 0 0.09" rpy="0 0 0"/>
+  </joint>
+
+  
+  <link name="base_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="${p['robot']['chassis']['length']} ${p['robot']['chassis']['width']} ${p['robot']['chassis']['height']}"/>
+      </geometry>
+      <material name="chassis_color">
+        <color rgba="0.18 0.22 0.28 1.0"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="${p['robot']['chassis']['length']} ${p['robot']['chassis']['width']} ${p['robot']['chassis']['height']}"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="${p['robot']['chassis']['mass']}"/>
+      <xacro:box_inertia m="${p['robot']['chassis']['mass']}"
+                         x="${p['robot']['chassis']['length']}"
+                         y="${p['robot']['chassis']['width']}"
+                         z="${p['robot']['chassis']['height']}"/>
+    </inertial>
+  </link>
+
+  <gazebo reference="base_link">
+    <material>Gazebo/DarkGrey</material>
+    <mu1>0.05</mu1>
+    <mu2>0.05</mu2>
+    <kp>1000000.0</kp>
+    <kd>1.0</kd>
+  </gazebo>
+
+  
+  <!-- ======================================================== -->
+  <!-- 4 CỤM ĐỘNG CƠ TRUYỀN ĐỘNG BÁNH XE (MOTOR DRIVE PODS)       -->
+  <!-- ======================================================== -->
+  <!-- Cụm động cơ trước - trái (FL Motor) -->
+  <link name="motor_fl_mount">
+    <visual>
+      <!-- Mặt bích bắt bulông vào thành xe -->
+      <origin xyz="0 0.003 0" rpy="${pi/2.0} 0 0"/>
+      <geometry><box size="0.056 0.056 0.006"/></geometry>
+      <material name="motor_flange_mat"><color rgba="0.22 0.25 0.28 1.0"/></material>
+    </visual>
+    <visual>
+      <!-- Củ động cơ servo / hộp số giảm tốc hình trụ kim loại -->
+      <origin xyz="0 0.015 0" rpy="${pi/2.0} 0 0"/>
+      <geometry><cylinder radius="0.026" length="0.024"/></geometry>
+      <material name="motor_can_mat"><color rgba="0.32 0.35 0.40 1.0"/></material>
+    </visual>
+    <visual>
+      <!-- Vòng bích bạc đạn nối vào vành bánh xe -->
+      <origin xyz="0 0.026 0" rpy="${pi/2.0} 0 0"/>
+      <geometry><cylinder radius="0.018" length="0.006"/></geometry>
+      <material name="motor_flange_mat"/>
+    </visual>
+  </link>
+  <joint name="motor_fl_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="motor_fl_mount"/>
+    <origin xyz="0.15 0.16 -0.04" rpy="0 0 0"/>
+  </joint>
+
+  <!-- Cụm động cơ trước - phải (FR Motor) -->
+  <link name="motor_fr_mount">
+    <visual>
+      <origin xyz="0 -0.003 0" rpy="${pi/2.0} 0 0"/>
+      <geometry><box size="0.056 0.056 0.006"/></geometry>
+      <material name="motor_flange_mat"/>
+    </visual>
+    <visual>
+      <origin xyz="0 -0.015 0" rpy="${pi/2.0} 0 0"/>
+      <geometry><cylinder radius="0.026" length="0.024"/></geometry>
+      <material name="motor_can_mat"/>
+    </visual>
+    <visual>
+      <origin xyz="0 -0.026 0" rpy="${pi/2.0} 0 0"/>
+      <geometry><cylinder radius="0.018" length="0.006"/></geometry>
+      <material name="motor_flange_mat"/>
+    </visual>
+  </link>
+  <joint name="motor_fr_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="motor_fr_mount"/>
+    <origin xyz="0.15 -0.16 -0.04" rpy="0 0 0"/>
+  </joint>
+
+  <!-- Cụm động cơ sau - trái (RL Motor) -->
+  <link name="motor_rl_mount">
+    <visual>
+      <origin xyz="0 0.003 0" rpy="${pi/2.0} 0 0"/>
+      <geometry><box size="0.056 0.056 0.006"/></geometry>
+      <material name="motor_flange_mat"/>
+    </visual>
+    <visual>
+      <origin xyz="0 0.015 0" rpy="${pi/2.0} 0 0"/>
+      <geometry><cylinder radius="0.026" length="0.024"/></geometry>
+      <material name="motor_can_mat"/>
+    </visual>
+    <visual>
+      <origin xyz="0 0.026 0" rpy="${pi/2.0} 0 0"/>
+      <geometry><cylinder radius="0.018" length="0.006"/></geometry>
+      <material name="motor_flange_mat"/>
+    </visual>
+  </link>
+  <joint name="motor_rl_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="motor_rl_mount"/>
+    <origin xyz="-0.15 0.16 -0.04" rpy="0 0 0"/>
+  </joint>
+
+  <!-- Cụm động cơ sau - phải (RR Motor) -->
+  <link name="motor_rr_mount">
+    <visual>
+      <origin xyz="0 -0.003 0" rpy="${pi/2.0} 0 0"/>
+      <geometry><box size="0.056 0.056 0.006"/></geometry>
+      <material name="motor_flange_mat"/>
+    </visual>
+    <visual>
+      <origin xyz="0 -0.015 0" rpy="${pi/2.0} 0 0"/>
+      <geometry><cylinder radius="0.026" length="0.024"/></geometry>
+      <material name="motor_can_mat"/>
+    </visual>
+    <visual>
+      <origin xyz="0 -0.026 0" rpy="${pi/2.0} 0 0"/>
+      <geometry><cylinder radius="0.018" length="0.006"/></geometry>
+      <material name="motor_flange_mat"/>
+    </visual>
+  </link>
+  <joint name="motor_rr_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="motor_rr_mount"/>
+    <origin xyz="-0.15 -0.16 -0.04" rpy="0 0 0"/>
+  </joint>
+
+  <gazebo reference="motor_fl_mount"><material>Gazebo/Grey</material></gazebo>
+  <gazebo reference="motor_fr_mount"><material>Gazebo/Grey</material></gazebo>
+  <gazebo reference="motor_rl_mount"><material>Gazebo/Grey</material></gazebo>
+  <gazebo reference="motor_rr_mount"><material>Gazebo/Grey</material></gazebo>
+
+  <!-- ======================================================== -->
+  <!-- KHAY ĐỰNG HÀNG TRÊN THÂN XE (ON-BOARD CARGO TRAY)        -->
+  <!-- ======================================================== -->
+  <joint name="tray_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="tray_link"/>
+    <!-- Đặt tại bên phải thân xe trong góc làm việc 190 độ của SCARA (x=0.04m, y=-0.09m, z=0.063m) -->
+    <origin xyz="0.04 -0.09 0.063" rpy="0 0 0"/>
+  </joint>
+
+  <link name="tray_link">
+    <!-- Đáy khay đựng hàng (kích thước 12x12 cm vừa vặn cho hộp 6x6 cm) -->
+    <visual>
+      <origin xyz="0 0 0.003" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.12 0.12 0.006"/>
+      </geometry>
+      <material name="tray_body_mat">
+        <color rgba="0.18 0.24 0.32 1.0"/>
+      </material>
+    </visual>
+    <!-- Lớp đệm cao su lòng khay chống trượt hộp hàng -->
+    <visual>
+      <origin xyz="0 0 0.0065" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.108 0.108 0.002"/>
+      </geometry>
+      <material name="tray_mat_rubber">
+        <color rgba="0.08 0.08 0.08 1.0"/>
+      </material>
+    </visual>
+    <!-- Thành trước khay (Front Lip) -->
+    <visual>
+      <origin xyz="0.057 0 0.012" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.006 0.12 0.018"/>
+      </geometry>
+      <material name="tray_body_mat"/>
+    </visual>
+    <!-- Thành sau khay (Rear Lip) -->
+    <visual>
+      <origin xyz="-0.057 0 0.012" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.006 0.12 0.018"/>
+      </geometry>
+      <material name="tray_body_mat"/>
+    </visual>
+    <!-- Thành trái khay (Left Wall) -->
+    <visual>
+      <origin xyz="0 0.057 0.012" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.108 0.006 0.018"/>
+      </geometry>
+      <material name="tray_body_mat"/>
+    </visual>
+    <!-- Thành phải khay (Right Wall) -->
+    <visual>
+      <origin xyz="0 -0.057 0.012" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.108 0.006 0.018"/>
+      </geometry>
+      <material name="tray_body_mat"/>
+    </visual>
+    <!-- Viền phản quang an toàn màu cam trên miệng khay -->
+    <visual>
+      <origin xyz="0 0.057 0.0215" rpy="0 0 0"/>
+      <geometry><box size="0.12 0.008 0.002"/></geometry>
+      <material name="tray_rim_mat"><color rgba="0.95 0.45 0.10 1.0"/></material>
+    </visual>
+    <visual>
+      <origin xyz="0 -0.057 0.0215" rpy="0 0 0"/>
+      <geometry><box size="0.12 0.008 0.002"/></geometry>
+      <material name="tray_rim_mat"/>
+    </visual>
+    <!-- Collision day khay (chi giu collision mat day de do hop, khong de thanh khay va quet tay kep) -->
+    <collision>
+      <origin xyz="0 0 0.003" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.12 0.12 0.006"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <origin xyz="0 0 0.010" rpy="0 0 0"/>
+      <mass value="0.25"/>
+      <xacro:box_inertia m="0.25" x="0.14" y="0.20" z="0.024"/>
+    </inertial>
+  </link>
+
+  <gazebo reference="tray_link">
+    <material>Gazebo/DarkGrey</material>
+    <mu1>50.0</mu1>
+    <mu2>50.0</mu2>
+    <kp>1000000.0</kp>
+    <kd>1.0</kd>
+    <selfCollide>false</selfCollide>
+  </gazebo>
+
+</robot>

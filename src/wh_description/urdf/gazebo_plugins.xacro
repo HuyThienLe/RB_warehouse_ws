@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  
+  <gazebo>
+    <plugin name="planar_move" filename="libgazebo_ros_planar_move.so">
+      <ros>
+        <remapping>cmd_vel:=cmd_vel</remapping>
+        <remapping>odom:=odom_gt</remapping>
+      </ros>
+      <update_rate>100</update_rate>
+      <publish_rate>50</publish_rate>
+      <publish_odom>true</publish_odom>
+      
+      <publish_odom_tf>false</publish_odom_tf>
+      <odometry_frame>odom</odometry_frame>
+      <robot_base_frame>base_footprint</robot_base_frame>
+      <covariance_x>0.0001</covariance_x>
+      <covariance_y>0.0001</covariance_y>
+      <covariance_yaw>0.0001</covariance_yaw>
+    </plugin>
+  </gazebo>
+
+  <!-- Parallel Gripper Attachment Plugin (Gazebo object attacher) -->
+  <gazebo>
+    <plugin name="parallel_gripper" filename="libgazebo_ros_vacuum_gripper.so">
+      <ros>
+        <namespace>gripper</namespace>
+        <remapping>switch:=switch_raw</remapping>
+        <remapping>grasping:=grasping_raw</remapping>
+      </ros>
+      <link_name>gripper_grasp_link</link_name>
+      <max_distance>0.08</max_distance>
+      <fixed>ground_plane</fixed>
+      <fixed>rack_a_level_1_plank</fixed>
+      <fixed>rack_a_level_2_plank</fixed>
+      <fixed>rack_b_level_1_plank</fixed>
+      <fixed>rack_b_level_2_plank</fixed>
+      <fixed>shelf_tray_0</fixed>
+      <fixed>shelf_tray_1</fixed>
+    </plugin>
+  </gazebo>
+
+</robot>

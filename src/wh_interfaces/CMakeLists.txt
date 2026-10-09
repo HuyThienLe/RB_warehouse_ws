@@ -15,6 +15,9 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/TagArray.msg"
   "msg/RobotStatus.msg"
   "msg/Task.msg"
+  "srv/SpawnObstacle.srv"
+  "srv/SubmitTask.srv"
+  "srv/CancelTask.srv"
   "action/DockToSlot.action"
   "action/PickPlace.action"
   DEPENDENCIES geometry_msgs std_msgs

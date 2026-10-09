@@ -1,0 +1,30 @@
+# inventory_seed.yaml – Hộp đặt sẵn khi khởi động simulation
+# box_id: id của hộp (dùng ArUco tag 20-39)
+# slot_id: id tag ô kệ (0-11), hoặc đặt pose tuyệt đối
+
+boxes:
+  # 6 hộp trong kệ (ô 0, 1, 3, 6, 8, 10)
+  - box_id: 20
+    slot_id: 0    # rack_a, col 0, tier 1
+
+  - box_id: 21
+    slot_id: 1    # rack_a, col 1, tier 1
+
+  - box_id: 22
+    slot_id: 3    # rack_a, col 0, tier 2
+
+  - box_id: 23
+    slot_id: 6    # rack_b, col 0, tier 1
+
+  - box_id: 24
+    slot_id: 8    # rack_b, col 2, tier 1
+
+  - box_id: 25
+    slot_id: 10   # rack_b, col 1, tier 2
+
+  # 1 hộp ở trạm IN (id 26, đặt theo pose)
+  - box_id: 26
+    pose:
+      x: -2.40
+      y:  1.20
+      z:  0.17   # trên mặt bàn (table_h=0.15 + box_h/2=0.02)

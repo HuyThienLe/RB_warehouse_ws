@@ -1,0 +1,21 @@
+# servo_params.yaml – Tham số điều khiển Visual Servoing (PBVS) cho Mecanum
+dock_server:
+  ros__parameters:
+    target_standoff: 0.32          # m (khoảng cách cách mặt tag ô kệ khi đỗ chuẩn)
+    tol_dist: 0.003                # 3 mm (0.003 m)
+    tol_lat: 0.003                 # 3 mm (0.003 m)
+    tol_yaw: 0.025                 # 1.43 deg ~ 0.025 rad
+    v_max: 0.08                    # Giới hạn vận tốc tịnh tiến (m/s)
+    w_max: 0.15                    # Giới hạn vận tốc góc (rad/s)
+    safety_min_px: 0.28            # Khóa an toàn: cấm px < 0.28 m (dừng ngay tránh đâm kệ)
+    kp_x: 0.8                      # Hệ số tỉ lệ tiến lùi
+    kp_y: 0.8                      # Hệ số tỉ lệ dịch ngang
+    kp_w: 1.0                      # Hệ số tỉ lệ xoay góc
+    sign_x: 1.0                    # Dấu điều khiển vx (xác định qua calibrate_signs)
+    sign_y: 1.0                    # Dấu điều khiển vy
+    sign_w: 1.0                    # Dấu điều khiển wz (1.0 là hồi tiếp âm chuẩn: khi lệch CCW thì e_yaw < 0 -> wz < 0 để quay CW)
+    consecutive_frames_stop: 10    # Số frame liên tiếp thỏa dung sai để kết luận hoàn tất
+    timeout_sec: 25.0              # Timeout tổng của hành động dock (25s để kịp các ca lệch góc cực đại 10 độ)
+    tag_lost_timeout_sec: 1.0      # Thời gian mất tag trước khi kích hoạt hồi phục
+    max_retries: 2                 # Số lần thử lại sau khi lùi về vị trí chờ
+    cmd_topic: "/cmd_vel_servo"

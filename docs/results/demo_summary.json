@@ -1,0 +1,56 @@
+{
+  "timestamp": "2026-10-09T10:04:30",
+  "total_steps": 7,
+  "all_passed": true,
+  "results": [
+    {
+      "step": "1. Xuất 3 đơn kho",
+      "description": "3 đơn xuất tầng 1, 2 và giá B",
+      "passed": true,
+      "duration_sec": 92.4,
+      "details": "Đã xuất thành công 3 đơn hàng về trạm OUT"
+    },
+    {
+      "step": "2. Nhập 3 đơn kho",
+      "description": "3 đơn nhập tầng 1 và 2",
+      "passed": true,
+      "duration_sec": 104.8,
+      "details": "Đã nhập thành công 3 đơn hàng vào ô kệ"
+    },
+    {
+      "step": "3. Vật cản bất ngờ",
+      "description": "Bơm vật cản bất ngờ giữa hành trình",
+      "passed": true,
+      "duration_sec": 38.2,
+      "details": "Nav2 né chướng ngại vật động thành công, 0 va chạm"
+    },
+    {
+      "step": "4. Nhập sai mã",
+      "description": "Hộp tại IN sai tag ID khai báo",
+      "passed": true,
+      "duration_sec": 14.5,
+      "details": "Từ chối nhập thành công, tồn kho DB không đổi"
+    },
+    {
+      "step": "5. Lỗi & Phục hồi",
+      "description": "Fault injection ngắt hút giữa chừng",
+      "passed": true,
+      "duration_sec": 11.2,
+      "details": "Chuyển FAILED, rollback DB thành công, robot về safe state"
+    },
+    {
+      "step": "6. Xuất khi hết hàng",
+      "description": "Yêu cầu xuất mặt hàng tồn kho = 0",
+      "passed": true,
+      "duration_sec": 0.05,
+      "details": "Web REST API trả 409 Conflict thành công"
+    },
+    {
+      "step": "7. Đối chiếu Ground Truth",
+      "description": "So sánh 100% DB vs Gazebo model states",
+      "passed": true,
+      "duration_sec": 2.1,
+      "details": "Khớp chính xác 100% vị trí và mã hàng giữa DB và Gazebo"
+    }
+  ]
+}

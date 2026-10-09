@@ -1,0 +1,6 @@
+trial,target,obstacle_pos,min_distance_m,collision,status
+1,"(1.5, 0.0)","(0.0, 0.0)",0.537,False,PASS
+2,"(-2.0, 0.0)","(-0.5, 0.0)",0.602,False,PASS
+3,"(1.5, 0.3)","(0.2, 0.3)",0.305,False,PASS
+4,"(-2.0, -0.3)","(-0.2, -0.3)",0.442,False,PASS
+5,"(1.25, 0.0)","(0.5, 0.0)",0.476,False,PASS

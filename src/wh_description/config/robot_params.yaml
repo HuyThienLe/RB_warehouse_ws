@@ -24,26 +24,30 @@ robot:
     joint_limits:
       prismatic_z:
         min: 0.0
-        max: 0.35
+        max: 0.52
       shoulder_pan_q1:
-        min_deg: -150.0
-        max_deg: 150.0
-        min_rad: -2.617993877991494
-        max_rad: 2.617993877991494
+        min_deg: -95.0
+        max_deg: 95.0
+        min_rad: -1.658062789394613
+        max_rad: 1.658062789394613
       elbow_pan_q2:
         min_deg: -140.0
         max_deg: 140.0
         min_rad: -2.443460952792061
         max_rad: 2.443460952792061
     gripper:
-      type: "vacuum_gripper"
+      type: "parallel_gripper"
+      fingers: 2
+      jaw_width: 0.066     # Khoang cach giua 2 ma kep (m)
+      finger_length: 0.045 # Chieu dai ma kep (m)
+      max_grasp_distance: 0.08
   sensors:
     lidar:
       samples: 360
       frequency: 10.0  # Hz
-      range_min: 0.15  # m
+      range_min: 0.25  # m
       range_max: 12.0  # m
-      position: {x: 0.0, y: 0.0, z: 0.15}
+      position: {x: -0.15, y: 0.0, z: 0.076}
     imu:
       frequency: 100.0 # Hz
       position: {x: 0.0, y: 0.0, z: 0.05}

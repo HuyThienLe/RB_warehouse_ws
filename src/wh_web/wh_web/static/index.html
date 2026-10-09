@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Kho Thông Minh – Điều Phối Robot</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Header cố định -->
+  <header class="app-header">
+    <div class="header-left">
+      <div class="brand-logo">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+          <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+          <line x1="12" y1="22.08" x2="12" y2="12"/>
+        </svg>
+      </div>
+      <div>
+        <h1 class="brand-title">SMART WAREHOUSE</h1>
+        <div class="connection-status">
+          <span class="status-dot offline" id="ws-dot"></span>
+          <span id="ws-text">Đang kết nối...</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="header-right">
+      <!-- Chỉ báo Chế độ vận hành (Mapping vs Navigation) -->
+      <span class="mode-badge navigation" id="mode-badge" title="Chế độ vận hành hệ thống">NAV MODE</span>
+
+      <!-- Chỉ báo pin -->
+      <div class="battery-card" id="battery-card" title="Mức pin robot">
+        <div class="battery-icon">
+          <div class="battery-level" id="battery-fill" style="width: 100%;"></div>
+        </div>
+        <span class="battery-pct" id="battery-text">100%</span>
+      </div>
+
+      <!-- Nút E-STOP Đỏ To Nổi Bật -->
+      <button class="btn-estop" id="btn-estop" onclick="triggerEStop()">
+        <span class="estop-pulse"></span>
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5">
+          <circle cx="12" cy="12" r="10"/>
+          <rect x="9" y="9" width="6" height="6" fill="currentColor"/>
+        </svg>
+        <span>E-STOP</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Banner Cảnh báo E-STOP khi đang kích hoạt -->
+  <div class="estop-banner hidden" id="estop-banner">
+    <div class="estop-banner-content">
+      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+        <line x1="12" y1="9" x2="12" y2="13"/>
+        <line x1="12" y1="17" x2="12.01" y2="17"/>
+      </svg>
+      <span>ROBOT ĐÃ DỪNG KHẨN CẤP! Vui lòng kiểm tra an toàn cơ khí.</span>
+      <button class="btn-estop-reset-prompt" onclick="openResetModal()">Khôi phục hoạt động</button>
+    </div>
+  </div>
+
+  <!-- Nội dung các Tab -->
+  <main class="app-main">
+    <!-- TAB 1: TỔNG QUAN (Map & Trạng thái Robot & SLAM) -->
+    <section class="tab-pane active" id="tab-overview">
+      <div class="pane-grid-2">
+        <!-- Bản đồ 2D Canvas -->
+        <div class="card map-card">
+          <div class="card-header">
+            <div class="map-title-group">
+              <h2>Bản đồ Kho (Thời gian thực)</h2>
+              <span class="badge" id="map-mode-label">NAV</span>
+            </div>
+            <div class="map-controls">
+              <span class="badge" id="map-coords">(-2.40, 0.00)</span>
+              <button class="btn-icon" onclick="zoomMap(1.2)" title="Phóng to">+</button>
+              <button class="btn-icon" onclick="zoomMap(0.8)" title="Thu nhỏ">-</button>
+              <button class="btn-icon" onclick="resetMapView()" title="Căn giữa">⌂</button>
+            </div>
+          </div>
+
+          <!-- Thanh chọn các Lớp Bản Đồ (Layers) -->
+          <div class="layer-bar">
+            <label class="layer-item"><input type="checkbox" id="layer-lidar" checked onchange="toggleLayer('lidar')"> <span class="layer-dot lidar"></span> LiDAR</label>
+            <label class="layer-item"><input type="checkbox" id="layer-trail" checked onchange="toggleLayer('trail')"> <span class="layer-dot trail"></span> Quỹ đạo</label>
+            <label class="layer-item"><input type="checkbox" id="layer-path" checked onchange="toggleLayer('path')"> <span class="layer-dot path"></span> Đường đi</label>
+            <label class="layer-item"><input type="checkbox" id="layer-racks" checked onchange="toggleLayer('racks')"> <span class="layer-dot racks"></span> Ô kệ</label>
+            <label class="layer-item"><input type="checkbox" id="layer-robot" checked onchange="toggleLayer('robot')"> <span class="layer-dot robot"></span> Robot</label>
+          </div>
+
+          <div class="canvas-container" id="canvas-container">
+            <canvas id="map-canvas" width="280" height="200"></canvas>
+            <div class="map-legend">
+              <span class="legend-item"><span class="dot empty"></span> Ô Trống</span>
+              <span class="legend-item"><span class="dot full"></span> Có Hàng</span>
+              <span class="legend-item"><span class="dot reserved"></span> Đang Xử Lý</span>
+              <span class="legend-item"><span class="dot robot"></span> Robot</span>
+            </div>
+            <div class="map-meta-info" id="map-meta-info">
+              <span id="map-version-text">Bản đồ: v0</span> • <span id="map-size-text">280×200</span> • <span id="map-res-text">0.025m</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Cột Phải: Trạng Thái Robot & Điều Khiển SLAM/Teleop -->
+        <div class="overview-right-col">
+          <!-- Thẻ trạng thái Robot -->
+          <div class="card robot-card">
+            <div class="card-header">
+              <h2>Trạng thái Robot AGV-SCARA</h2>
+              <span class="status-pill idle" id="robot-state-badge">IDLE</span>
+            </div>
+
+            <div class="metrics-grid">
+              <div class="metric-box">
+                <span class="metric-label">Nhiệm vụ đang chạy</span>
+                <span class="metric-value highlight" id="robot-task-id">#0</span>
+              </div>
+              <div class="metric-box">
+                <span class="metric-label">Ô kệ thao tác</span>
+                <span class="metric-value" id="robot-slot-id">--</span>
+              </div>
+              <div class="metric-box">
+                <span class="metric-label">Hộp trên khay xe</span>
+                <span class="metric-value" id="robot-holding-box">Không</span>
+              </div>
+              <div class="metric-box">
+                <span class="metric-label">Góc quay Yaw</span>
+                <span class="metric-value" id="robot-yaw">0.0°</span>
+              </div>
+            </div>
+
+            <div class="speed-indicator">
+              <div class="speed-row">
+                <span>Vận tốc dài:</span>
+                <strong id="robot-speed-linear">0.00 m/s</strong>
+              </div>
+              <div class="speed-row">
+                <span>Vận tốc góc:</span>
+                <strong id="robot-speed-angular">0.00 rad/s</strong>
+              </div>
+            </div>
+
+            <!-- Lỗi gần nhất nếu có -->
+            <div class="error-notice hidden" id="robot-error-box">
+              <span class="error-title">Thông báo sự cố:</span>
+              <span class="error-text" id="robot-error-text"></span>
+            </div>
+          </div>
+
+          <!-- Thẻ Điều Khiển SLAM & Teleop -->
+          <div class="card slam-card" id="slam-card">
+            <div class="card-header">
+              <h2>Điều Khiển Dựng Map SLAM</h2>
+              <span class="badge" id="slam-status-badge">Sẵn sàng</span>
+            </div>
+
+            <div class="slam-actions-grid">
+              <button class="btn-sm btn-primary" onclick="openSaveMapModal()">
+                💾 Lưu Bản Đồ
+              </button>
+              <button class="btn-sm btn-secondary" id="btn-auto-mapper" onclick="toggleAutoMapper()">
+                🤖 Tự Động Quét
+              </button>
+              <button class="btn-sm btn-secondary" onclick="serializeSlamMap()">
+                📦 Serialize Map
+              </button>
+              <button class="btn-sm btn-danger-soft" onclick="openClearSlamModal()">
+                🗑️ Xóa Phiên SLAM
+              </button>
+            </div>
+
+            <!-- Khối Teleop Điều Khiển Thủ Công (Watchdog 0.3s) -->
+            <div class="teleop-section">
+              <div class="teleop-header">
+                <h3>Điều Khiển Robot Thủ Công (Teleop)</h3>
+                <span class="teleop-hint">Giữ nút để chạy (≤0.25 m/s, ≤0.6 rad/s)</span>
+              </div>
+              <div class="teleop-dpad">
+                <div class="teleop-row">
+                  <button class="btn-teleop" id="btn-teleop-rot-left" title="Xoay Trái">↺</button>
+                  <button class="btn-teleop" id="btn-teleop-fwd" title="Tiến">▲</button>
+                  <button class="btn-teleop" id="btn-teleop-rot-right" title="Xoay Phải">↻</button>
+                </div>
+                <div class="teleop-row">
+                  <button class="btn-teleop" id="btn-teleop-left" title="Trái">◄</button>
+                  <button class="btn-teleop btn-teleop-stop" id="btn-teleop-stop" title="Dừng">■</button>
+                  <button class="btn-teleop" id="btn-teleop-right" title="Phải">►</button>
+                </div>
+                <div class="teleop-row">
+                  <div class="teleop-spacer"></div>
+                  <button class="btn-teleop" id="btn-teleop-bwd" title="Lùi">▼</button>
+                  <div class="teleop-spacer"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: KHO HÀNG (Racks Grid & Items Summary) -->
+    <section class="tab-pane" id="tab-inventory">
+      <div class="card">
+        <div class="card-header">
+          <h2>Sơ đồ Vị trí Ô Kệ (12 Ô)</h2>
+          <div class="rack-stats" id="rack-stats-text">0/12 Có hàng</div>
+        </div>
+
+        <div class="racks-container">
+          <!-- KỆ A -->
+          <div class="rack-section">
+            <h3 class="rack-title">GIÁ KỆ A (Bên Phải)</h3>
+            <div class="tier-label">Tầng 2 (Cao)</div>
+            <div class="slots-row" id="slots-rack-a-tier-2"></div>
+            <div class="tier-label">Tầng 1 (Thấp)</div>
+            <div class="slots-row" id="slots-rack-a-tier-1"></div>
+          </div>
+
+          <!-- KỆ B -->
+          <div class="rack-section">
+            <h3 class="rack-title">GIÁ KỆ B (Bên Trái)</h3>
+            <div class="tier-label">Tầng 2 (Cao)</div>
+            <div class="slots-row" id="slots-rack-b-tier-2"></div>
+            <div class="tier-label">Tầng 1 (Thấp)</div>
+            <div class="slots-row" id="slots-rack-b-tier-1"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bảng Mặt hàng & Ngưỡng Tồn -->
+      <div class="card mt-4">
+        <div class="card-header">
+          <h2>Danh mục Mặt hàng & Tồn kho</h2>
+          <button class="btn-sm" onclick="fetchInventory()">Làm mới</button>
+        </div>
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Mã hàng</th>
+                <th>Tên sản phẩm</th>
+                <th>Tag ArUco</th>
+                <th>Tồn kho</th>
+                <th>Ngưỡng cảnh báo</th>
+                <th>Tình trạng</th>
+              </tr>
+            </thead>
+            <tbody id="items-table-body">
+              <tr><td colspan="6" class="text-center">Đang nạp dữ liệu...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 3: NHẬP / XUẤT (Order Dispatch) -->
+    <section class="tab-pane" id="tab-orders">
+      <div class="card order-card">
+        <div class="card-header">
+          <h2>Tạo Lệnh Điều Phối Hàng Hóa</h2>
+        </div>
+
+        <!-- Cảnh báo khóa khi ở chế độ Mapping -->
+        <div class="mapping-mode-warning hidden" id="mapping-order-warning">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="8" x2="12" y2="12"/>
+            <line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          <div>
+            <strong>CHẾ ĐỘ QUÉT BẢN ĐỒ (MAPPING) ĐANG HOẠT ĐỘNG</strong>
+            <p>Hệ thống không nhận nhiệm vụ kho trong lúc đang dựng bản đồ SLAM. Vui lòng chuyển sang chế độ Navigation để điều phối hàng hóa.</p>
+          </div>
+        </div>
+
+        <form id="order-form" onsubmit="event.preventDefault();">
+          <div class="form-group">
+            <label for="order-item-code">Chọn Mặt Hàng:</label>
+            <select id="order-item-code" class="form-control" onchange="updateItemPreview()">
+              <option value="">-- Đang nạp danh mục --</option>
+            </select>
+          </div>
+
+          <!-- Xem nhanh tồn kho mặt hàng -->
+          <div class="item-preview-box" id="item-preview-box">
+            <div class="preview-metric">
+              <span>Tồn hiện tại:</span>
+              <strong id="preview-stock">0</strong>
+            </div>
+            <div class="preview-metric">
+              <span>Ô trống khả dụng:</span>
+              <strong id="preview-free-slots">0</strong>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Số lượng (1 - 10 hộp):</label>
+            <div class="quantity-picker">
+              <button type="button" class="btn-qty" onclick="changeQty(-1)">-</button>
+              <input type="number" id="order-quantity" class="qty-input" value="1" min="1" max="10" readonly>
+              <button type="button" class="btn-qty" onclick="changeQty(1)">+</button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Độ ưu tiên:</label>
+            <div class="priority-selector">
+              <label class="priority-opt">
+                <input type="radio" name="order-priority" value="0">
+                <span>0 (Thấp)</span>
+              </label>
+              <label class="priority-opt">
+                <input type="radio" name="order-priority" value="1" checked>
+                <span>1 (Bình thường)</span>
+              </label>
+              <label class="priority-opt">
+                <input type="radio" name="order-priority" value="2">
+                <span>2 (Khẩn cấp)</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="order-actions">
+            <button type="button" class="btn-submit btn-inbound" onclick="submitInboundOrder()">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 5v14M5 12l7 7 7-7"/>
+              </svg>
+              <span>NHẬP KHO (INBOUND)</span>
+            </button>
+
+            <button type="button" class="btn-submit btn-outbound" onclick="submitOutboundOrder()">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 19V5M5 12l7-7 7 7"/>
+              </svg>
+              <span>XUẤT KHO (OUTBOUND)</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- TAB 4: NHIỆM VỤ (Tasks Stepper & Queue) -->
+    <section class="tab-pane" id="tab-tasks">
+      <!-- Nhiệm vụ đang thực hiện -->
+      <div class="card active-task-card" id="active-task-container">
+        <div class="card-header">
+          <h2>Nhiệm Vụ Đang Thực Thi</h2>
+          <span class="badge" id="active-task-badge">Không có</span>
+        </div>
+
+        <div id="active-task-body">
+          <div class="empty-state">Hiện không có nhiệm vụ nào đang chạy.</div>
+        </div>
+      </div>
+
+      <!-- Hàng đợi nhiệm vụ -->
+      <div class="card mt-4">
+        <div class="card-header">
+          <h2>Hàng Đợi Chờ Xử Lý</h2>
+          <button class="btn-sm" onclick="fetchTasks()">Làm mới</button>
+        </div>
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Mã đơn</th>
+                <th>Loại</th>
+                <th>Mặt hàng</th>
+                <th>Ưu tiên</th>
+                <th>Trạng thái</th>
+                <th>Thời điểm</th>
+                <th>Hành động</th>
+              </tr>
+            </thead>
+            <tbody id="tasks-queue-body">
+              <tr><td colspan="7" class="text-center">Hàng đợi trống.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 5: LỊCH SỬ & THÔNG BÁO -->
+    <section class="tab-pane" id="tab-logs">
+      <div class="pane-grid-2">
+        <!-- Thông báo hệ thống thời gian thực -->
+        <div class="card">
+          <div class="card-header">
+            <h2>Thông Báo Thời Gian Thực</h2>
+            <button class="btn-sm" onclick="clearNotifications()">Xóa</button>
+          </div>
+          <div class="notifications-feed" id="notifications-feed">
+            <div class="notif-empty">Chưa có thông báo mới.</div>
+          </div>
+        </div>
+
+        <!-- Lịch sử giao dịch biến động tồn kho -->
+        <div class="card">
+          <div class="card-header">
+            <h2>Lịch Sử Giao Dịch Gần Nhất</h2>
+            <button class="btn-sm" onclick="fetchTransactions()">Làm mới</button>
+          </div>
+          <div class="table-responsive" style="max-height: 400px;">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Đơn</th>
+                  <th>Loại</th>
+                  <th>Mã hàng</th>
+                  <th>Ô kệ</th>
+                  <th>Biến động</th>
+                  <th>Thời gian</th>
+                </tr>
+              </thead>
+              <tbody id="tx-table-body">
+                <tr><td colspan="6" class="text-center">Đang nạp dữ liệu...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Bottom Navigation Bar (Tối ưu cho ngón tay trên điện thoại) -->
+  <nav class="app-bottom-nav">
+    <button class="nav-item active" onclick="switchTab('tab-overview', this)">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="3" y="3" width="7" height="7"/>
+        <rect x="14" y="3" width="7" height="7"/>
+        <rect x="14" y="14" width="7" height="7"/>
+        <rect x="3" y="14" width="7" height="7"/>
+      </svg>
+      <span>Tổng quan</span>
+    </button>
+
+    <button class="nav-item" onclick="switchTab('tab-inventory', this)">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+      </svg>
+      <span>Kho hàng</span>
+    </button>
+
+    <button class="nav-item" onclick="switchTab('tab-orders', this)">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="12" y1="8" x2="12" y2="16"/>
+        <line x1="8" y1="12" x2="16" y2="12"/>
+      </svg>
+      <span>Nhập/Xuất</span>
+    </button>
+
+    <button class="nav-item" onclick="switchTab('tab-tasks', this)">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="9 11 12 14 22 4"/>
+        <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+      </svg>
+      <span>Nhiệm vụ</span>
+    </button>
+
+    <button class="nav-item" onclick="switchTab('tab-logs', this)">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"/>
+        <polyline points="12 6 12 12 16 14"/>
+      </svg>
+      <span>Lịch sử</span>
+    </button>
+  </nav>
+
+  <!-- Modal Xác Nhận Hai Bước Khôi Phục E-STOP -->
+  <div class="modal-backdrop hidden" id="reset-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Xác nhận khôi phục an toàn (E-STOP Reset)</h3>
+      </div>
+      <div class="modal-body">
+        <p class="text-warn">CẢNH BÁO: Chỉ khôi phục sau khi đã kiểm tra thực tế không có vật cản, người đứng gần hoặc sự cố cơ khí kẹt tay kẹp.</p>
+        <div class="checkbox-group">
+          <label>
+            <input type="checkbox" id="chk-confirm-safety" onchange="toggleResetBtn()">
+            <span>Tôi xác nhận khu vực kho và robot đã an toàn.</span>
+          </label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" onclick="closeResetModal()">Hủy bỏ</button>
+        <button class="btn-primary" id="btn-do-reset" disabled onclick="executeResetEStop()">Xác nhận khôi phục</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Lưu Bản Đồ SLAM -->
+  <div class="modal-backdrop hidden" id="save-map-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Lưu Bản Đồ SLAM Hiện Tại</h3>
+      </div>
+      <div class="modal-body">
+        <p>Bản đồ sẽ được lưu thành các file <code>.pgm</code> và <code>.yaml</code> trong thư mục bản đồ hệ thống để tái sử dụng ở chế độ Navigation.</p>
+        <div class="form-group" style="margin-top: 14px;">
+          <label for="input-map-name">Tên file bản đồ (không đuôi mở rộng):</label>
+          <input type="text" id="input-map-name" class="form-control" value="warehouse_map">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" onclick="closeSaveMapModal()">Hủy bỏ</button>
+        <button class="btn-primary" onclick="confirmSaveMap()">Xác nhận lưu</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Xóa Phiên SLAM -->
+  <div class="modal-backdrop hidden" id="clear-slam-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Xác nhận xóa phiên dựng SLAM</h3>
+      </div>
+      <div class="modal-body">
+        <p class="text-warn">CẢNH BÁO: Hành động này sẽ đặt lại toàn bộ lưới bản đồ đang dựng và xóa lịch sử quỹ đạo hiện tại!</p>
+        <div class="checkbox-group">
+          <label>
+            <input type="checkbox" id="chk-confirm-clear-slam" onchange="toggleClearSlamBtn()">
+            <span>Tôi chắc chắn muốn xóa và đặt lại phiên SLAM.</span>
+          </label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" onclick="closeClearSlamModal()">Hủy bỏ</button>
+        <button class="btn-primary" id="btn-do-clear-slam" disabled onclick="confirmClearSlam()" style="background: var(--color-danger); color: #fff;">Xác nhận xóa</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Xác Nhận Gửi Mục Tiêu Nav2 Khi Chạm Bản Đồ -->
+  <div class="modal-backdrop hidden" id="nav-goal-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Điều hướng tới điểm đã chọn</h3>
+      </div>
+      <div class="modal-body">
+        <p id="nav-goal-text">Bạn có muốn robot điều hướng tới tọa độ (x: 0.00, y: 0.00)?</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" onclick="closeNavGoalModal()">Hủy bỏ</button>
+        <button class="btn-primary" onclick="confirmNavGoal()">Bắt đầu đi</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,45 @@
+ekf_filter_node:
+  ros__parameters:
+    use_sim_time: true
+    frequency: 30.0
+    two_d_mode: true
+    publish_tf: true
+
+    odom_frame: odom
+    base_link_frame: base_footprint
+    world_frame: odom
+
+    # Nguồn odometry từ bánh xe (/odom - đã có mô phỏng trượt bánh)
+    odom0: /odom
+    # Cấu hình ma trận odom0_config [15 giá trị boolean]:
+    # Hàng 1: [x, y, z]                     -> false (không lấy vị trí tuyệt đối từ dead-reckoning để tránh tích lũy sai số)
+    # Hàng 2: [roll, pitch, yaw]            -> false (góc yaw để IMU cung cấp sẽ chính xác hơn nhiều)
+    # Hàng 3: [vx, vy, vz]                  -> [true, true, false] (dùng vận tốc tịnh tiến vx, vy trong khung base)
+    # Hàng 4: [vroll, vpitch, vyaw]         -> [false, false, true] (dùng vận tốc góc vyaw)
+    # Hàng 5: [ax, ay, az]                  -> false (không đo gia tốc từ encoder)
+    odom0_config: [false, false, false,
+                   false, false, false,
+                   true,  true,  false,
+                   false, false, true,
+                   false, false, false]
+    odom0_queue_size: 10
+    odom0_nodelay: true
+    odom0_differential: false
+
+    # Nguồn cảm biến quán tính IMU (/imu/data)
+    imu0: /imu/data
+    # Cấu hình ma trận imu0_config [15 giá trị boolean]:
+    # Hàng 1: [x, y, z]                     -> false (IMU không đo vị trí)
+    # Hàng 2: [roll, pitch, yaw]            -> [false, false, true] (lấy góc quay yaw quanh trục Z trên mặt phẳng 2D)
+    # Hàng 3: [vx, vy, vz]                  -> false (IMU không đo vận tốc)
+    # Hàng 4: [vroll, vpitch, vyaw]         -> [false, false, true] (lấy vận tốc góc con quay hồi chuyển vyaw quanh Z)
+    # Hàng 5: [ax, ay, az]                  -> false (không dùng gia tốc tuyến tính do nhiễu cơ học)
+    imu0_config: [false, false, false,
+                  false, false, true,
+                  false, false, false,
+                  false, false, true,
+                  false, false, false]
+    imu0_queue_size: 10
+    imu0_nodelay: true
+    imu0_differential: false
+    imu0_relative: false

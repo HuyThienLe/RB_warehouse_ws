@@ -1,0 +1,405 @@
+#!/usr/bin/env python3
+"""box_manager – Node quản lý hộp và vật cản động trong Gazebo.
+
+Services:
+  /wh/clear_obstacle  (std_srvs/srv/Trigger)
+
+Spawn/remove hộp và vật cản qua /spawn_entity, /delete_entity.
+Slots được đọc từ wh_navigation/config/slots.yaml (qua ament_index).
+"""
+
+import os
+import sys
+import threading
+import time
+
+import rclpy
+from rclpy.callback_groups import ReentrantCallbackGroup
+from rclpy.executors import MultiThreadedExecutor
+from rclpy.node import Node
+from std_srvs.srv import Trigger
+from gazebo_msgs.srv import SpawnEntity, DeleteEntity
+from gazebo_msgs.msg import ModelStates
+
+try:
+    from ament_index_python.packages import get_package_share_directory
+    _ament_ok = True
+except ImportError:
+    _ament_ok = False
+
+import yaml
+
+
+# ── SDF template hộp ─────────────────────────────────────────────────────────
+BOX_SDF_TEMPLATE = """\
+<?xml version="1.0"?>
+<sdf version="1.6">
+  <model name="box_{bid}">
+    <pose>0 0 0 0 0 0</pose>
+    <link name="link">
+      <inertial>
+        <mass>0.2</mass>
+        <inertia>
+          <ixx>{ixx:.6f}</ixx><ixy>0</ixy><ixz>0</ixz>
+          <iyy>{iyy:.6f}</iyy><iyz>0</iyz>
+          <izz>{izz:.6f}</izz>
+        </inertia>
+      </inertial>
+      <collision name="col">
+        <max_contacts>4</max_contacts>
+        <geometry><box><size>0.06 0.06 0.04</size></box></geometry>
+        <surface>
+          <friction><ode><mu>0.8</mu><mu2>0.8</mu2></ode></friction>
+          <contact><ode>
+            <max_vel>0.01</max_vel>
+            <min_depth>0.001</min_depth>
+          </ode></contact>
+        </surface>
+      </collision>
+      <visual name="vis_body">
+        <cast_shadows>false</cast_shadows>
+        <geometry><box><size>0.06 0.06 0.04</size></box></geometry>
+        <material>
+          <ambient>0.9 0.7 0.3 1.0</ambient>
+          <diffuse>0.9 0.7 0.3 1.0</diffuse>
+        </material>
+      </visual>
+      <visual name="vis_tag_top">
+        <cast_shadows>false</cast_shadows>
+        <pose>0 0 0.0203 0 0 0</pose>
+        <geometry><box><size>0.036 0.036 0.0005</size></box></geometry>
+        <material>
+          <script>
+            <uri>model://aruco_tags/materials/scripts</uri>
+            <uri>model://aruco_tags/materials/textures</uri>
+            <name>Aruco/Tag{top_tag_id}</name>
+          </script>
+        </material>
+      </visual>
+      <visual name="vis_tag_front">
+        <cast_shadows>false</cast_shadows>
+        <pose>0 -0.0303 0 0 0 3.141593</pose>
+        <geometry><box><size>0.036 0.0005 0.036</size></box></geometry>
+        <material>
+          <script>
+            <uri>model://aruco_tags/materials/scripts</uri>
+            <uri>model://aruco_tags/materials/textures</uri>
+            <name>Aruco/Tag{front_tag_id}</name>
+          </script>
+        </material>
+      </visual>
+      <visual name="vis_tag_back">
+        <cast_shadows>false</cast_shadows>
+        <pose>0 0.0303 0 0 0 0</pose>
+        <geometry><box><size>0.036 0.0005 0.036</size></box></geometry>
+        <material>
+          <script>
+            <uri>model://aruco_tags/materials/scripts</uri>
+            <uri>model://aruco_tags/materials/textures</uri>
+            <name>Aruco/Tag{front_tag_id}</name>
+          </script>
+        </material>
+      </visual>
+      <velocity_decay>
+        <linear>0.05</linear>
+        <angular>0.05</angular>
+      </velocity_decay>
+    </link>
+  </model>
+</sdf>
+"""
+
+OBS_SDF_TEMPLATE = """\
+<?xml version="1.0"?>
+<sdf version="1.6">
+  <model name="obstacle_{oid}">
+    <static>true</static>
+    <pose>{px} {py} {pz} 0 0 0</pose>
+    <link name="link">
+      <collision name="col">
+        <geometry><box><size>{sx} {sy} {sz}</size></box></geometry>
+        <surface><friction><ode><mu>0.8</mu><mu2>0.8</mu2></ode></friction></surface>
+      </collision>
+      <visual name="vis">
+        <cast_shadows>false</cast_shadows>
+        <geometry><box><size>{sx} {sy} {sz}</size></box></geometry>
+        <material>
+          <ambient>0.9 0.3 0.1 1.0</ambient>
+          <diffuse>0.9 0.3 0.1 1.0</diffuse>
+        </material>
+      </visual>
+    </link>
+  </model>
+</sdf>
+"""
+
+
+def _box_inertia(lx=0.06, ly=0.06, lz=0.04, m=0.2):
+    ixx = m / 12.0 * (ly**2 + lz**2)
+    iyy = m / 12.0 * (lx**2 + lz**2)
+    izz = m / 12.0 * (lx**2 + ly**2)
+    return ixx, iyy, izz
+
+
+def _find_slots_yaml():
+    """Tìm slots.yaml qua ament_index hoặc đường dẫn tương đối."""
+    if _ament_ok:
+        try:
+            nav_share = get_package_share_directory("wh_navigation")
+            p = os.path.join(nav_share, "config", "slots.yaml")
+            if os.path.exists(p):
+                return p
+        except Exception:
+            pass
+    # Fallback: relative to this script
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    candidates = [
+        os.path.join(script_dir, "..", "..", "wh_navigation", "config", "slots.yaml"),
+        os.path.join(script_dir, "..", "..", "..", "src", "wh_navigation", "config", "slots.yaml"),
+    ]
+    for c in candidates:
+        if os.path.exists(os.path.normpath(c)):
+            return os.path.normpath(c)
+    return None
+
+
+def _find_seed_yaml():
+    """Tìm inventory_seed.yaml."""
+    if _ament_ok:
+        try:
+            gz_share = get_package_share_directory("wh_gazebo")
+            p = os.path.join(gz_share, "config", "inventory_seed.yaml")
+            if os.path.exists(p):
+                return p
+        except Exception:
+            pass
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    candidates = [
+        os.path.join(script_dir, "..", "config", "inventory_seed.yaml"),
+        os.path.join(script_dir, "..", "..", "wh_gazebo", "config", "inventory_seed.yaml"),
+    ]
+    for c in candidates:
+        if os.path.exists(os.path.normpath(c)):
+            return os.path.normpath(c)
+    return None
+
+
+class BoxManager(Node):
+
+    def __init__(self):
+        super().__init__("box_manager")
+        self.cbg = ReentrantCallbackGroup()
+
+        self.declare_parameter("use_seed", True)
+
+        self._boxes: dict = {}
+        self._obstacles: dict = {}
+        self._obs_counter = 0
+        self._model_states: ModelStates = None
+
+        self.create_subscription(
+            ModelStates, "/gazebo/model_states",
+            self._cb_model_states, 10,
+            callback_group=self.cbg
+        )
+
+        self._spawn_cli = self.create_client(
+            SpawnEntity, "/spawn_entity", callback_group=self.cbg
+        )
+        self._delete_cli = self.create_client(
+            DeleteEntity, "/delete_entity", callback_group=self.cbg
+        )
+
+        # Load slots
+        slots_file = _find_slots_yaml()
+        self._slots = {}
+        if slots_file:
+            with open(slots_file) as f:
+                data = yaml.safe_load(f)
+                raw_slots = data.get("slots", {})
+                for k, v in raw_slots.items():
+                    self._slots[int(k)] = v
+            self.get_logger().info(f"Loaded {len(self._slots)} slots from {slots_file}")
+        else:
+            self.get_logger().warn("slots.yaml not found – slot-based spawn unavailable")
+
+        # Service: clear_obstacle
+        self.create_service(
+            Trigger, "/wh/clear_obstacle",
+            self._svc_clear_obstacle,
+            callback_group=self.cbg
+        )
+
+        self.get_logger().info("BoxManager node ready.")
+
+        # Khởi động thread spawn seed boxes nếu tham số use_seed được bật
+        if self.get_parameter("use_seed").value:
+            threading.Thread(target=self._run_seed_spawning, daemon=True).start()
+
+    def _cb_model_states(self, msg: ModelStates):
+        self._model_states = msg
+
+    def _wait_gazebo(self, timeout=30.0) -> bool:
+        end = time.time() + timeout
+        while time.time() < end and rclpy.ok():
+            if (self._spawn_cli.wait_for_service(timeout_sec=1.0) and
+                    self._delete_cli.wait_for_service(timeout_sec=1.0)):
+                return True
+            time.sleep(0.5)
+        return False
+
+    def _call_service_sync(self, client, request, timeout_sec=10.0):
+        """Gọi service an toàn trong MultiThreadedExecutor mà không gọi spin_until_future_complete."""
+        if not client.wait_for_service(timeout_sec=timeout_sec):
+            return None
+        future = client.call_async(request)
+        start_time = time.time()
+        while not future.done() and (time.time() - start_time < timeout_sec) and rclpy.ok():
+            time.sleep(0.02)
+        if future.done():
+            return future.result()
+        return None
+
+    def spawn_box(self, box_tag_id: int, x: float, y: float, z: float) -> bool:
+        if not self._wait_gazebo(timeout=15.0):
+            self.get_logger().error("Gazebo spawn service not available")
+            return False
+
+        ixx, iyy, izz = _box_inertia()
+        sdf = BOX_SDF_TEMPLATE.format(
+            bid=box_tag_id,
+            ixx=ixx, iyy=iyy, izz=izz,
+            top_tag_id=box_tag_id,
+            front_tag_id=box_tag_id,
+        )
+        req = SpawnEntity.Request()
+        req.name = f"box_{box_tag_id}"
+        req.xml = sdf
+        req.initial_pose.position.x = float(x)
+        req.initial_pose.position.y = float(y)
+        req.initial_pose.position.z = float(z)
+
+        res = self._call_service_sync(self._spawn_cli, req, timeout_sec=10.0)
+
+        if res and res.success:
+            self._boxes[box_tag_id] = f"box_{box_tag_id}"
+            self.get_logger().info(
+                f"Spawned box_{box_tag_id} at ({x:.3f},{y:.3f},{z:.3f})"
+            )
+            return True
+        err = res.status_message if res else "timeout"
+        self.get_logger().error(f"Spawn box_{box_tag_id} failed: {err}")
+        return False
+
+    def spawn_box_in_slot(self, box_tag_id: int, slot_tag_id: int) -> bool:
+        slot = self._slots.get(int(slot_tag_id))
+        if slot is None:
+            self.get_logger().error(f"Slot {slot_tag_id} not found")
+            return False
+        bc = slot["box_center_pose"]
+        return self.spawn_box(box_tag_id, bc["x"], bc["y"], bc["z"])
+
+    def remove_box(self, box_tag_id: int) -> bool:
+        name = self._boxes.get(box_tag_id, f"box_{box_tag_id}")
+        if not self._wait_gazebo():
+            return False
+        req = DeleteEntity.Request()
+        req.name = name
+        res = self._call_service_sync(self._delete_cli, req, timeout_sec=10.0)
+        if res and res.success:
+            self._boxes.pop(box_tag_id, None)
+            self.get_logger().info(f"Removed {name}")
+            return True
+        return False
+
+    def spawn_obstacle(self, x, y, z, sx=0.3, sy=0.3, sz=0.3) -> int:
+        self._obs_counter += 1
+        oid = self._obs_counter
+        if not self._wait_gazebo():
+            return -1
+        sdf = OBS_SDF_TEMPLATE.format(
+            oid=oid, px=x, py=y, pz=z + sz / 2.0, sx=sx, sy=sy, sz=sz
+        )
+        req = SpawnEntity.Request()
+        req.name = f"obstacle_{oid}"
+        req.xml = sdf
+        res = self._call_service_sync(self._spawn_cli, req, timeout_sec=10.0)
+        if res and res.success:
+            self._obstacles[oid] = f"obstacle_{oid}"
+            self.get_logger().info(f"Spawned obstacle_{oid}")
+            return oid
+        return -1
+
+    def _svc_clear_obstacle(self, req, resp):
+        count = 0
+        for oid, name in list(self._obstacles.items()):
+            dreq = DeleteEntity.Request()
+            dreq.name = name
+            res = self._call_service_sync(self._delete_cli, dreq, timeout_sec=5.0)
+            if res and res.success:
+                self._obstacles.pop(oid, None)
+                count += 1
+        resp.success = True
+        resp.message = f"Cleared {count} obstacles"
+        return resp
+
+    def get_box_pose(self, box_tag_id: int):
+        if self._model_states is None:
+            return None
+        name = f"box_{box_tag_id}"
+        try:
+            idx = self._model_states.name.index(name)
+            return self._model_states.pose[idx]
+        except ValueError:
+            return None
+
+    def _run_seed_spawning(self):
+        """Chạy trong thread riêng: đợi Gazebo sẵn sàng và spawn các hộp ban đầu."""
+        time.sleep(2.0)  # Đợi nhẹ cho Gazebo node khởi tạo
+        if not self._wait_gazebo(timeout=30.0):
+            self.get_logger().error("Gazebo services (/spawn_entity) not available. Seed boxes skipped.")
+            return
+
+        seed_file = _find_seed_yaml()
+        if not seed_file:
+            self.get_logger().warn("inventory_seed.yaml not found, skipping seed boxes")
+            return
+
+        with open(seed_file) as f:
+            seed = yaml.safe_load(f)
+
+        self.get_logger().info(f"Spawning seed boxes from {seed_file}")
+        for entry in seed.get("boxes", []):
+            if not rclpy.ok():
+                break
+            box_id = entry["box_id"]
+            slot_id = entry.get("slot_id")
+            if slot_id is not None:
+                self.spawn_box_in_slot(box_id, slot_id)
+            else:
+                pose = entry.get("pose", {})
+                self.spawn_box(
+                    box_id,
+                    pose.get("x", 0.0),
+                    pose.get("y", 0.0),
+                    pose.get("z", 0.1)
+                )
+            time.sleep(0.3)
+
+
+def main(args=None):
+    rclpy.init(args=args)
+    node = BoxManager()
+    executor = MultiThreadedExecutor(num_threads=4)
+    executor.add_node(node)
+    try:
+        executor.spin()
+    except KeyboardInterrupt:
+        pass
+    finally:
+        node.destroy_node()
+        rclpy.shutdown()
+
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,253 @@
+slots:
+  0:
+    rack: rack_a
+    col: 0
+    tier: 1
+    tag_pose:
+      x: 0.75
+      y: 0.599
+      z: 0.10999999999999999
+      yaw: 3.141592653589793
+    box_center_pose:
+      x: 0.75
+      y: 0.71
+      z: 0.17099999999999999
+    staging_pose:
+      x: 0.75
+      y: 0.05
+      yaw: 1.5708
+    work_pose:
+      x: 0.75
+      y: 0.28
+      yaw: 1.5708
+  1:
+    rack: rack_a
+    col: 1
+    tier: 1
+    tag_pose:
+      x: 1.25
+      y: 0.599
+      z: 0.10999999999999999
+      yaw: 3.141592653589793
+    box_center_pose:
+      x: 1.25
+      y: 0.71
+      z: 0.17099999999999999
+    staging_pose:
+      x: 1.25
+      y: 0.05
+      yaw: 1.5708
+    work_pose:
+      x: 1.25
+      y: 0.28
+      yaw: 1.5708
+  2:
+    rack: rack_a
+    col: 2
+    tier: 1
+    tag_pose:
+      x: 1.75
+      y: 0.599
+      z: 0.10999999999999999
+      yaw: 3.141592653589793
+    box_center_pose:
+      x: 1.75
+      y: 0.71
+      z: 0.17099999999999999
+    staging_pose:
+      x: 1.75
+      y: 0.05
+      yaw: 1.5708
+    work_pose:
+      x: 1.75
+      y: 0.28
+      yaw: 1.5708
+  3:
+    rack: rack_a
+    col: 0
+    tier: 2
+    tag_pose:
+      x: 0.75
+      y: 0.599
+      z: 0.36000000000000004
+      yaw: 3.141592653589793
+    box_center_pose:
+      x: 0.75
+      y: 0.71
+      z: 0.42100000000000004
+    staging_pose:
+      x: 0.75
+      y: 0.05
+      yaw: 1.5708
+    work_pose:
+      x: 0.75
+      y: 0.28
+      yaw: 1.5708
+  4:
+    rack: rack_a
+    col: 1
+    tier: 2
+    tag_pose:
+      x: 1.25
+      y: 0.599
+      z: 0.36000000000000004
+      yaw: 3.141592653589793
+    box_center_pose:
+      x: 1.25
+      y: 0.71
+      z: 0.42100000000000004
+    staging_pose:
+      x: 1.25
+      y: 0.05
+      yaw: 1.5708
+    work_pose:
+      x: 1.25
+      y: 0.28
+      yaw: 1.5708
+  5:
+    rack: rack_a
+    col: 2
+    tier: 2
+    tag_pose:
+      x: 1.75
+      y: 0.599
+      z: 0.36000000000000004
+      yaw: 3.141592653589793
+    box_center_pose:
+      x: 1.75
+      y: 0.71
+      z: 0.42100000000000004
+    staging_pose:
+      x: 1.75
+      y: 0.05
+      yaw: 1.5708
+    work_pose:
+      x: 1.75
+      y: 0.28
+      yaw: 1.5708
+  6:
+    rack: rack_b
+    col: 0
+    tier: 1
+    tag_pose:
+      x: 0.75
+      y: -0.599
+      z: 0.10999999999999999
+      yaw: 0.0
+    box_center_pose:
+      x: 0.75
+      y: -0.71
+      z: 0.17099999999999999
+    staging_pose:
+      x: 0.75
+      y: -0.05
+      yaw: -1.5708
+    work_pose:
+      x: 0.75
+      y: -0.28
+      yaw: -1.5708
+  7:
+    rack: rack_b
+    col: 1
+    tier: 1
+    tag_pose:
+      x: 1.25
+      y: -0.599
+      z: 0.10999999999999999
+      yaw: 0.0
+    box_center_pose:
+      x: 1.25
+      y: -0.71
+      z: 0.17099999999999999
+    staging_pose:
+      x: 1.25
+      y: -0.05
+      yaw: -1.5708
+    work_pose:
+      x: 1.25
+      y: -0.28
+      yaw: -1.5708
+  8:
+    rack: rack_b
+    col: 2
+    tier: 1
+    tag_pose:
+      x: 1.75
+      y: -0.599
+      z: 0.10999999999999999
+      yaw: 0.0
+    box_center_pose:
+      x: 1.75
+      y: -0.71
+      z: 0.17099999999999999
+    staging_pose:
+      x: 1.75
+      y: -0.05
+      yaw: -1.5708
+    work_pose:
+      x: 1.75
+      y: -0.28
+      yaw: -1.5708
+  9:
+    rack: rack_b
+    col: 0
+    tier: 2
+    tag_pose:
+      x: 0.75
+      y: -0.599
+      z: 0.36000000000000004
+      yaw: 0.0
+    box_center_pose:
+      x: 0.75
+      y: -0.71
+      z: 0.42100000000000004
+    staging_pose:
+      x: 0.75
+      y: -0.05
+      yaw: -1.5708
+    work_pose:
+      x: 0.75
+      y: -0.28
+      yaw: -1.5708
+  10:
+    rack: rack_b
+    col: 1
+    tier: 2
+    tag_pose:
+      x: 1.25
+      y: -0.599
+      z: 0.36000000000000004
+      yaw: 0.0
+    box_center_pose:
+      x: 1.25
+      y: -0.71
+      z: 0.42100000000000004
+    staging_pose:
+      x: 1.25
+      y: -0.05
+      yaw: -1.5708
+    work_pose:
+      x: 1.25
+      y: -0.28
+      yaw: -1.5708
+  11:
+    rack: rack_b
+    col: 2
+    tier: 2
+    tag_pose:
+      x: 1.75
+      y: -0.599
+      z: 0.36000000000000004
+      yaw: 0.0
+    box_center_pose:
+      x: 1.75
+      y: -0.71
+      z: 0.42100000000000004
+    staging_pose:
+      x: 1.75
+      y: -0.05
+      yaw: -1.5708
+    work_pose:
+      x: 1.75
+      y: -0.28
+      yaw: -1.5708

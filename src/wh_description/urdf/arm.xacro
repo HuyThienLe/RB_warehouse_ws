@@ -1,0 +1,463 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- ======================================================== -->
+  <!-- 1. CỘT ĐỨNG NÂNG HẠ (VERTICAL MAST / ARM BASE)           -->
+  <!-- ======================================================== -->
+  <joint name="arm_base_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="arm_base_link"/>
+    <origin xyz="0.12 0 0.06" rpy="0 0 0"/>
+  </joint>
+
+  <link name="arm_base_link">
+    <!-- Đế bắt bulông trên nóc thân xe -->
+    <visual>
+      <origin xyz="0 0 0.006" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.08 0.08 0.012"/>
+      </geometry>
+      <material name="mast_base_mat">
+        <color rgba="0.15 0.18 0.22 1.0"/>
+      </material>
+    </visual>
+    <!-- Trụ cột đứng vuông chính -->
+    <visual>
+      <origin xyz="0 0 0.22" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.045 0.045 0.44"/>
+      </geometry>
+      <material name="mast_color">
+        <color rgba="0.25 0.28 0.32 1.0"/>
+      </material>
+    </visual>
+    <!-- Ray trượt tuyến tính kim loại mặt trước -->
+    <visual>
+      <origin xyz="0.024 0 0.22" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.010 0.022 0.42"/>
+      </geometry>
+      <material name="rail_mat">
+        <color rgba="0.75 0.78 0.82 1.0"/>
+      </material>
+    </visual>
+    <!-- Nắp đỉnh cột -->
+    <visual>
+      <origin xyz="0 0 0.445" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.055 0.055 0.012"/>
+      </geometry>
+      <material name="mast_cap_mat">
+        <color rgba="0.15 0.18 0.22 1.0"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0.22" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.055 0.055 0.44"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <origin xyz="0 0 0.22" rpy="0 0 0"/>
+      <mass value="1.0"/>
+      <xacro:box_inertia m="1.0" x="0.055" y="0.055" z="0.44"/>
+    </inertial>
+  </link>
+
+  <gazebo reference="arm_base_link">
+    <material>Gazebo/DarkGrey</material>
+    <selfCollide>false</selfCollide>
+  </gazebo>
+
+  <!-- ======================================================== -->
+  <!-- 2. TOA TRƯỢT NÂNG HẠ (LIFT CARRIAGE)                     -->
+  <!-- ======================================================== -->
+  <joint name="lift_joint" type="prismatic">
+    <parent link="arm_base_link"/>
+    <child link="lift_carriage_link"/>
+    <origin xyz="0 0 0.04" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="${p['robot']['arm']['joint_limits']['prismatic_z']['min']}" upper="${p['robot']['arm']['joint_limits']['prismatic_z']['max']}" effort="300.0" velocity="0.15"/>
+    <dynamics damping="10.0" friction="2.0"/>
+  </joint>
+
+  <gazebo reference="lift_joint">
+    <implicitSpringDamper>true</implicitSpringDamper>
+    <provideFeedback>true</provideFeedback>
+  </gazebo>
+
+  <link name="lift_carriage_link">
+    <!-- Khối con trượt ôm quanh ray cột -->
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.065 0.075 0.07"/>
+      </geometry>
+      <material name="carriage_color">
+        <color rgba="0.15 0.40 0.75 1.0"/>
+      </material>
+    </visual>
+    <!-- Càng đúc vươn ra phía trước đỡ ổ trục vai -->
+    <visual>
+      <origin xyz="0.042 0 -0.005" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.060 0.065 0.055"/>
+      </geometry>
+      <material name="carriage_color"/>
+    </visual>
+    <!-- Trụ bạc đạn đỡ khớp vai (nổi lên trên mặt càng) -->
+    <visual>
+      <origin xyz="0.070 0 0.026" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="0.028" length="0.020"/>
+      </geometry>
+      <material name="carriage_hub_mat">
+        <color rgba="0.12 0.32 0.60 1.0"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.035 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.08 0.075 0.07"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <origin xyz="0.035 0 0" rpy="0 0 0"/>
+      <mass value="0.60"/>
+      <xacro:box_inertia m="0.60" x="0.08" y="0.075" z="0.07"/>
+    </inertial>
+  </link>
+
+  <gazebo reference="lift_carriage_link">
+    <material>Gazebo/Blue</material>
+    <selfCollide>false</selfCollide>
+  </gazebo>
+
+  <!-- ======================================================== -->
+  <!-- 3. KHỚP VAI & CÁNH TAY 1 (SHOULDER JOINT & LINK 1)        -->
+  <!-- ======================================================== -->
+  <joint name="shoulder_joint" type="revolute">
+    <parent link="lift_carriage_link"/>
+    <child link="shoulder_link"/>
+    <!-- Điểm xoay đặt chính xác trên mặt phẳng bạc đạn toa trượt -->
+    <origin xyz="0.070 0 0.036" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="${p['robot']['arm']['joint_limits']['shoulder_pan_q1']['min_rad']}"
+           upper="${p['robot']['arm']['joint_limits']['shoulder_pan_q1']['max_rad']}"
+           effort="60.0" velocity="1.2"/>
+    <dynamics damping="1.0" friction="0.2"/>
+  </joint>
+
+  <gazebo reference="shoulder_joint">
+    <implicitSpringDamper>true</implicitSpringDamper>
+    <provideFeedback>true</provideFeedback>
+  </gazebo>
+
+  <link name="shoulder_link">
+    <!-- Củ trục vai / Vỏ motor vai (ngồi khít lên bạc đạn toa trượt) -->
+    <visual>
+      <origin xyz="0 0 0.016" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="0.028" length="0.032"/>
+      </geometry>
+      <material name="arm_hub_mat">
+        <color rgba="0.25 0.28 0.32 1.0"/>
+      </material>
+    </visual>
+    <!-- Thân đòn cánh tay 1 (dài 0.18 m, nối liền từ tâm vai đến tâm khủy) -->
+    <visual>
+      <origin xyz="0.09 0 0.014" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.18 0.042 0.028"/>
+      </geometry>
+      <material name="arm_link_color">
+        <color rgba="0.75 0.78 0.82 1.0"/>
+      </material>
+    </visual>
+    <!-- Trụ bạc đạn đầu khủy tay -->
+    <visual>
+      <origin xyz="0.18 0 0.014" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="0.026" length="0.028"/>
+      </geometry>
+      <material name="arm_hub_mat"/>
+    </visual>
+    <collision>
+      <origin xyz="0.09 0 0.014" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.14 0.038 0.026"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <origin xyz="0.09 0 0.014" rpy="0 0 0"/>
+      <mass value="0.45"/>
+      <xacro:box_inertia m="0.45" x="0.18" y="0.042" z="0.028"/>
+    </inertial>
+  </link>
+
+  <gazebo reference="shoulder_link">
+    <material>Gazebo/Grey</material>
+    <selfCollide>false</selfCollide>
+  </gazebo>
+
+  <!-- ======================================================== -->
+  <!-- 4. KHỚP KHỦY & CÁNH TAY 2 (ELBOW JOINT & LINK 2)          -->
+  <!-- ======================================================== -->
+  <joint name="elbow_joint" type="revolute">
+    <parent link="shoulder_link"/>
+    <child link="elbow_link"/>
+    <!-- Điểm xoay đặt khít trên đỉnh bạc đạn khủy cánh tay 1 (z = 0.028) -->
+    <origin xyz="0.18 0 0.028" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="${p['robot']['arm']['joint_limits']['elbow_pan_q2']['min_rad']}"
+           upper="${p['robot']['arm']['joint_limits']['elbow_pan_q2']['max_rad']}"
+           effort="45.0" velocity="1.2"/>
+    <dynamics damping="0.8" friction="0.2"/>
+  </joint>
+
+  <gazebo reference="elbow_joint">
+    <implicitSpringDamper>true</implicitSpringDamper>
+    <provideFeedback>true</provideFeedback>
+  </gazebo>
+
+  <link name="elbow_link">
+    <!-- Củ trục khủy / Vỏ motor khủy (ngồi khít trên đầu cánh tay 1) -->
+    <visual>
+      <origin xyz="0 0 0.016" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="0.026" length="0.032"/>
+      </geometry>
+      <material name="arm_hub_mat"/>
+    </visual>
+    <!-- Thân đòn cánh tay 2 (dài 0.18 m) -->
+    <visual>
+      <origin xyz="0.09 0 0.013" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.18 0.038 0.026"/>
+      </geometry>
+      <material name="arm_link_color"/>
+    </visual>
+    <!-- Trụ cổ tay (Wrist Housing) đâm xuống dưới để nhận đế kẹp -->
+    <visual>
+      <origin xyz="0.18 0 0.005" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="0.022" length="0.036"/>
+      </geometry>
+      <material name="arm_hub_mat"/>
+    </visual>
+    <collision>
+      <origin xyz="0.09 0 0.013" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.14 0.035 0.024"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <origin xyz="0.09 0 0.013" rpy="0 0 0"/>
+      <mass value="0.35"/>
+      <xacro:box_inertia m="0.35" x="0.18" y="0.038" z="0.026"/>
+    </inertial>
+  </link>
+
+  <gazebo reference="elbow_link">
+    <material>Gazebo/Grey</material>
+    <selfCollide>false</selfCollide>
+  </gazebo>
+
+  <!-- ======================================================== -->
+  <!-- 5. TAY KẸP CƠ KHÍ 2 NGÓN (PARALLEL GRIPPER)               -->
+  <!-- ======================================================== -->
+  <!-- Khớp gắn đế kẹp cắm khít vào đáy trụ cổ tay của cánh tay 2 -->
+  <joint name="tool_joint" type="fixed">
+    <parent link="elbow_link"/>
+    <child link="tool_link"/>
+    <origin xyz="0.18 0 -0.013" rpy="0 0 0"/>
+  </joint>
+
+  <!-- Thân đế tay kẹp (Gripper Base / Palm) -->
+  <link name="tool_link">
+    <!-- Trụ cổ kẹp cắm trực tiếp vào cổ tay -->
+    <visual>
+      <origin xyz="0 0 -0.018" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="0.014" length="0.036"/>
+      </geometry>
+      <material name="gripper_stem_mat">
+        <color rgba="0.15 0.15 0.15 1.0"/>
+      </material>
+    </visual>
+    <!-- Thanh ngang thân đế kẹp -->
+    <visual>
+      <origin xyz="0 0 -0.042" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.045 0.096 0.014"/>
+      </geometry>
+      <material name="gripper_palm_mat">
+        <color rgba="0.22 0.25 0.30 1.0"/>
+      </material>
+    </visual>
+    <!-- Bulông chốt má kẹp hai bên -->
+    <visual>
+      <origin xyz="0 0.038 -0.049" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="0.008" length="0.006"/>
+      </geometry>
+      <material name="gripper_stem_mat"/>
+    </visual>
+    <visual>
+      <origin xyz="0 -0.038 -0.049" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="0.008" length="0.006"/>
+      </geometry>
+      <material name="gripper_stem_mat"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 -0.042" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.045 0.096 0.014"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <origin xyz="0 0 -0.035" rpy="0 0 0"/>
+      <mass value="0.25"/>
+      <xacro:box_inertia m="0.25" x="0.045" y="0.096" z="0.035"/>
+    </inertial>
+  </link>
+
+  <gazebo reference="tool_link">
+    <material>Gazebo/DarkGrey</material>
+    <selfCollide>false</selfCollide>
+  </gazebo>
+
+  <!-- ======================================================== -->
+  <!-- 6. HAI MÁ KẸP SONG SONG (PARALLEL FINGERS)               -->
+  <!-- ======================================================== -->
+  <!-- Má kẹp trái (Left Finger) gắn liền dưới đế kẹp -->
+  <joint name="left_finger_joint" type="fixed">
+    <parent link="tool_link"/>
+    <child link="left_finger_link"/>
+    <origin xyz="0 0.038 -0.049" rpy="0 0 0"/>
+  </joint>
+
+  <link name="left_finger_link">
+    <!-- Khung ngón kẹp kim loại -->
+    <visual>
+      <origin xyz="0 0 -0.021" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.036 0.010 0.042"/>
+      </geometry>
+      <material name="finger_metal_mat">
+        <color rgba="0.2 0.22 0.25 1.0"/>
+      </material>
+    </visual>
+    <!-- Đệm cao su ma sát cao màu cam phía trong lòng ngón kẹp -->
+    <visual>
+      <origin xyz="0 -0.0055 -0.021" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.032 0.0025 0.038"/>
+      </geometry>
+      <material name="rubber_pad_mat">
+        <color rgba="0.95 0.35 0.10 1.0"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 -0.021" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.036 0.010 0.042"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <origin xyz="0 0 -0.021" rpy="0 0 0"/>
+      <mass value="0.05"/>
+      <xacro:box_inertia m="0.05" x="0.036" y="0.010" z="0.042"/>
+    </inertial>
+  </link>
+
+  <gazebo reference="left_finger_link">
+    <material>Gazebo/Orange</material>
+    <mu1>2.0</mu1>
+    <mu2>2.0</mu2>
+    <selfCollide>false</selfCollide>
+  </gazebo>
+
+  <!-- Má kẹp phải (Right Finger) gắn liền dưới đế kẹp -->
+  <joint name="right_finger_joint" type="fixed">
+    <parent link="tool_link"/>
+    <child link="right_finger_link"/>
+    <origin xyz="0 -0.038 -0.049" rpy="0 0 0"/>
+  </joint>
+
+  <link name="right_finger_link">
+    <!-- Khung ngón kẹp kim loại -->
+    <visual>
+      <origin xyz="0 0 -0.021" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.036 0.010 0.042"/>
+      </geometry>
+      <material name="finger_metal_mat"/>
+    </visual>
+    <!-- Đệm cao su ma sát cao màu cam phía trong lòng ngón kẹp -->
+    <visual>
+      <origin xyz="0 0.0055 -0.021" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.032 0.0025 0.038"/>
+      </geometry>
+      <material name="rubber_pad_mat"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 -0.021" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.036 0.010 0.042"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <origin xyz="0 0 -0.021" rpy="0 0 0"/>
+      <mass value="0.05"/>
+      <xacro:box_inertia m="0.05" x="0.036" y="0.010" z="0.042"/>
+    </inertial>
+  </link>
+
+  <gazebo reference="right_finger_link">
+    <material>Gazebo/Orange</material>
+    <mu1>2.0</mu1>
+    <mu2>2.0</mu2>
+    <selfCollide>false</selfCollide>
+  </gazebo>
+
+  <!-- ======================================================== -->
+  <!-- 7. TÂM KẸP (TCP - TOOL CENTER POINT) & GRASP LINK         -->
+  <!-- ======================================================== -->
+  <!-- Điểm tâm kẹp nằm chính giữa 2 má kẹp (z = -0.070 m từ tool_link) -->
+  <joint name="gripper_grasp_joint" type="fixed">
+    <parent link="tool_link"/>
+    <child link="gripper_grasp_link"/>
+    <origin xyz="0 0 -0.070" rpy="0 0 0"/>
+  </joint>
+
+  <link name="gripper_grasp_link">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0.01"/>
+      <xacro:box_inertia m="0.01" x="0.01" y="0.01" z="0.01"/>
+    </inertial>
+  </link>
+
+  <gazebo reference="gripper_grasp_joint">
+    <preserveFixedJoint>true</preserveFixedJoint>
+  </gazebo>
+
+  <!-- Alias suction_link để tương thích các plugin / node cũ nếu có -->
+  <joint name="suction_joint" type="fixed">
+    <parent link="gripper_grasp_link"/>
+    <child link="suction_link"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+
+  <link name="suction_link">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0.005"/>
+      <xacro:box_inertia m="0.005" x="0.005" y="0.005" z="0.005"/>
+    </inertial>
+  </link>
+
+</robot>

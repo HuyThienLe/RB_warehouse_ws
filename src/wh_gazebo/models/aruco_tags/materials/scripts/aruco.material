@@ -1,0 +1,479 @@
+material Aruco/Tag0
+{
+  technique
+  {
+    pass
+    {
+      lighting off
+      texture_unit
+      {
+        texture tag_0.png
+      }
+    }
+  }
+}
+
+material Aruco/Tag1
+{
+  technique
+  {
+    pass
+    {
+      lighting off
+      texture_unit
+      {
+        texture tag_1.png
+      }
+    }
+  }
+}
+
+material Aruco/Tag2
+{
+  technique
+  {
+    pass
+    {
+      lighting off
+      texture_unit
+      {
+        texture tag_2.png
+      }
+    }
+  }
+}
+
+material Aruco/Tag3
+{
+  technique
+  {
+    pass
+    {
+      lighting off
+      texture_unit
+      {
+        texture tag_3.png
+      }
+    }
+  }
+}
+
+material Aruco/Tag4
+{
+  technique
+  {
+    pass
+    {
+      lighting off
+      texture_unit
+      {
+        texture tag_4.png
+      }
+    }
+  }
+}
+
+material Aruco/Tag5
+{
+  technique
+  {
+    pass
+    {
+      lighting off
+      texture_unit
+      {
+        texture tag_5.png
+      }
+    }
+  }
+}
+
+material Aruco/Tag6
+{
+  technique
+  {
+    pass
+    {
+      lighting off
+      texture_unit
+      {
+        texture tag_6.png
+      }
+    }
+  }
+}
+
+material Aruco/Tag7
+{
+  technique
+  {
+    pass
+    {
+      lighting off
+      texture_unit
+      {
+        texture tag_7.png
+      }
+    }
+  }
+}
+
+material Aruco/Tag8
+{
+  technique
+  {
+    pass
+    {
+      lighting off
+      texture_unit
+      {
+        texture tag_8.png
+      }
+    }
+  }
+}
+
+material Aruco/Tag9
+{
+  technique
+  {
+    pass
+    {
+      lighting off
+      texture_unit
+      {
+        texture tag_9.png
+      }
+    }
+  }
+}
+
+material Aruco/Tag10
+{
+  technique
+  {
+    pass
+    {
+      lighting off
+      texture_unit
+      {
+        texture tag_10.png
+      }
+    }
+  }
+}
+
+material Aruco/Tag11
+{
+  technique
+  {
+    pass
+    {
+      lighting off
+      texture_unit
+      {
+        texture tag_11.png
+      }
+    }
+  }
+}
+
+material Aruco/Tag20
+{
+  technique
+  {
+    pass
+    {
+      lighting off
+      texture_unit
+      {
+        texture tag_20.png
+      }
+    }
+  }
+}
+
+material Aruco/Tag21
+{
+  technique
+  {
+    pass
+    {
+      lighting off
+      texture_unit
+      {
+        texture tag_21.png
+      }
+    }
+  }
+}
+
+material Aruco/Tag22
+{
+  technique
+  {
+    pass
+    {
+      lighting off
+      texture_unit
+      {
+        texture tag_22.png
+      }
+    }
+  }
+}
+
+material Aruco/Tag23
+{
+  technique
+  {
+    pass
+    {
+      lighting off
+      texture_unit
+      {
+        texture tag_23.png
+      }
+    }
+  }
+}
+
+material Aruco/Tag24
+{
+  technique
+  {
+    pass
+    {
+      lighting off
+      texture_unit
+      {
+        texture tag_24.png
+      }
+    }
+  }
+}
+
+material Aruco/Tag25
+{
+  technique
+  {
+    pass
+    {
+      lighting off
+      texture_unit
+      {
+        texture tag_25.png
+      }
+    }
+  }
+}
+
+material Aruco/Tag26
+{
+  technique
+  {
+    pass
+    {
+      lighting off
+      texture_unit
+      {
+        texture tag_26.png
+      }
+    }
+  }
+}
+
+material Aruco/Tag27
+{
+  technique
+  {
+    pass
+    {
+      lighting off
+      texture_unit
+      {
+        texture tag_27.png
+      }
+    }
+  }
+}
+
+material Aruco/Tag28
+{
+  technique
+  {
+    pass
+    {
+      lighting off
+      texture_unit
+      {
+        texture tag_28.png
+      }
+    }
+  }
+}
+
+material Aruco/Tag29
+{
+  technique
+  {
+    pass
+    {
+      lighting off
+      texture_unit
+      {
+        texture tag_29.png
+      }
+    }
+  }
+}
+
+material Aruco/Tag30
+{
+  technique
+  {
+    pass
+    {
+      lighting off
+      texture_unit
+      {
+        texture tag_30.png
+      }
+    }
+  }
+}
+
+material Aruco/Tag31
+{
+  technique
+  {
+    pass
+    {
+      lighting off
+      texture_unit
+      {
+        texture tag_31.png
+      }
+    }
+  }
+}
+
+material Aruco/Tag32
+{
+  technique
+  {
+    pass
+    {
+      lighting off
+      texture_unit
+      {
+        texture tag_32.png
+      }
+    }
+  }
+}
+
+material Aruco/Tag33
+{
+  technique
+  {
+    pass
+    {
+      lighting off
+      texture_unit
+      {
+        texture tag_33.png
+      }
+    }
+  }
+}
+
+material Aruco/Tag34
+{
+  technique
+  {
+    pass
+    {
+      lighting off
+      texture_unit
+      {
+        texture tag_34.png
+      }
+    }
+  }
+}
+
+material Aruco/Tag35
+{
+  technique
+  {
+    pass
+    {
+      lighting off
+      texture_unit
+      {
+        texture tag_35.png
+      }
+    }
+  }
+}
+
+material Aruco/Tag36
+{
+  technique
+  {
+    pass
+    {
+      lighting off
+      texture_unit
+      {
+        texture tag_36.png
+      }
+    }
+  }
+}
+
+material Aruco/Tag37
+{
+  technique
+  {
+    pass
+    {
+      lighting off
+      texture_unit
+      {
+        texture tag_37.png
+      }
+    }
+  }
+}
+
+material Aruco/Tag38
+{
+  technique
+  {
+    pass
+    {
+      lighting off
+      texture_unit
+      {
+        texture tag_38.png
+      }
+    }
+  }
+}
+
+material Aruco/Tag39
+{
+  technique
+  {
+    pass
+    {
+      lighting off
+      texture_unit
+      {
+        texture tag_39.png
+      }
+    }
+  }
+}

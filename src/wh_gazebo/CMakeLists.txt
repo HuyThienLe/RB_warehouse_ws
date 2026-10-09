@@ -7,7 +7,19 @@ endif()
 
 find_package(ament_cmake REQUIRED)
 
-install(DIRECTORY launch config worlds models DESTINATION share/${PROJECT_NAME})
+install(DIRECTORY launch config worlds models scripts
+        DESTINATION share/${PROJECT_NAME})
+
+install(PROGRAMS
+  scripts/box_manager
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+install(PROGRAMS
+  scripts/gen_world.py
+  scripts/gen_tags.py
+  DESTINATION lib/${PROJECT_NAME}
+)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)

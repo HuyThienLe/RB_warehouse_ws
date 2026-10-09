@@ -1,0 +1,24 @@
+# twist_mux.yaml – Bộ trộn lệnh điều khiển vận tốc xe AGV Mecanum
+# Chuỗi ưu tiên: estop (255) > visual servoing (100) > Nav2 (50) > teleop (10)
+# Đầu ra: /cmd_vel_muxed
+
+twist_mux:
+  ros__parameters:
+    topics:
+      servo:
+        topic: /cmd_vel_servo
+        timeout: 0.5
+        priority: 100
+      navigation:
+        topic: /cmd_vel_smoothed
+        timeout: 0.5
+        priority: 50
+      teleop:
+        topic: /cmd_vel_teleop
+        timeout: 0.5
+        priority: 10
+    locks:
+      estop:
+        topic: /estop
+        timeout: 0.0
+        priority: 255

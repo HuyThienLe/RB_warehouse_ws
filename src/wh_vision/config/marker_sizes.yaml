@@ -1,0 +1,22 @@
+# marker_sizes.yaml – Bảng ánh xạ kích thước cạnh thật (mét) của các ArUco marker
+# Mặt phẳng dán tag trong Gazebo: 0.050 m (kệ & trạm), 0.036 m (hộp).
+# Do texture có quiet zone 20% (tỉ lệ 400/560), cạnh vuông đen ArUco được phát hiện là:
+# - Kệ & Trạm (IDs 0..11, 30, 31): 0.050 * (400/560) = 0.035714 m (35.71 mm)
+# - Hộp hàng  (IDs 20..39 trừ 30, 31): 0.036 * (400/560) = 0.025714 m (25.71 mm)
+marker_sizes:
+  # Nhóm kệ hàng: 12 ô kệ (Kệ A: 0..5, Kệ B: 6..11)
+  shelf:
+    size: 0.03532
+    ids: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+
+  # Nhóm trạm nạp/dỡ: Trạm IN (30), Trạm OUT (31)
+  station:
+    size: 0.03532
+    ids: [30, 31]
+
+  # Nhóm hộp hàng: IDs 20..39 loại trừ 30, 31
+  box:
+    size: 0.02543
+    ids: [20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 32, 33, 34, 35, 36, 37, 38, 39]
+
+default_size: 0.03532
