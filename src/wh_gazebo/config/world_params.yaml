@@ -13,7 +13,7 @@ warehouse:
 
 shelves:
   rack_a:
-    front_y: 0.60      # mat truoc tai y = +0.60, huong -y
+    front_y: 1.76      # mat truoc tai y = +1.76 (lung ke sat tuong Bac y = +2.0), huong -y
     facing_direction: "-y"
     columns_x: [0.75, 1.25, 1.75]
     levels:
@@ -26,7 +26,7 @@ shelves:
         thickness: 0.02
         tag_ids: [3, 4, 5]  # tuong ung cot x: 0.75, 1.25, 1.75
   rack_b:
-    front_y: -0.60     # mat truoc tai y = -0.60, huong +y
+    front_y: -1.76     # mat truoc tai y = -1.76 (lung ke sat tuong Nam y = -2.0), huong +y
     facing_direction: "+y"
     columns_x: [0.75, 1.25, 1.75]
     levels:
@@ -45,10 +45,10 @@ shelves:
 
 stations:
   station_in:
-    center: {x: -2.4, y: 1.2, z: 0.0}
+    center: {x: -2.4, y: 1.25, z: 0.0}
     tag_id: 30
   station_out:
-    center: {x: -2.4, y: -1.2, z: 0.0}
+    center: {x: -2.4, y: -1.25, z: 0.0}
     tag_id: 31
   home:
     pose: {x: -2.4, y: 0.0, z: 0.0, yaw: 0.0}

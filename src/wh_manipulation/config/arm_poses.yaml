@@ -1,66 +1,84 @@
 arm_poses:
   STOW:
-    lift: 0.050
+    lift: 0.160
     shoulder: -1.5708
     elbow: -2.3562
+    wrist: 0.7854
     description: "Tu the gap gon sat suon phai trong footprint xe, nang Z an toan khong quet san xe"
 
+  PRE_SLOT_HOVER:
+    lift: 0.160
+    shoulder: -0.8697
+    elbow: 2.6281
+    wrist: -1.7584
+    description: "Tu the treo ngoai hanh lang truoc nguc xe (x=0.20m, y=0.0m, phi=0.0 rad)"
+
   PRE_SLOT_TIER_1:
-    lift: 0.040
-    shoulder: -1.1719
-    elbow: 2.3438
-    description: "Tu the nguong ngoai cua o ke tang 1 (r=0.14m, y=0.61m)"
+    lift: 0.035
+    shoulder: -0.8697
+    elbow: 2.6281
+    wrist: -1.7584
+    description: "Tu the ngoai cua o ke tang 1 o cao do tiep can ngang (x=0.20m, y=0.0m, phi=0.0 rad, cach mat hop 20mm)"
 
   OBSERVE_TIER_1:
-    lift: 0.040
-    shoulder: -0.8411
-    elbow: 1.6821
-    description: "Tu the quan sat / hover tren noc hop tang 1 (x_world=0.75, y_world=0.71, r=0.24m)"
+    lift: 0.035
+    shoulder: -0.1559
+    elbow: 0.3568
+    wrist: -0.2010
+    description: "Tu the trong long o ke tang 1 tai tam hop hover (x=0.425m, y=0.0m, phi=0.0 rad, tay duoi thang)"
 
   TOUCH_TIER_1:
     lift: 0.015
-    shoulder: -0.8411
-    elbow: 1.6821
-    description: "Tu the tiep xuc kep / hut hop tang 1 (cham noc hop, z_grasp=0.186)"
+    shoulder: -0.1559
+    elbow: 0.3568
+    wrist: -0.2010
+    description: "Tu the tiep xuc kep / hut hop tang 1 (x=0.425m, y=0.0m, phi=0.0 rad, tay duoi thang)"
 
   PRE_SLOT_TIER_2:
-    lift: 0.300
-    shoulder: -1.1719
-    elbow: 2.3438
-    description: "Tu the nguong ngoai cua o ke tang 2"
+    lift: 0.285
+    shoulder: -0.8697
+    elbow: 2.6281
+    wrist: -1.7584
+    description: "Tu the ngoai cua o ke tang 2 o cao do tiep can ngang (x=0.20m, y=0.0m, phi=0.0 rad, cach mat hop 20mm)"
 
   OBSERVE_TIER_2:
-    lift: 0.300
-    shoulder: -0.8411
-    elbow: 1.6821
-    description: "Tu the quan sat / hover tren noc hop tang 2"
+    lift: 0.285
+    shoulder: -0.1559
+    elbow: 0.3568
+    wrist: -0.2010
+    description: "Tu the trong long o ke tang 2 tai tam hop hover (x=0.425m, y=0.0m, phi=0.0 rad, tay duoi thang)"
 
   TOUCH_TIER_2:
     lift: 0.265
-    shoulder: -0.8411
-    elbow: 1.6821
-    description: "Tu the tiep xuc kep / hut hop tang 2"
+    shoulder: -0.1559
+    elbow: 0.3568
+    wrist: -0.2010
+    description: "Tu the tiep xuc kep / hut hop tang 2 (x=0.425m, y=0.0m, phi=0.0 rad, tay duoi thang)"
 
   TRAY_HOVER:
-    lift: 0.080
-    shoulder: -1.5378
-    elbow: -2.1268
-    description: "Tu the treo tren khay chua hang suon phai (x=0.04m, y=-0.09m)"
+    lift: 0.160
+    shoulder: -1.5860
+    elbow: -2.2536
+    wrist: 0.6980
+    description: "Tu the treo tren khay chua hang suon phai xe tai dung tam khay (x=0.04m, y=-0.09m)"
 
   TRAY_TOUCH:
-    lift: 0.045
-    shoulder: -1.5378
-    elbow: -2.1268
-    description: "Tu the ha hop xuong mat khay chua hang suon phai xe"
+    lift: 0.015
+    shoulder: -1.5860
+    elbow: -2.2536
+    wrist: 0.6980
+    description: "Tu the ha/kep hop sat mat khay chua hang xe tai dung tam khay (x=0.04m, y=-0.09m)"
 
   STATION_IN_HOVER:
     lift: 0.040
-    shoulder: -0.8411
-    elbow: 1.6821
-    description: "Hover tren tram tiep nhan IN"
+    shoulder: -0.1559
+    elbow: 0.3568
+    wrist: -0.2010
+    description: "Hover tren tram tiep nhan IN (x=0.425m, y=0.0m, phi=0.0 rad, tay duoi thang)"
 
   STATION_OUT_HOVER:
     lift: 0.040
-    shoulder: -0.8411
-    elbow: 1.6821
-    description: "Hover tren tram xuat hang OUT"
+    shoulder: -0.1559
+    elbow: 0.3568
+    wrist: -0.2010
+    description: "Hover tren tram xuat hang OUT (x=0.425m, y=0.0m, phi=0.0 rad, tay duoi thang)"

@@ -6,19 +6,19 @@ waypoints:
     description: "V\u1ECB tr\xED ch\u1EDD ban \u0111\u1EA7u c\u1EE7a robot"
   IN_STAGING:
     x: -2.4
-    y: 0.45
+    y: 0.5
     yaw: 1.5708
     description: "\u0110i\u1EC3m ch\u1EDD ti\u1EBFp nh\u1EADn h\xE0ng tr\u01B0\u1EDB\
       c tr\u1EA1m IN (c\xE1ch 0.5m)"
   OUT_STAGING:
     x: -2.4
-    y: -0.45
+    y: -0.5
     yaw: -1.5708
     description: "\u0110i\u1EC3m ch\u1EDD xu\u1EA5t h\xE0ng tr\u01B0\u1EDBc tr\u1EA1\
       m OUT (c\xE1ch 0.5m)"
   SLOT_STAGING_0:
     x: 0.75
-    y: 0.05
+    y: 1.125
     yaw: 1.5708
     slot_id: 0
     rack: rack_a
@@ -28,7 +28,7 @@ waypoints:
       \ c\u1ED9t 0, t\u1EA7ng 1)"
   SLOT_STAGING_1:
     x: 1.25
-    y: 0.05
+    y: 1.125
     yaw: 1.5708
     slot_id: 1
     rack: rack_a
@@ -38,7 +38,7 @@ waypoints:
       \ c\u1ED9t 1, t\u1EA7ng 1)"
   SLOT_STAGING_2:
     x: 1.75
-    y: 0.05
+    y: 1.125
     yaw: 1.5708
     slot_id: 2
     rack: rack_a
@@ -48,7 +48,7 @@ waypoints:
       \ c\u1ED9t 2, t\u1EA7ng 1)"
   SLOT_STAGING_3:
     x: 0.75
-    y: 0.05
+    y: 1.125
     yaw: 1.5708
     slot_id: 3
     rack: rack_a
@@ -58,7 +58,7 @@ waypoints:
       \ c\u1ED9t 0, t\u1EA7ng 2)"
   SLOT_STAGING_4:
     x: 1.25
-    y: 0.05
+    y: 1.125
     yaw: 1.5708
     slot_id: 4
     rack: rack_a
@@ -68,7 +68,7 @@ waypoints:
       \ c\u1ED9t 1, t\u1EA7ng 2)"
   SLOT_STAGING_5:
     x: 1.75
-    y: 0.05
+    y: 1.125
     yaw: 1.5708
     slot_id: 5
     rack: rack_a
@@ -78,7 +78,7 @@ waypoints:
       \ c\u1ED9t 2, t\u1EA7ng 2)"
   SLOT_STAGING_6:
     x: 0.75
-    y: -0.05
+    y: -1.125
     yaw: -1.5708
     slot_id: 6
     rack: rack_b
@@ -88,7 +88,7 @@ waypoints:
       \ c\u1ED9t 0, t\u1EA7ng 1)"
   SLOT_STAGING_7:
     x: 1.25
-    y: -0.05
+    y: -1.125
     yaw: -1.5708
     slot_id: 7
     rack: rack_b
@@ -98,7 +98,7 @@ waypoints:
       \ c\u1ED9t 1, t\u1EA7ng 1)"
   SLOT_STAGING_8:
     x: 1.75
-    y: -0.05
+    y: -1.125
     yaw: -1.5708
     slot_id: 8
     rack: rack_b
@@ -108,7 +108,7 @@ waypoints:
       \ c\u1ED9t 2, t\u1EA7ng 1)"
   SLOT_STAGING_9:
     x: 0.75
-    y: -0.05
+    y: -1.125
     yaw: -1.5708
     slot_id: 9
     rack: rack_b
@@ -118,7 +118,7 @@ waypoints:
       \ c\u1ED9t 0, t\u1EA7ng 2)"
   SLOT_STAGING_10:
     x: 1.25
-    y: -0.05
+    y: -1.125
     yaw: -1.5708
     slot_id: 10
     rack: rack_b
@@ -128,7 +128,7 @@ waypoints:
       \ c\u1ED9t 1, t\u1EA7ng 2)"
   SLOT_STAGING_11:
     x: 1.75
-    y: -0.05
+    y: -1.125
     yaw: -1.5708
     slot_id: 11
     rack: rack_b
@@ -136,3 +136,23 @@ waypoints:
     tier: 2
     description: "\u0110i\u1EC3m ch\u1EDD tr\u01B0\u1EDBc \xF4 k\u1EC7 11 (rack_b,\
       \ c\u1ED9t 2, t\u1EA7ng 2)"
+  SLOT_STAGING_30:
+    x: -2.4
+    y: 0.45
+    yaw: 1.5708
+    slot_id: 30
+    rack: station_in
+    col: 0
+    tier: 1
+    description: "\u0110i\u1EC3m ch\u1EDD tr\u01B0\u1EDBc \xF4 k\u1EC7 30 (station_in,\
+      \ c\u1ED9t 0, t\u1EA7ng 1)"
+  SLOT_STAGING_31:
+    x: -2.4
+    y: -0.45
+    yaw: -1.5708
+    slot_id: 31
+    rack: station_out
+    col: 0
+    tier: 1
+    description: "\u0110i\u1EC3m ch\u1EDD tr\u01B0\u1EDBc \xF4 k\u1EC7 31 (station_out,\
+      \ c\u1ED9t 0, t\u1EA7ng 1)"

@@ -78,6 +78,7 @@ class FSMContext:
         self.priority = priority
 
         self.slot_id: Optional[str] = None
+        self.preferred_slot_id: Optional[str] = None
         self.slot_tag_id: Optional[int] = None
         self.tier: int = 1
         self.expected_box_tag: Optional[int] = None

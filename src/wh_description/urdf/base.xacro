@@ -44,6 +44,7 @@
     <mu2>0.05</mu2>
     <kp>1000000.0</kp>
     <kd>1.0</kd>
+    <selfCollide>false</selfCollide>
   </gazebo>
 
   
@@ -165,11 +166,11 @@
   </joint>
 
   <link name="tray_link">
-    <!-- Đáy khay đựng hàng (kích thước 12x12 cm vừa vặn cho hộp 6x6 cm) -->
+    <!-- Đáy khay đựng hàng (kích thước mở rộng 15x15 cm rộng rãi cho hộp 6x6 cm) -->
     <visual>
       <origin xyz="0 0 0.003" rpy="0 0 0"/>
       <geometry>
-        <box size="0.12 0.12 0.006"/>
+        <box size="0.15 0.15 0.006"/>
       </geometry>
       <material name="tray_body_mat">
         <color rgba="0.18 0.24 0.32 1.0"/>
@@ -179,75 +180,109 @@
     <visual>
       <origin xyz="0 0 0.0065" rpy="0 0 0"/>
       <geometry>
-        <box size="0.108 0.108 0.002"/>
+        <box size="0.138 0.138 0.002"/>
       </geometry>
       <material name="tray_mat_rubber">
         <color rgba="0.08 0.08 0.08 1.0"/>
       </material>
     </visual>
-    <!-- Thành trước khay (Front Lip) -->
+    <!-- Thành trước khay (Front Wall - Cao 16mm chuẩn AMR, giữ hộp nhưng không cản trở tay kẹp) -->
     <visual>
-      <origin xyz="0.057 0 0.012" rpy="0 0 0"/>
+      <origin xyz="0.072 0 0.014" rpy="0 0 0"/>
       <geometry>
-        <box size="0.006 0.12 0.018"/>
+        <box size="0.006 0.15 0.016"/>
       </geometry>
       <material name="tray_body_mat"/>
     </visual>
-    <!-- Thành sau khay (Rear Lip) -->
+    <!-- Thành sau khay (Rear Wall - Cao 16mm) -->
     <visual>
-      <origin xyz="-0.057 0 0.012" rpy="0 0 0"/>
+      <origin xyz="-0.072 0 0.014" rpy="0 0 0"/>
       <geometry>
-        <box size="0.006 0.12 0.018"/>
+        <box size="0.006 0.15 0.016"/>
       </geometry>
       <material name="tray_body_mat"/>
     </visual>
-    <!-- Thành trái khay (Left Wall) -->
+    <!-- Thành trái khay (Left Wall - Cao 16mm) -->
     <visual>
-      <origin xyz="0 0.057 0.012" rpy="0 0 0"/>
+      <origin xyz="0 0.072 0.014" rpy="0 0 0"/>
       <geometry>
-        <box size="0.108 0.006 0.018"/>
+        <box size="0.138 0.006 0.016"/>
       </geometry>
       <material name="tray_body_mat"/>
     </visual>
-    <!-- Thành phải khay (Right Wall) -->
+    <!-- Thành phải khay (Right Wall - Cao 16mm) -->
     <visual>
-      <origin xyz="0 -0.057 0.012" rpy="0 0 0"/>
+      <origin xyz="0 -0.072 0.014" rpy="0 0 0"/>
       <geometry>
-        <box size="0.108 0.006 0.018"/>
+        <box size="0.138 0.006 0.016"/>
       </geometry>
       <material name="tray_body_mat"/>
     </visual>
-    <!-- Viền phản quang an toàn màu cam trên miệng khay -->
+    <!-- Viền phản quang an toàn màu cam trên đỉnh 4 thành khay -->
     <visual>
-      <origin xyz="0 0.057 0.0215" rpy="0 0 0"/>
-      <geometry><box size="0.12 0.008 0.002"/></geometry>
+      <origin xyz="0.072 0 0.023" rpy="0 0 0"/>
+      <geometry><box size="0.008 0.15 0.002"/></geometry>
       <material name="tray_rim_mat"><color rgba="0.95 0.45 0.10 1.0"/></material>
     </visual>
     <visual>
-      <origin xyz="0 -0.057 0.0215" rpy="0 0 0"/>
-      <geometry><box size="0.12 0.008 0.002"/></geometry>
+      <origin xyz="-0.072 0 0.023" rpy="0 0 0"/>
+      <geometry><box size="0.008 0.15 0.002"/></geometry>
       <material name="tray_rim_mat"/>
     </visual>
-    <!-- Collision day khay (chi giu collision mat day de do hop, khong de thanh khay va quet tay kep) -->
+    <visual>
+      <origin xyz="0 0.072 0.023" rpy="0 0 0"/>
+      <geometry><box size="0.138 0.008 0.002"/></geometry>
+      <material name="tray_rim_mat"/>
+    </visual>
+    <visual>
+      <origin xyz="0 -0.072 0.023" rpy="0 0 0"/>
+      <geometry><box size="0.138 0.008 0.002"/></geometry>
+      <material name="tray_rim_mat"/>
+    </visual>
+    <!-- Collision: Đáy khay + 4 gờ chặn chống trượt cao 16mm (thấp hơn hộp 40mm giúp tay kẹp ngang ôm hộp 100% tự do) -->
     <collision>
       <origin xyz="0 0 0.003" rpy="0 0 0"/>
       <geometry>
-        <box size="0.12 0.12 0.006"/>
+        <box size="0.15 0.15 0.006"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin xyz="0.072 0 0.014" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.006 0.15 0.016"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin xyz="-0.072 0 0.014" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.006 0.15 0.016"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin xyz="0 0.072 0.014" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.138 0.006 0.016"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin xyz="0 -0.072 0.014" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.138 0.006 0.016"/>
       </geometry>
     </collision>
     <inertial>
       <origin xyz="0 0 0.010" rpy="0 0 0"/>
-      <mass value="0.25"/>
-      <xacro:box_inertia m="0.25" x="0.14" y="0.20" z="0.024"/>
+      <mass value="0.30"/>
+      <xacro:box_inertia m="0.30" x="0.15" y="0.15" z="0.024"/>
     </inertial>
   </link>
 
   <gazebo reference="tray_link">
     <material>Gazebo/DarkGrey</material>
-    <mu1>50.0</mu1>
-    <mu2>50.0</mu2>
+    <mu1>100.0</mu1>
+    <mu2>100.0</mu2>
     <kp>1000000.0</kp>
-    <kd>1.0</kd>
+    <kd>10.0</kd>
     <selfCollide>false</selfCollide>
   </gazebo>
 

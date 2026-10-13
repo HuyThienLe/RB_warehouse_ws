@@ -97,7 +97,7 @@ def generate_launch_description():
         "use_sim_time", default_value="true", description="Use simulation clock"
     )
 
-    is_nav_mode = IfCondition(PythonExpression(["'", mode, "' == 'navigation'"]))
+    is_nav_mode = IfCondition(PythonExpression(["'", mode, "' in ('navigation', 'nav')"]))
 
     # 1. Khởi chạy Mô phỏng Gazebo (World + AMR Robot + Controllers + Slip + EKF + BoxManager)
     warehouse_sim = IncludeLaunchDescription(

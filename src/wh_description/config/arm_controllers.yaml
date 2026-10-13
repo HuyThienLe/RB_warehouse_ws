@@ -13,6 +13,7 @@ arm_controller:
       - lift_joint
       - shoulder_joint
       - elbow_joint
+      - wrist_joint
     command_interfaces:
       - position
     state_interfaces:
@@ -23,13 +24,16 @@ arm_controller:
     allow_partial_joints_goal: false
     constraints:
       stopped_velocity_tolerance: 0.05
-      goal_time: 3.0
+      goal_time: 5.0
       lift_joint:
-        trajectory: 0.1
+        trajectory: 0.0
         goal: 0.02
       shoulder_joint:
-        trajectory: 0.6
+        trajectory: 0.0
         goal: 0.05
       elbow_joint:
-        trajectory: 0.6
+        trajectory: 0.0
+        goal: 0.05
+      wrist_joint:
+        trajectory: 0.0
         goal: 0.05

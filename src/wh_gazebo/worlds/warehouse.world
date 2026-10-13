@@ -149,7 +149,7 @@
 
     <model name="rack_a_back_wall">
       <static>true</static>
-      <pose>1.2500 0.8300 0.3000 0.000000 0.000000 0.000000</pose>
+      <pose>1.2500 1.9900 0.3000 0.000000 0.000000 0.000000</pose>
       <link name="link">
         <collision name="col">
           <geometry><box><size>1.54 0.02 0.6</size></box></geometry>
@@ -165,7 +165,7 @@
 
     <model name="rack_a_level_1_plank">
       <static>true</static>
-      <pose>1.2500 0.7100 0.1400 0.000000 0.000000 0.000000</pose>
+      <pose>1.2500 1.8700 0.1400 0.000000 0.000000 0.000000</pose>
       <link name="link">
         <collision name="col">
           <geometry><box><size>1.5 0.22 0.02</size></box></geometry>
@@ -181,7 +181,7 @@
 
     <model name="rack_a_level_2_plank">
       <static>true</static>
-      <pose>1.2500 0.7100 0.3900 0.000000 0.000000 0.000000</pose>
+      <pose>1.2500 1.8700 0.3900 0.000000 0.000000 0.000000</pose>
       <link name="link">
         <collision name="col">
           <geometry><box><size>1.5 0.22 0.02</size></box></geometry>
@@ -197,7 +197,7 @@
 
     <model name="rack_a_floor_plank">
       <static>true</static>
-      <pose>1.2500 0.7100 0.0050 0.000000 0.000000 0.000000</pose>
+      <pose>1.2500 1.8700 0.0050 0.000000 0.000000 0.000000</pose>
       <link name="link">
         <collision name="col">
           <geometry><box><size>1.5 0.22 0.02</size></box></geometry>
@@ -213,7 +213,7 @@
 
     <model name="rack_a_left_side">
       <static>true</static>
-      <pose>0.4900 0.7100 0.3000 0.000000 0.000000 0.000000</pose>
+      <pose>0.4900 1.8700 0.3000 0.000000 0.000000 0.000000</pose>
       <link name="link">
         <collision name="col">
           <geometry><box><size>0.02 0.22 0.6</size></box></geometry>
@@ -229,7 +229,7 @@
 
     <model name="rack_a_right_side">
       <static>true</static>
-      <pose>2.0100 0.7100 0.3000 0.000000 0.000000 0.000000</pose>
+      <pose>2.0100 1.8700 0.3000 0.000000 0.000000 0.000000</pose>
       <link name="link">
         <collision name="col">
           <geometry><box><size>0.02 0.22 0.6</size></box></geometry>
@@ -245,7 +245,7 @@
 
     <model name="rack_a_divider_0">
       <static>true</static>
-      <pose>1.0000 0.7100 0.3000 0.000000 0.000000 0.000000</pose>
+      <pose>1.0000 1.8700 0.3000 0.000000 0.000000 0.000000</pose>
       <link name="link">
         <collision name="col">
           <geometry><box><size>0.015 0.22 0.6</size></box></geometry>
@@ -261,7 +261,7 @@
 
     <model name="rack_a_divider_1">
       <static>true</static>
-      <pose>1.5000 0.7100 0.3000 0.000000 0.000000 0.000000</pose>
+      <pose>1.5000 1.8700 0.3000 0.000000 0.000000 0.000000</pose>
       <link name="link">
         <collision name="col">
           <geometry><box><size>0.015 0.22 0.6</size></box></geometry>
@@ -277,8 +277,9 @@
 
     <model name="rack_a_level_1_front_beam">
       <static>true</static>
-      <pose>1.2500 0.6050 0.1100 0.000000 0.000000 0.000000</pose>
+      <pose>1.2500 1.7650 0.1100 0.000000 0.000000 0.000000</pose>
       <link name="link">
+
         <visual name="vis">
           <cast_shadows>false</cast_shadows>
           <geometry><box><size>1.5 0.01 0.04</size></box></geometry>
@@ -289,8 +290,9 @@
 
     <model name="rack_a_level_2_front_beam">
       <static>true</static>
-      <pose>1.2500 0.6050 0.3600 0.000000 0.000000 0.000000</pose>
+      <pose>1.2500 1.7650 0.3600 0.000000 0.000000 0.000000</pose>
       <link name="link">
+
         <visual name="vis">
           <cast_shadows>false</cast_shadows>
           <geometry><box><size>1.5 0.01 0.04</size></box></geometry>
@@ -301,7 +303,7 @@
 
     <model name="tag_slot_0">
       <static>true</static>
-      <pose>0.7500 0.5990 0.1100 0.000000 0.000000 3.141593</pose>
+      <pose>0.7500 1.7590 0.1100 0.000000 0.000000 3.141593</pose>
       <link name="link">
         <collision name="col">
           <geometry><box><size>0.05 0.001 0.05</size></box></geometry>
@@ -322,7 +324,7 @@
 
     <model name="tag_slot_1">
       <static>true</static>
-      <pose>1.2500 0.5990 0.1100 0.000000 0.000000 3.141593</pose>
+      <pose>1.2500 1.7590 0.1100 0.000000 0.000000 3.141593</pose>
       <link name="link">
         <collision name="col">
           <geometry><box><size>0.05 0.001 0.05</size></box></geometry>
@@ -343,7 +345,7 @@
 
     <model name="tag_slot_2">
       <static>true</static>
-      <pose>1.7500 0.5990 0.1100 0.000000 0.000000 3.141593</pose>
+      <pose>1.7500 1.7590 0.1100 0.000000 0.000000 3.141593</pose>
       <link name="link">
         <collision name="col">
           <geometry><box><size>0.05 0.001 0.05</size></box></geometry>
@@ -364,7 +366,7 @@
 
     <model name="tag_slot_3">
       <static>true</static>
-      <pose>0.7500 0.5990 0.3600 0.000000 0.000000 3.141593</pose>
+      <pose>0.7500 1.7590 0.3600 0.000000 0.000000 3.141593</pose>
       <link name="link">
         <collision name="col">
           <geometry><box><size>0.05 0.001 0.05</size></box></geometry>
@@ -385,7 +387,7 @@
 
     <model name="tag_slot_4">
       <static>true</static>
-      <pose>1.2500 0.5990 0.3600 0.000000 0.000000 3.141593</pose>
+      <pose>1.2500 1.7590 0.3600 0.000000 0.000000 3.141593</pose>
       <link name="link">
         <collision name="col">
           <geometry><box><size>0.05 0.001 0.05</size></box></geometry>
@@ -406,7 +408,7 @@
 
     <model name="tag_slot_5">
       <static>true</static>
-      <pose>1.7500 0.5990 0.3600 0.000000 0.000000 3.141593</pose>
+      <pose>1.7500 1.7590 0.3600 0.000000 0.000000 3.141593</pose>
       <link name="link">
         <collision name="col">
           <geometry><box><size>0.05 0.001 0.05</size></box></geometry>
@@ -427,7 +429,7 @@
 
     <model name="shelf_tray_0">
       <static>true</static>
-      <pose>0.7500 0.7100 0.1500 0.000000 0.000000 0.000000</pose>
+      <pose>0.7500 1.8700 0.1500 0.000000 0.000000 0.000000</pose>
       <link name="link">
         <!-- Đáy khay mỏng 2mm sát mặt sàn -->
         <visual name="bottom_vis">
@@ -477,7 +479,7 @@
 
     <model name="shelf_tray_1">
       <static>true</static>
-      <pose>1.2500 0.7100 0.1500 0.000000 0.000000 0.000000</pose>
+      <pose>1.2500 1.8700 0.1500 0.000000 0.000000 0.000000</pose>
       <link name="link">
         <!-- Đáy khay mỏng 2mm sát mặt sàn -->
         <visual name="bottom_vis">
@@ -527,7 +529,7 @@
 
     <model name="shelf_tray_2">
       <static>true</static>
-      <pose>1.7500 0.7100 0.1500 0.000000 0.000000 0.000000</pose>
+      <pose>1.7500 1.8700 0.1500 0.000000 0.000000 0.000000</pose>
       <link name="link">
         <!-- Đáy khay mỏng 2mm sát mặt sàn -->
         <visual name="bottom_vis">
@@ -577,7 +579,7 @@
 
     <model name="shelf_tray_3">
       <static>true</static>
-      <pose>0.7500 0.7100 0.4000 0.000000 0.000000 0.000000</pose>
+      <pose>0.7500 1.8700 0.4000 0.000000 0.000000 0.000000</pose>
       <link name="link">
         <!-- Đáy khay mỏng 2mm sát mặt sàn -->
         <visual name="bottom_vis">
@@ -627,7 +629,7 @@
 
     <model name="shelf_tray_4">
       <static>true</static>
-      <pose>1.2500 0.7100 0.4000 0.000000 0.000000 0.000000</pose>
+      <pose>1.2500 1.8700 0.4000 0.000000 0.000000 0.000000</pose>
       <link name="link">
         <!-- Đáy khay mỏng 2mm sát mặt sàn -->
         <visual name="bottom_vis">
@@ -677,7 +679,7 @@
 
     <model name="shelf_tray_5">
       <static>true</static>
-      <pose>1.7500 0.7100 0.4000 0.000000 0.000000 0.000000</pose>
+      <pose>1.7500 1.8700 0.4000 0.000000 0.000000 0.000000</pose>
       <link name="link">
         <!-- Đáy khay mỏng 2mm sát mặt sàn -->
         <visual name="bottom_vis">
@@ -727,7 +729,7 @@
 
     <model name="rack_b_back_wall">
       <static>true</static>
-      <pose>1.2500 -0.8300 0.3000 0.000000 0.000000 0.000000</pose>
+      <pose>1.2500 -1.9900 0.3000 0.000000 0.000000 0.000000</pose>
       <link name="link">
         <collision name="col">
           <geometry><box><size>1.54 0.02 0.6</size></box></geometry>
@@ -743,7 +745,7 @@
 
     <model name="rack_b_level_1_plank">
       <static>true</static>
-      <pose>1.2500 -0.7100 0.1400 0.000000 0.000000 0.000000</pose>
+      <pose>1.2500 -1.8700 0.1400 0.000000 0.000000 0.000000</pose>
       <link name="link">
         <collision name="col">
           <geometry><box><size>1.5 0.22 0.02</size></box></geometry>
@@ -759,7 +761,7 @@
 
     <model name="rack_b_level_2_plank">
       <static>true</static>
-      <pose>1.2500 -0.7100 0.3900 0.000000 0.000000 0.000000</pose>
+      <pose>1.2500 -1.8700 0.3900 0.000000 0.000000 0.000000</pose>
       <link name="link">
         <collision name="col">
           <geometry><box><size>1.5 0.22 0.02</size></box></geometry>
@@ -775,7 +777,7 @@
 
     <model name="rack_b_floor_plank">
       <static>true</static>
-      <pose>1.2500 -0.7100 0.0050 0.000000 0.000000 0.000000</pose>
+      <pose>1.2500 -1.8700 0.0050 0.000000 0.000000 0.000000</pose>
       <link name="link">
         <collision name="col">
           <geometry><box><size>1.5 0.22 0.02</size></box></geometry>
@@ -791,7 +793,7 @@
 
     <model name="rack_b_left_side">
       <static>true</static>
-      <pose>0.4900 -0.7100 0.3000 0.000000 0.000000 0.000000</pose>
+      <pose>0.4900 -1.8700 0.3000 0.000000 0.000000 0.000000</pose>
       <link name="link">
         <collision name="col">
           <geometry><box><size>0.02 0.22 0.6</size></box></geometry>
@@ -807,7 +809,7 @@
 
     <model name="rack_b_right_side">
       <static>true</static>
-      <pose>2.0100 -0.7100 0.3000 0.000000 0.000000 0.000000</pose>
+      <pose>2.0100 -1.8700 0.3000 0.000000 0.000000 0.000000</pose>
       <link name="link">
         <collision name="col">
           <geometry><box><size>0.02 0.22 0.6</size></box></geometry>
@@ -823,7 +825,7 @@
 
     <model name="rack_b_divider_0">
       <static>true</static>
-      <pose>1.0000 -0.7100 0.3000 0.000000 0.000000 0.000000</pose>
+      <pose>1.0000 -1.8700 0.3000 0.000000 0.000000 0.000000</pose>
       <link name="link">
         <collision name="col">
           <geometry><box><size>0.015 0.22 0.6</size></box></geometry>
@@ -839,7 +841,7 @@
 
     <model name="rack_b_divider_1">
       <static>true</static>
-      <pose>1.5000 -0.7100 0.3000 0.000000 0.000000 0.000000</pose>
+      <pose>1.5000 -1.8700 0.3000 0.000000 0.000000 0.000000</pose>
       <link name="link">
         <collision name="col">
           <geometry><box><size>0.015 0.22 0.6</size></box></geometry>
@@ -855,8 +857,9 @@
 
     <model name="rack_b_level_1_front_beam">
       <static>true</static>
-      <pose>1.2500 -0.6050 0.1100 0.000000 0.000000 0.000000</pose>
+      <pose>1.2500 -1.7650 0.1100 0.000000 0.000000 0.000000</pose>
       <link name="link">
+
         <visual name="vis">
           <cast_shadows>false</cast_shadows>
           <geometry><box><size>1.5 0.01 0.04</size></box></geometry>
@@ -867,8 +870,9 @@
 
     <model name="rack_b_level_2_front_beam">
       <static>true</static>
-      <pose>1.2500 -0.6050 0.3600 0.000000 0.000000 0.000000</pose>
+      <pose>1.2500 -1.7650 0.3600 0.000000 0.000000 0.000000</pose>
       <link name="link">
+
         <visual name="vis">
           <cast_shadows>false</cast_shadows>
           <geometry><box><size>1.5 0.01 0.04</size></box></geometry>
@@ -879,7 +883,7 @@
 
     <model name="tag_slot_6">
       <static>true</static>
-      <pose>0.7500 -0.5990 0.1100 0.000000 0.000000 0.000000</pose>
+      <pose>0.7500 -1.7590 0.1100 0.000000 0.000000 0.000000</pose>
       <link name="link">
         <collision name="col">
           <geometry><box><size>0.05 0.001 0.05</size></box></geometry>
@@ -900,7 +904,7 @@
 
     <model name="tag_slot_7">
       <static>true</static>
-      <pose>1.2500 -0.5990 0.1100 0.000000 0.000000 0.000000</pose>
+      <pose>1.2500 -1.7590 0.1100 0.000000 0.000000 0.000000</pose>
       <link name="link">
         <collision name="col">
           <geometry><box><size>0.05 0.001 0.05</size></box></geometry>
@@ -921,7 +925,7 @@
 
     <model name="tag_slot_8">
       <static>true</static>
-      <pose>1.7500 -0.5990 0.1100 0.000000 0.000000 0.000000</pose>
+      <pose>1.7500 -1.7590 0.1100 0.000000 0.000000 0.000000</pose>
       <link name="link">
         <collision name="col">
           <geometry><box><size>0.05 0.001 0.05</size></box></geometry>
@@ -942,7 +946,7 @@
 
     <model name="tag_slot_9">
       <static>true</static>
-      <pose>0.7500 -0.5990 0.3600 0.000000 0.000000 0.000000</pose>
+      <pose>0.7500 -1.7590 0.3600 0.000000 0.000000 0.000000</pose>
       <link name="link">
         <collision name="col">
           <geometry><box><size>0.05 0.001 0.05</size></box></geometry>
@@ -963,7 +967,7 @@
 
     <model name="tag_slot_10">
       <static>true</static>
-      <pose>1.2500 -0.5990 0.3600 0.000000 0.000000 0.000000</pose>
+      <pose>1.2500 -1.7590 0.3600 0.000000 0.000000 0.000000</pose>
       <link name="link">
         <collision name="col">
           <geometry><box><size>0.05 0.001 0.05</size></box></geometry>
@@ -984,7 +988,7 @@
 
     <model name="tag_slot_11">
       <static>true</static>
-      <pose>1.7500 -0.5990 0.3600 0.000000 0.000000 0.000000</pose>
+      <pose>1.7500 -1.7590 0.3600 0.000000 0.000000 0.000000</pose>
       <link name="link">
         <collision name="col">
           <geometry><box><size>0.05 0.001 0.05</size></box></geometry>
@@ -1005,7 +1009,7 @@
 
     <model name="shelf_tray_6">
       <static>true</static>
-      <pose>0.7500 -0.7100 0.1500 0.000000 0.000000 0.000000</pose>
+      <pose>0.7500 -1.8700 0.1500 0.000000 0.000000 0.000000</pose>
       <link name="link">
         <!-- Đáy khay mỏng 2mm sát mặt sàn -->
         <visual name="bottom_vis">
@@ -1055,7 +1059,7 @@
 
     <model name="shelf_tray_7">
       <static>true</static>
-      <pose>1.2500 -0.7100 0.1500 0.000000 0.000000 0.000000</pose>
+      <pose>1.2500 -1.8700 0.1500 0.000000 0.000000 0.000000</pose>
       <link name="link">
         <!-- Đáy khay mỏng 2mm sát mặt sàn -->
         <visual name="bottom_vis">
@@ -1105,7 +1109,7 @@
 
     <model name="shelf_tray_8">
       <static>true</static>
-      <pose>1.7500 -0.7100 0.1500 0.000000 0.000000 0.000000</pose>
+      <pose>1.7500 -1.8700 0.1500 0.000000 0.000000 0.000000</pose>
       <link name="link">
         <!-- Đáy khay mỏng 2mm sát mặt sàn -->
         <visual name="bottom_vis">
@@ -1155,7 +1159,7 @@
 
     <model name="shelf_tray_9">
       <static>true</static>
-      <pose>0.7500 -0.7100 0.4000 0.000000 0.000000 0.000000</pose>
+      <pose>0.7500 -1.8700 0.4000 0.000000 0.000000 0.000000</pose>
       <link name="link">
         <!-- Đáy khay mỏng 2mm sát mặt sàn -->
         <visual name="bottom_vis">
@@ -1205,7 +1209,7 @@
 
     <model name="shelf_tray_10">
       <static>true</static>
-      <pose>1.2500 -0.7100 0.4000 0.000000 0.000000 0.000000</pose>
+      <pose>1.2500 -1.8700 0.4000 0.000000 0.000000 0.000000</pose>
       <link name="link">
         <!-- Đáy khay mỏng 2mm sát mặt sàn -->
         <visual name="bottom_vis">
@@ -1255,7 +1259,7 @@
 
     <model name="shelf_tray_11">
       <static>true</static>
-      <pose>1.7500 -0.7100 0.4000 0.000000 0.000000 0.000000</pose>
+      <pose>1.7500 -1.8700 0.4000 0.000000 0.000000 0.000000</pose>
       <link name="link">
         <!-- Đáy khay mỏng 2mm sát mặt sàn -->
         <visual name="bottom_vis">
@@ -1305,15 +1309,15 @@
 
     <model name="table_in">
       <static>true</static>
-      <pose>-2.4000 1.2000 0.0750 0.000000 0.000000 0.000000</pose>
+      <pose>-2.4000 1.2500 0.0750 0.000000 0.000000 0.000000</pose>
       <link name="link">
         <collision name="col">
-          <geometry><box><size>0.3 0.3 0.15</size></box></geometry>
+          <geometry><box><size>0.7 0.4 0.15</size></box></geometry>
           <surface><friction><ode><mu>0.9</mu><mu2>0.9</mu2></ode></friction></surface>
         </collision>
         <visual name="vis">
           <cast_shadows>false</cast_shadows>
-          <geometry><box><size>0.3 0.3 0.15</size></box></geometry>
+          <geometry><box><size>0.7 0.4 0.15</size></box></geometry>
           <material><ambient>0.80 0.80 0.85 1.0</ambient><diffuse>0.80 0.80 0.85 1.0</diffuse></material>
         </visual>
       </link>
@@ -1321,50 +1325,50 @@
 
     <model name="station_tray_in">
       <static>true</static>
-      <pose>-2.4000 1.2000 0.1500 0.000000 0.000000 0.000000</pose>
+      <pose>-2.4000 1.2500 0.1500 0.000000 0.000000 0.000000</pose>
       <link name="link">
         <!-- Đáy khay mỏng 2mm sát mặt sàn -->
         <visual name="bottom_vis">
           <pose>0 0 0.001 0 0 0</pose>
-          <geometry><box><size>0.22 0.22 0.002</size></box></geometry>
+          <geometry><box><size>0.62 0.32 0.002</size></box></geometry>
           <material><ambient>0.15 0.35 0.65 1.0</ambient><diffuse>0.15 0.35 0.65 1.0</diffuse></material>
         </visual>
         <!-- Thành sau khay -->
         <visual name="back_wall_vis">
-          <pose>0 0.107 0.01 0 0 0</pose>
-          <geometry><box><size>0.22 0.006 0.02</size></box></geometry>
+          <pose>0 0.157 0.0125 0 0 0</pose>
+          <geometry><box><size>0.62 0.006 0.025</size></box></geometry>
           <material><ambient>0.15 0.35 0.65 1.0</ambient><diffuse>0.15 0.35 0.65 1.0</diffuse></material>
         </visual>
         <!-- Thành trái khay -->
         <visual name="left_wall_vis">
-          <pose>-0.107 0 0.01 0 0 0</pose>
-          <geometry><box><size>0.006 0.22 0.02</size></box></geometry>
+          <pose>-0.307 0 0.0125 0 0 0</pose>
+          <geometry><box><size>0.006 0.32 0.025</size></box></geometry>
           <material><ambient>0.15 0.35 0.65 1.0</ambient><diffuse>0.15 0.35 0.65 1.0</diffuse></material>
         </visual>
         <!-- Thành phải khay -->
         <visual name="right_wall_vis">
-          <pose>0.107 0 0.01 0 0 0</pose>
-          <geometry><box><size>0.006 0.22 0.02</size></box></geometry>
+          <pose>0.307 0 0.0125 0 0 0</pose>
+          <geometry><box><size>0.006 0.32 0.025</size></box></geometry>
           <material><ambient>0.15 0.35 0.65 1.0</ambient><diffuse>0.15 0.35 0.65 1.0</diffuse></material>
         </visual>
         <!-- Gờ mép trước thấp 4mm -->
         <visual name="front_lip_vis">
-          <pose>0 -0.107 0.004 0 0 0</pose>
-          <geometry><box><size>0.22 0.006 0.008</size></box></geometry>
+          <pose>0 -0.157 0.004 0 0 0</pose>
+          <geometry><box><size>0.62 0.006 0.008</size></box></geometry>
           <material><ambient>0.20 0.50 0.85 1.0</ambient><diffuse>0.20 0.50 0.85 1.0</diffuse></material>
         </visual>
         <!-- Collisions thành khay bảo vệ hộp -->
         <collision name="back_col">
-          <pose>0 0.107 0.01 0 0 0</pose>
-          <geometry><box><size>0.22 0.006 0.02</size></box></geometry>
+          <pose>0 0.157 0.0125 0 0 0</pose>
+          <geometry><box><size>0.62 0.006 0.025</size></box></geometry>
         </collision>
         <collision name="left_col">
-          <pose>-0.107 0 0.01 0 0 0</pose>
-          <geometry><box><size>0.006 0.22 0.02</size></box></geometry>
+          <pose>-0.307 0 0.0125 0 0 0</pose>
+          <geometry><box><size>0.006 0.32 0.025</size></box></geometry>
         </collision>
         <collision name="right_col">
-          <pose>0.107 0 0.01 0 0 0</pose>
-          <geometry><box><size>0.006 0.22 0.02</size></box></geometry>
+          <pose>0.307 0 0.0125 0 0 0</pose>
+          <geometry><box><size>0.006 0.32 0.025</size></box></geometry>
         </collision>
       </link>
     </model>
@@ -1392,15 +1396,15 @@
 
     <model name="table_out">
       <static>true</static>
-      <pose>-2.4000 -1.2000 0.0750 0.000000 0.000000 0.000000</pose>
+      <pose>-2.4000 -1.2500 0.0750 0.000000 0.000000 0.000000</pose>
       <link name="link">
         <collision name="col">
-          <geometry><box><size>0.3 0.3 0.15</size></box></geometry>
+          <geometry><box><size>0.7 0.4 0.15</size></box></geometry>
           <surface><friction><ode><mu>0.9</mu><mu2>0.9</mu2></ode></friction></surface>
         </collision>
         <visual name="vis">
           <cast_shadows>false</cast_shadows>
-          <geometry><box><size>0.3 0.3 0.15</size></box></geometry>
+          <geometry><box><size>0.7 0.4 0.15</size></box></geometry>
           <material><ambient>0.80 0.80 0.85 1.0</ambient><diffuse>0.80 0.80 0.85 1.0</diffuse></material>
         </visual>
       </link>
@@ -1408,50 +1412,50 @@
 
     <model name="station_tray_out">
       <static>true</static>
-      <pose>-2.4000 -1.2000 0.1500 0.000000 0.000000 0.000000</pose>
+      <pose>-2.4000 -1.2500 0.1500 0.000000 0.000000 0.000000</pose>
       <link name="link">
         <!-- Đáy khay mỏng 2mm sát mặt sàn -->
         <visual name="bottom_vis">
           <pose>0 0 0.001 0 0 0</pose>
-          <geometry><box><size>0.22 0.22 0.002</size></box></geometry>
+          <geometry><box><size>0.62 0.32 0.002</size></box></geometry>
           <material><ambient>0.15 0.35 0.65 1.0</ambient><diffuse>0.15 0.35 0.65 1.0</diffuse></material>
         </visual>
         <!-- Thành sau khay -->
         <visual name="back_wall_vis">
-          <pose>0 -0.107 0.01 0 0 0</pose>
-          <geometry><box><size>0.22 0.006 0.02</size></box></geometry>
+          <pose>0 -0.157 0.0125 0 0 0</pose>
+          <geometry><box><size>0.62 0.006 0.025</size></box></geometry>
           <material><ambient>0.15 0.35 0.65 1.0</ambient><diffuse>0.15 0.35 0.65 1.0</diffuse></material>
         </visual>
         <!-- Thành trái khay -->
         <visual name="left_wall_vis">
-          <pose>-0.107 0 0.01 0 0 0</pose>
-          <geometry><box><size>0.006 0.22 0.02</size></box></geometry>
+          <pose>-0.307 0 0.0125 0 0 0</pose>
+          <geometry><box><size>0.006 0.32 0.025</size></box></geometry>
           <material><ambient>0.15 0.35 0.65 1.0</ambient><diffuse>0.15 0.35 0.65 1.0</diffuse></material>
         </visual>
         <!-- Thành phải khay -->
         <visual name="right_wall_vis">
-          <pose>0.107 0 0.01 0 0 0</pose>
-          <geometry><box><size>0.006 0.22 0.02</size></box></geometry>
+          <pose>0.307 0 0.0125 0 0 0</pose>
+          <geometry><box><size>0.006 0.32 0.025</size></box></geometry>
           <material><ambient>0.15 0.35 0.65 1.0</ambient><diffuse>0.15 0.35 0.65 1.0</diffuse></material>
         </visual>
         <!-- Gờ mép trước thấp 4mm -->
         <visual name="front_lip_vis">
-          <pose>0 0.107 0.004 0 0 0</pose>
-          <geometry><box><size>0.22 0.006 0.008</size></box></geometry>
+          <pose>0 0.157 0.004 0 0 0</pose>
+          <geometry><box><size>0.62 0.006 0.008</size></box></geometry>
           <material><ambient>0.20 0.50 0.85 1.0</ambient><diffuse>0.20 0.50 0.85 1.0</diffuse></material>
         </visual>
         <!-- Collisions thành khay bảo vệ hộp -->
         <collision name="back_col">
-          <pose>0 -0.107 0.01 0 0 0</pose>
-          <geometry><box><size>0.22 0.006 0.02</size></box></geometry>
+          <pose>0 -0.157 0.0125 0 0 0</pose>
+          <geometry><box><size>0.62 0.006 0.025</size></box></geometry>
         </collision>
         <collision name="left_col">
-          <pose>-0.107 0 0.01 0 0 0</pose>
-          <geometry><box><size>0.006 0.22 0.02</size></box></geometry>
+          <pose>-0.307 0 0.0125 0 0 0</pose>
+          <geometry><box><size>0.006 0.32 0.025</size></box></geometry>
         </collision>
         <collision name="right_col">
-          <pose>0.107 0 0.01 0 0 0</pose>
-          <geometry><box><size>0.006 0.22 0.02</size></box></geometry>
+          <pose>0.307 0 0.0125 0 0 0</pose>
+          <geometry><box><size>0.006 0.32 0.025</size></box></geometry>
         </collision>
       </link>
     </model>
@@ -1479,7 +1483,7 @@
 
     <model name="floor_in">
       <static>true</static>
-      <pose>-2.4000 1.2000 0.0010 0.000000 0.000000 0.000000</pose>
+      <pose>-2.4000 1.2500 0.0010 0.000000 0.000000 0.000000</pose>
       <link name="link">
         <visual name="vis">
           <cast_shadows>false</cast_shadows>
@@ -1494,7 +1498,7 @@
 
     <model name="floor_out">
       <static>true</static>
-      <pose>-2.4000 -1.2000 0.0010 0.000000 0.000000 0.000000</pose>
+      <pose>-2.4000 -1.2500 0.0010 0.000000 0.000000 0.000000</pose>
       <link name="link">
         <visual name="vis">
           <cast_shadows>false</cast_shadows>
@@ -1518,6 +1522,258 @@
             <ambient>0.0 0.5 1.0 0.7</ambient>
             <diffuse>0.0 0.5 1.0 0.7</diffuse>
           </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="docking_bay_rack_a_col_0">
+      <static>true</static>
+      <pose>0.7500 1.3250 0.0010 0.000000 0.000000 0.000000</pose>
+      <link name="link">
+        <!-- Viền trước -->
+        <visual name="border_front">
+          <pose>0 0.22999999999999998 0 0 0 0</pose>
+          <cast_shadows>false</cast_shadows>
+          <geometry><box><size>0.36 0.02 0.001</size></box></geometry>
+          <material><ambient>0.95 0.75 0.1 0.9</ambient><diffuse>0.95 0.75 0.1 0.9</diffuse></material>
+        </visual>
+        <!-- Viền sau -->
+        <visual name="border_back">
+          <pose>0 -0.22999999999999998 0 0 0 0</pose>
+          <cast_shadows>false</cast_shadows>
+          <geometry><box><size>0.36 0.02 0.001</size></box></geometry>
+          <material><ambient>0.95 0.75 0.1 0.9</ambient><diffuse>0.95 0.75 0.1 0.9</diffuse></material>
+        </visual>
+        <!-- Viền trái -->
+        <visual name="border_left">
+          <pose>-0.16999999999999998 0 0 0 0 0</pose>
+          <cast_shadows>false</cast_shadows>
+          <geometry><box><size>0.02 0.48 0.001</size></box></geometry>
+          <material><ambient>0.95 0.75 0.1 0.9</ambient><diffuse>0.95 0.75 0.1 0.9</diffuse></material>
+        </visual>
+        <!-- Viền phải -->
+        <visual name="border_right">
+          <pose>0.16999999999999998 0 0 0 0 0</pose>
+          <cast_shadows>false</cast_shadows>
+          <geometry><box><size>0.02 0.48 0.001</size></box></geometry>
+          <material><ambient>0.95 0.75 0.1 0.9</ambient><diffuse>0.95 0.75 0.1 0.9</diffuse></material>
+        </visual>
+        <!-- Vạch tâm căn chỉnh (Alignment Cross Line) -->
+        <visual name="center_mark">
+          <pose>0 0 0 0 0 0</pose>
+          <cast_shadows>false</cast_shadows>
+          <geometry><box><size>0.08 0.08 0.001</size></box></geometry>
+          <material><ambient>0.95 0.75 0.1 0.5</ambient><diffuse>0.95 0.75 0.1 0.5</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="docking_bay_rack_a_col_1">
+      <static>true</static>
+      <pose>1.2500 1.3250 0.0010 0.000000 0.000000 0.000000</pose>
+      <link name="link">
+        <!-- Viền trước -->
+        <visual name="border_front">
+          <pose>0 0.22999999999999998 0 0 0 0</pose>
+          <cast_shadows>false</cast_shadows>
+          <geometry><box><size>0.36 0.02 0.001</size></box></geometry>
+          <material><ambient>0.95 0.75 0.1 0.9</ambient><diffuse>0.95 0.75 0.1 0.9</diffuse></material>
+        </visual>
+        <!-- Viền sau -->
+        <visual name="border_back">
+          <pose>0 -0.22999999999999998 0 0 0 0</pose>
+          <cast_shadows>false</cast_shadows>
+          <geometry><box><size>0.36 0.02 0.001</size></box></geometry>
+          <material><ambient>0.95 0.75 0.1 0.9</ambient><diffuse>0.95 0.75 0.1 0.9</diffuse></material>
+        </visual>
+        <!-- Viền trái -->
+        <visual name="border_left">
+          <pose>-0.16999999999999998 0 0 0 0 0</pose>
+          <cast_shadows>false</cast_shadows>
+          <geometry><box><size>0.02 0.48 0.001</size></box></geometry>
+          <material><ambient>0.95 0.75 0.1 0.9</ambient><diffuse>0.95 0.75 0.1 0.9</diffuse></material>
+        </visual>
+        <!-- Viền phải -->
+        <visual name="border_right">
+          <pose>0.16999999999999998 0 0 0 0 0</pose>
+          <cast_shadows>false</cast_shadows>
+          <geometry><box><size>0.02 0.48 0.001</size></box></geometry>
+          <material><ambient>0.95 0.75 0.1 0.9</ambient><diffuse>0.95 0.75 0.1 0.9</diffuse></material>
+        </visual>
+        <!-- Vạch tâm căn chỉnh (Alignment Cross Line) -->
+        <visual name="center_mark">
+          <pose>0 0 0 0 0 0</pose>
+          <cast_shadows>false</cast_shadows>
+          <geometry><box><size>0.08 0.08 0.001</size></box></geometry>
+          <material><ambient>0.95 0.75 0.1 0.5</ambient><diffuse>0.95 0.75 0.1 0.5</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="docking_bay_rack_a_col_2">
+      <static>true</static>
+      <pose>1.7500 1.3250 0.0010 0.000000 0.000000 0.000000</pose>
+      <link name="link">
+        <!-- Viền trước -->
+        <visual name="border_front">
+          <pose>0 0.22999999999999998 0 0 0 0</pose>
+          <cast_shadows>false</cast_shadows>
+          <geometry><box><size>0.36 0.02 0.001</size></box></geometry>
+          <material><ambient>0.95 0.75 0.1 0.9</ambient><diffuse>0.95 0.75 0.1 0.9</diffuse></material>
+        </visual>
+        <!-- Viền sau -->
+        <visual name="border_back">
+          <pose>0 -0.22999999999999998 0 0 0 0</pose>
+          <cast_shadows>false</cast_shadows>
+          <geometry><box><size>0.36 0.02 0.001</size></box></geometry>
+          <material><ambient>0.95 0.75 0.1 0.9</ambient><diffuse>0.95 0.75 0.1 0.9</diffuse></material>
+        </visual>
+        <!-- Viền trái -->
+        <visual name="border_left">
+          <pose>-0.16999999999999998 0 0 0 0 0</pose>
+          <cast_shadows>false</cast_shadows>
+          <geometry><box><size>0.02 0.48 0.001</size></box></geometry>
+          <material><ambient>0.95 0.75 0.1 0.9</ambient><diffuse>0.95 0.75 0.1 0.9</diffuse></material>
+        </visual>
+        <!-- Viền phải -->
+        <visual name="border_right">
+          <pose>0.16999999999999998 0 0 0 0 0</pose>
+          <cast_shadows>false</cast_shadows>
+          <geometry><box><size>0.02 0.48 0.001</size></box></geometry>
+          <material><ambient>0.95 0.75 0.1 0.9</ambient><diffuse>0.95 0.75 0.1 0.9</diffuse></material>
+        </visual>
+        <!-- Vạch tâm căn chỉnh (Alignment Cross Line) -->
+        <visual name="center_mark">
+          <pose>0 0 0 0 0 0</pose>
+          <cast_shadows>false</cast_shadows>
+          <geometry><box><size>0.08 0.08 0.001</size></box></geometry>
+          <material><ambient>0.95 0.75 0.1 0.5</ambient><diffuse>0.95 0.75 0.1 0.5</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="docking_bay_rack_b_col_0">
+      <static>true</static>
+      <pose>0.7500 -1.3250 0.0010 0.000000 0.000000 0.000000</pose>
+      <link name="link">
+        <!-- Viền trước -->
+        <visual name="border_front">
+          <pose>0 0.22999999999999998 0 0 0 0</pose>
+          <cast_shadows>false</cast_shadows>
+          <geometry><box><size>0.36 0.02 0.001</size></box></geometry>
+          <material><ambient>0.95 0.75 0.1 0.9</ambient><diffuse>0.95 0.75 0.1 0.9</diffuse></material>
+        </visual>
+        <!-- Viền sau -->
+        <visual name="border_back">
+          <pose>0 -0.22999999999999998 0 0 0 0</pose>
+          <cast_shadows>false</cast_shadows>
+          <geometry><box><size>0.36 0.02 0.001</size></box></geometry>
+          <material><ambient>0.95 0.75 0.1 0.9</ambient><diffuse>0.95 0.75 0.1 0.9</diffuse></material>
+        </visual>
+        <!-- Viền trái -->
+        <visual name="border_left">
+          <pose>-0.16999999999999998 0 0 0 0 0</pose>
+          <cast_shadows>false</cast_shadows>
+          <geometry><box><size>0.02 0.48 0.001</size></box></geometry>
+          <material><ambient>0.95 0.75 0.1 0.9</ambient><diffuse>0.95 0.75 0.1 0.9</diffuse></material>
+        </visual>
+        <!-- Viền phải -->
+        <visual name="border_right">
+          <pose>0.16999999999999998 0 0 0 0 0</pose>
+          <cast_shadows>false</cast_shadows>
+          <geometry><box><size>0.02 0.48 0.001</size></box></geometry>
+          <material><ambient>0.95 0.75 0.1 0.9</ambient><diffuse>0.95 0.75 0.1 0.9</diffuse></material>
+        </visual>
+        <!-- Vạch tâm căn chỉnh (Alignment Cross Line) -->
+        <visual name="center_mark">
+          <pose>0 0 0 0 0 0</pose>
+          <cast_shadows>false</cast_shadows>
+          <geometry><box><size>0.08 0.08 0.001</size></box></geometry>
+          <material><ambient>0.95 0.75 0.1 0.5</ambient><diffuse>0.95 0.75 0.1 0.5</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="docking_bay_rack_b_col_1">
+      <static>true</static>
+      <pose>1.2500 -1.3250 0.0010 0.000000 0.000000 0.000000</pose>
+      <link name="link">
+        <!-- Viền trước -->
+        <visual name="border_front">
+          <pose>0 0.22999999999999998 0 0 0 0</pose>
+          <cast_shadows>false</cast_shadows>
+          <geometry><box><size>0.36 0.02 0.001</size></box></geometry>
+          <material><ambient>0.95 0.75 0.1 0.9</ambient><diffuse>0.95 0.75 0.1 0.9</diffuse></material>
+        </visual>
+        <!-- Viền sau -->
+        <visual name="border_back">
+          <pose>0 -0.22999999999999998 0 0 0 0</pose>
+          <cast_shadows>false</cast_shadows>
+          <geometry><box><size>0.36 0.02 0.001</size></box></geometry>
+          <material><ambient>0.95 0.75 0.1 0.9</ambient><diffuse>0.95 0.75 0.1 0.9</diffuse></material>
+        </visual>
+        <!-- Viền trái -->
+        <visual name="border_left">
+          <pose>-0.16999999999999998 0 0 0 0 0</pose>
+          <cast_shadows>false</cast_shadows>
+          <geometry><box><size>0.02 0.48 0.001</size></box></geometry>
+          <material><ambient>0.95 0.75 0.1 0.9</ambient><diffuse>0.95 0.75 0.1 0.9</diffuse></material>
+        </visual>
+        <!-- Viền phải -->
+        <visual name="border_right">
+          <pose>0.16999999999999998 0 0 0 0 0</pose>
+          <cast_shadows>false</cast_shadows>
+          <geometry><box><size>0.02 0.48 0.001</size></box></geometry>
+          <material><ambient>0.95 0.75 0.1 0.9</ambient><diffuse>0.95 0.75 0.1 0.9</diffuse></material>
+        </visual>
+        <!-- Vạch tâm căn chỉnh (Alignment Cross Line) -->
+        <visual name="center_mark">
+          <pose>0 0 0 0 0 0</pose>
+          <cast_shadows>false</cast_shadows>
+          <geometry><box><size>0.08 0.08 0.001</size></box></geometry>
+          <material><ambient>0.95 0.75 0.1 0.5</ambient><diffuse>0.95 0.75 0.1 0.5</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="docking_bay_rack_b_col_2">
+      <static>true</static>
+      <pose>1.7500 -1.3250 0.0010 0.000000 0.000000 0.000000</pose>
+      <link name="link">
+        <!-- Viền trước -->
+        <visual name="border_front">
+          <pose>0 0.22999999999999998 0 0 0 0</pose>
+          <cast_shadows>false</cast_shadows>
+          <geometry><box><size>0.36 0.02 0.001</size></box></geometry>
+          <material><ambient>0.95 0.75 0.1 0.9</ambient><diffuse>0.95 0.75 0.1 0.9</diffuse></material>
+        </visual>
+        <!-- Viền sau -->
+        <visual name="border_back">
+          <pose>0 -0.22999999999999998 0 0 0 0</pose>
+          <cast_shadows>false</cast_shadows>
+          <geometry><box><size>0.36 0.02 0.001</size></box></geometry>
+          <material><ambient>0.95 0.75 0.1 0.9</ambient><diffuse>0.95 0.75 0.1 0.9</diffuse></material>
+        </visual>
+        <!-- Viền trái -->
+        <visual name="border_left">
+          <pose>-0.16999999999999998 0 0 0 0 0</pose>
+          <cast_shadows>false</cast_shadows>
+          <geometry><box><size>0.02 0.48 0.001</size></box></geometry>
+          <material><ambient>0.95 0.75 0.1 0.9</ambient><diffuse>0.95 0.75 0.1 0.9</diffuse></material>
+        </visual>
+        <!-- Viền phải -->
+        <visual name="border_right">
+          <pose>0.16999999999999998 0 0 0 0 0</pose>
+          <cast_shadows>false</cast_shadows>
+          <geometry><box><size>0.02 0.48 0.001</size></box></geometry>
+          <material><ambient>0.95 0.75 0.1 0.9</ambient><diffuse>0.95 0.75 0.1 0.9</diffuse></material>
+        </visual>
+        <!-- Vạch tâm căn chỉnh (Alignment Cross Line) -->
+        <visual name="center_mark">
+          <pose>0 0 0 0 0 0</pose>
+          <cast_shadows>false</cast_shadows>
+          <geometry><box><size>0.08 0.08 0.001</size></box></geometry>
+          <material><ambient>0.95 0.75 0.1 0.5</ambient><diffuse>0.95 0.75 0.1 0.5</diffuse></material>
         </visual>
       </link>
     </model>

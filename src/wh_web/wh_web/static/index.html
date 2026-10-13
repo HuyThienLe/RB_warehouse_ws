@@ -428,6 +428,16 @@
             </select>
           </div>
 
+          <div class="form-group" id="inbound-slot-group">
+            <label for="order-slot-id">Ô Kệ Đích Nhập Hàng (Tùy chọn):</label>
+            <select id="order-slot-id" class="form-control">
+              <option value="">-- Tự động chọn ô tối ưu (gần trạm nhất) --</option>
+            </select>
+            <small style="color: var(--text-muted, #888); font-size: 0.8rem; display: block; margin-top: 4px;">
+              Mặc định thuật toán WMS chọn ô trống chi phí thấp nhất. Bạn có thể chọn cụ thể ô bạn muốn.
+            </small>
+          </div>
+
           <!-- Xem nhanh tồn kho mặt hàng -->
           <div class="item-preview-box" id="item-preview-box">
             <div class="preview-metric">

@@ -75,19 +75,19 @@ def compute_layout() -> dict:
                     tag_yaw = math.pi
                     # hộp nằm về phía y tăng (vào trong lòng kệ)
                     box_y = front_y + slot_depth / 2.0
-                    # staging: phía trước kệ A (y nhỏ hơn)
-                    staging_y = front_y - 0.55
+                    # staging: phía trước kệ A trong hành lang
+                    staging_y = front_y - 0.635    # y = 1.125 m
                     staging_yaw = math.pi / 2.0    # quay về hướng +y nhìn vào kệ
-                    work_y = front_y - 0.32
+                    work_y = front_y - 0.435       # y = 1.325 m (cách tâm hộp 0.545m = 1 cánh tay duỗi thẳng SCARA)
                 else:  # "+y"
                     tag_y = front_y + 0.001
                     tag_yaw = 0.0
                     # hộp nằm về phía y giảm (vào trong lòng kệ)
                     box_y = front_y - slot_depth / 2.0
-                    # staging: phía trước kệ B (y lớn hơn)
-                    staging_y = front_y + 0.55
+                    # staging: phía trước kệ B trong hành lang
+                    staging_y = front_y + 0.635    # y = -1.125 m
                     staging_yaw = -math.pi / 2.0   # quay về hướng -y nhìn vào kệ
-                    work_y = front_y + 0.32
+                    work_y = front_y + 0.435       # y = -1.325 m (cách tâm hộp 0.545m = 1 cánh tay duỗi thẳng SCARA)
 
                 # Tag đặt ngay dưới mặt sàn đỡ ô (z_face - 0.04)
                 tag_z = z_face - 0.04
@@ -113,6 +113,21 @@ def compute_layout() -> dict:
                         "x": col_x, "y": work_y, "yaw": staging_yaw,
                     },
                 }
+    # Thêm trạm IN và OUT (Tag 30 và 31) - chuẩn hóa cách 1 sải tay duỗi thẳng SCARA (0.545m từ base)
+    slots[30] = {
+        "rack": "station_in", "col": 0, "tier": 1,
+        "tag_pose": {"x": -2.40, "y": 1.049, "z": 0.150, "yaw": 3.14159},
+        "box_center_pose": {"x": -2.40, "y": 1.150, "z": 0.171},
+        "staging_pose": {"x": -2.40, "y": 0.450, "yaw": 1.5708},
+        "work_pose": {"x": -2.40, "y": 0.605, "yaw": 1.5708},
+    }
+    slots[31] = {
+        "rack": "station_out", "col": 0, "tier": 1,
+        "tag_pose": {"x": -2.40, "y": -1.049, "z": 0.150, "yaw": 0.0},
+        "box_center_pose": {"x": -2.40, "y": -1.150, "z": 0.171},
+        "staging_pose": {"x": -2.40, "y": -0.450, "yaw": -1.5708},
+        "work_pose": {"x": -2.40, "y": -0.605, "yaw": -1.5708},
+    }
     return slots
 
 
@@ -256,6 +271,60 @@ def _floor_marker(name, px, py, color_rgba, size=0.3) -> str:
     </model>"""
 
 
+def _docking_bay_box(name, px, py, length_x=0.36, width_y=0.48, color_rgba=(0.95, 0.75, 0.10, 0.9)) -> str:
+    """Ô vạch line dừng xe trước ô kệ (Industrial AGV Docking Bay Line Marker).
+    Bao gồm 4 viền màu vàng phản quang đánh dấu chuẩn vị trí dừng robot.
+    """
+    r, g, b, a = color_rgba
+    border_t = 0.02
+    half_lx = length_x / 2.0
+    half_wy = width_y / 2.0
+    pose = _pose_str(px, py, 0.001)
+
+    return f"""
+    <model name="{name}">
+      <static>true</static>
+      <pose>{pose}</pose>
+      <link name="link">
+        <!-- Viền trước -->
+        <visual name="border_front">
+          <pose>0 {half_wy - border_t/2.0} 0 0 0 0</pose>
+          <cast_shadows>false</cast_shadows>
+          <geometry><box><size>{length_x} {border_t} 0.001</size></box></geometry>
+          <material><ambient>{r} {g} {b} {a}</ambient><diffuse>{r} {g} {b} {a}</diffuse></material>
+        </visual>
+        <!-- Viền sau -->
+        <visual name="border_back">
+          <pose>0 {-half_wy + border_t/2.0} 0 0 0 0</pose>
+          <cast_shadows>false</cast_shadows>
+          <geometry><box><size>{length_x} {border_t} 0.001</size></box></geometry>
+          <material><ambient>{r} {g} {b} {a}</ambient><diffuse>{r} {g} {b} {a}</diffuse></material>
+        </visual>
+        <!-- Viền trái -->
+        <visual name="border_left">
+          <pose>{-half_lx + border_t/2.0} 0 0 0 0 0</pose>
+          <cast_shadows>false</cast_shadows>
+          <geometry><box><size>{border_t} {width_y} 0.001</size></box></geometry>
+          <material><ambient>{r} {g} {b} {a}</ambient><diffuse>{r} {g} {b} {a}</diffuse></material>
+        </visual>
+        <!-- Viền phải -->
+        <visual name="border_right">
+          <pose>{half_lx - border_t/2.0} 0 0 0 0 0</pose>
+          <cast_shadows>false</cast_shadows>
+          <geometry><box><size>{border_t} {width_y} 0.001</size></box></geometry>
+          <material><ambient>{r} {g} {b} {a}</ambient><diffuse>{r} {g} {b} {a}</diffuse></material>
+        </visual>
+        <!-- Vạch tâm căn chỉnh (Alignment Cross Line) -->
+        <visual name="center_mark">
+          <pose>0 0 0 0 0 0</pose>
+          <cast_shadows>false</cast_shadows>
+          <geometry><box><size>0.08 0.08 0.001</size></box></geometry>
+          <material><ambient>{r} {g} {b} 0.5</ambient><diffuse>{r} {g} {b} 0.5</diffuse></material>
+        </visual>
+      </link>
+    </model>"""
+
+
 # ── Shelf geometry ────────────────────────────────────────────────────────────
 def _build_shelf(rack_name: str, rack: dict, slots: dict) -> str:
     """Sinh SDF cho một giá kệ hoàn chỉnh bao gồm vách sau, các tầng đỡ, vách hông và vách chia ô."""
@@ -382,32 +451,34 @@ def _build_station(name: str, cfg: dict) -> str:
     tag_id = cfg["tag_id"]
     sdf = []
 
-    # Bàn cao 0.15 m
+    # Bàn công nghiệp rộng rãi (0.70m x 0.40m, cao 0.15m) chống rơi hàng 100%
+    table_w = 0.70
+    table_d = 0.40
     table_h = 0.15
     sdf.append(_static_box(
         f"table_{name}",
-        0.3, 0.3, table_h,
+        table_w, table_d, table_h,
         cx, cy, table_h / 2.0,
         color="0.80 0.80 0.85 1.0", cast_shadow="false", mu=0.9
     ))
 
-    # Khay tiếp nhận hàng trên mặt bàn trạm IN/OUT
+    # Khay tiếp nhận hàng cỡ lớn trên mặt bàn trạm IN/OUT (0.62m x 0.32m)
     facing_dir = "-y" if cy > 0 else "+y"
     sdf.append(_build_shelf_tray(
         f"station_tray_{name}",
         cx, cy, table_h,
-        tray_w=0.22, tray_d=0.22, tray_h=0.020,
+        tray_w=0.62, tray_d=0.32, tray_h=0.025,
         facing=facing_dir
     ))
 
     # Tag dán thẳng đứng ở mép bàn hướng về phía robot (lối đi y = 0)
-    # Bàn IN (cy = 1.2 > 0): robot tiếp cận từ y < 1.2 -> mặt tag phải quay về -y (yaw = pi)
-    # Bàn OUT (cy = -1.2 < 0): robot tiếp cận từ y > -1.2 -> mặt tag phải quay về +y (yaw = 0)
+    # Bàn IN (cy > 0): mép trước ở cy - table_d/2 -> tag ở mép trước
+    # Bàn OUT (cy < 0): mép trước ở cy + table_d/2 -> tag ở mép trước
     if cy > 0:
-        tag_y = cy - 0.151   # mép phía y nhỏ hơn
+        tag_y = cy - table_d / 2.0 - 0.001   # mép phía y nhỏ hơn
         tag_yaw = math.pi    # quay về -y
     else:
-        tag_y = cy + 0.151   # mép phía y lớn hơn
+        tag_y = cy + table_d / 2.0 + 0.001   # mép phía y lớn hơn
         tag_yaw = 0.0        # quay về +y
 
     sdf.append(_tag_plane(
@@ -462,6 +533,13 @@ def build_world(slots: dict) -> str:
     parts.append(_floor_marker("floor_in",   si["x"], si["y"], (0.0, 1.0, 0.0, 0.7)))
     parts.append(_floor_marker("floor_out",  so["x"], so["y"], (1.0, 0.5, 0.0, 0.7)))
     parts.append(_floor_marker("floor_home", sh["x"], sh["y"], (0.0, 0.5, 1.0, 0.7)))
+
+    # ── Vạch ô line đỗ xe chuẩn trước kệ hàng (Docking Bay Line Markers) ─────
+    for col_idx, cx in enumerate(SHELVES["rack_a"]["columns_x"]):
+        parts.append(_docking_bay_box(f"docking_bay_rack_a_col_{col_idx}", cx, 1.325, length_x=0.36, width_y=0.48))
+    for col_idx, cx in enumerate(SHELVES["rack_b"]["columns_x"]):
+        parts.append(_docking_bay_box(f"docking_bay_rack_b_col_{col_idx}", cx, -1.325, length_x=0.36, width_y=0.48))
+
 
     # ── Vật cản tĩnh: để trống, vật cản được sinh động qua /wh/spawn_obstacle ───
     obstacles = []

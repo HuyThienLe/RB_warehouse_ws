@@ -174,6 +174,9 @@ class InventoryDB:
                 with open(inventory_seed_file, "r", encoding="utf-8") as f:
                     inv_data = yaml.safe_load(f).get("boxes", [])
                     with self.conn:
+                        # Đồng bộ lại trạng thái toàn bộ ô kệ về EMPTY để tránh hàng ảo từ phiên chạy cũ
+                        self.conn.execute("UPDATE slots SET state = 'EMPTY', quantity = 0, item_code = NULL, stored_at = NULL, reserved_by_task = NULL;")
+                        self.conn.execute("UPDATE tasks SET status = 'CANCELLED' WHERE status IN ('QUEUED', 'IN_PROGRESS');")
                         for box in inv_data:
                             box_id = box["box_id"]
                             slot_tag = box.get("slot_id")
@@ -203,9 +206,9 @@ class InventoryDB:
     # ── Nghiệp vụ Đặt ô & Quản lý Tồn kho ────────────────────────────────────
 
     def reserve_slot_for_inbound(
-        self, item_code: str, task_id: int
+        self, item_code: str, task_id: int, preferred_slot_id: Optional[str] = None
     ) -> Tuple[Optional[str], Optional[int], Optional[str]]:
-        """Chọn ô EMPTY chi phí nhỏ nhất, đặt RESERVED trong 1 transaction nguyên tử.
+        """Chọn ô EMPTY theo chỉ định hoặc chi phí nhỏ nhất, đặt RESERVED trong 1 transaction nguyên tử.
         
         Chi phí = khoảng cách Euclid từ IN_STAGING (-2.4, 0.45) đến SLOT_STAGING + 0.2 nếu tầng 2.
         Trả về: (slot_id, slot_tag_id, error_code).
@@ -235,24 +238,33 @@ class InventoryDB:
                     self.add_event("WARN", f"Nhiệm vụ {task_id}: Hết ô trống (NO_FREE_SLOT)")
                     return None, None, "NO_FREE_SLOT"
 
-                # 3. Tính chi phí cho từng ô
+                # 3. Tính chi phí cho từng ô (hoặc ưu tiên ô chỉ định nếu rảnh)
                 best_slot = None
                 min_cost = float("inf")
 
-                for s in empty_slots:
-                    # Tọa độ staging của ô:
-                    # rack_a: y = 0.05, rack_b: y = -0.05
-                    # col 0: x = 0.75, col 1: x = 1.25, col 2: x = 1.75
-                    col_x = 0.75 + s["col"] * 0.50
-                    r = s["rack"].lower().strip()
-                    staging_y = -0.05 if ("rack_b" in r or r == "b" or r.endswith("_b")) else 0.05
-                    dist = math.sqrt((col_x - IN_STAGING_X) ** 2 + (staging_y - IN_STAGING_Y) ** 2)
-                    tier_cost = 0.2 if s["tier"] == 2 else 0.0
-                    cost = dist + tier_cost
+                if preferred_slot_id:
+                    pref_clean = preferred_slot_id.upper().strip()
+                    for s in empty_slots:
+                        if s["slot_id"].upper().strip() == pref_clean:
+                            best_slot = s
+                            min_cost = 0.0
+                            break
 
-                    if cost < min_cost:
-                        min_cost = cost
-                        best_slot = s
+                if best_slot is None:
+                    for s in empty_slots:
+                        # Tọa độ staging của ô:
+                        # rack_a: y = 1.125, rack_b: y = -1.125
+                        # col 0: x = 0.75, col 1: x = 1.25, col 2: x = 1.75
+                        col_x = 0.75 + s["col"] * 0.50
+                        r = s["rack"].lower().strip()
+                        staging_y = -1.125 if ("rack_b" in r or r == "b" or r.endswith("_b")) else 1.125
+                        dist = math.sqrt((col_x - IN_STAGING_X) ** 2 + (staging_y - IN_STAGING_Y) ** 2)
+                        tier_cost = 0.2 if s["tier"] == 2 else 0.0
+                        cost = dist + tier_cost
+
+                        if cost < min_cost:
+                            min_cost = cost
+                            best_slot = s
 
                 slot_id = best_slot["slot_id"]
                 slot_tag_id = best_slot["slot_tag_id"]
@@ -443,7 +455,7 @@ class InventoryDB:
 
     # ── Quản lý Nhiệm vụ (Task Queue) ────────────────────────────────────────
 
-    def create_task(self, task_type: str, item_code: str, priority: int = 1) -> int:
+    def create_task(self, task_type: str, item_code: str, priority: int = 1, slot_id: Optional[str] = None) -> int:
         """Tạo nhiệm vụ mới và đưa vào hàng đợi (status='QUEUED')."""
         task_type = task_type.upper()
         ts = now_iso()
@@ -451,13 +463,14 @@ class InventoryDB:
             with self.conn:
                 cur = self.conn.execute(
                     """
-                    INSERT INTO tasks(type, item_code, priority, status, created_at)
-                    VALUES (?, ?, ?, 'QUEUED', ?);
+                    INSERT INTO tasks(type, item_code, slot_id, priority, status, created_at)
+                    VALUES (?, ?, ?, ?, 'QUEUED', ?);
                     """,
-                    (task_type, item_code, priority, ts),
+                    (task_type, item_code, slot_id, priority, ts),
                 )
                 task_id = cur.lastrowid
-            self.add_event("INFO", f"Đã tiếp nhận nhiệm vụ #{task_id}: {task_type} {item_code} (ưu tiên={priority})")
+            slot_msg = f" (ô đích: {slot_id})" if slot_id else ""
+            self.add_event("INFO", f"Đã tiếp nhận nhiệm vụ #{task_id}: {task_type} {item_code}{slot_msg} (ưu tiên={priority})")
             return task_id
 
     def get_queued_tasks(self) -> List[Dict[str, Any]]:

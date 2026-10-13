@@ -17,6 +17,7 @@ Nhiệm vụ:
 import math
 import os
 import time
+from typing import Optional, Tuple, Dict, List
 import numpy as np
 import yaml
 
@@ -59,13 +60,13 @@ class DockServer(Node):
         )
 
         # Tham số PBVS
-        self.declare_parameter("target_standoff", 0.32)
+        self.declare_parameter("target_standoff", 0.435)
         self.declare_parameter("tol_dist", 0.005)
         self.declare_parameter("tol_lat", 0.005)
         self.declare_parameter("tol_yaw", 0.0349)  # ~2 độ
         self.declare_parameter("v_max", 0.08)
         self.declare_parameter("w_max", 0.15)
-        self.declare_parameter("safety_min_px", 0.28)
+        self.declare_parameter("safety_min_px", 0.30)
         self.declare_parameter("kp_x", 0.8)
         self.declare_parameter("kp_y", 0.8)
         self.declare_parameter("kp_w", 1.0)
@@ -115,6 +116,9 @@ class DockServer(Node):
         )
 
     def tags_cb(self, msg: TagArray):
+        # Yêu cầu bài toán: Robot chỉ dùng 1 camera (dock_camera) để định vị
+        if "dock" not in msg.camera:
+            return
         now_sec = self.get_clock().now().nanoseconds * 1e-9
         for tag in msg.tags:
             self.latest_tags[tag.id] = (tag, now_sec)
@@ -128,18 +132,33 @@ class DockServer(Node):
             return tag_id - 3
         return None
 
+    def get_candidate_tags(self, slot_id: int) -> List[int]:
+        """Danh sách tag hợp lệ cho ô kệ (tag ô -> tag tầng đối diện -> tag hộp hàng)."""
+        cands = [slot_id]
+        alt = self.get_column_partner_tag(slot_id)
+        if alt is not None:
+            cands.append(alt)
+        slot_to_box = {
+            0: 20, 1: 21, 2: 22,
+            3: 22, 4: 21, 5: 20,
+            6: 23, 7: 24, 8: 24,
+            9: 25, 10: 25, 11: 23,
+            30: 26, 31: 31
+        }
+        if slot_id in slot_to_box:
+            b_tag = slot_to_box[slot_id]
+            if b_tag not in cands:
+                cands.append(b_tag)
+        return cands
+
     def verify_slot(self, expected_id: int) -> bool:
-        """Kiểm tra tag ID ô kệ hiện tại có đúng id yêu cầu không."""
+        """Kiểm tra tag ID ô kệ hoặc hộp hàng tại ô hiện tại có khớp không."""
         now_sec = self.get_clock().now().nanoseconds * 1e-9
-        if expected_id in self.latest_tags:
-            tag, stamp = self.latest_tags[expected_id]
-            if (now_sec - stamp) <= 1.5 and tag.id == expected_id:
-                return True
-        alt_id = self.get_column_partner_tag(expected_id)
-        if alt_id is not None and alt_id in self.latest_tags:
-            tag, stamp = self.latest_tags[alt_id]
-            if (now_sec - stamp) <= 1.5 and tag.id == alt_id:
-                return True
+        for tid in self.get_candidate_tags(expected_id):
+            if tid in self.latest_tags:
+                tag, stamp = self.latest_tags[tid]
+                if (now_sec - stamp) <= 2.5:
+                    return True
         return False
 
     def goal_callback(self, goal_request):
@@ -162,9 +181,9 @@ class DockServer(Node):
         goal = goal_handle.request
         slot_id = int(goal.slot_tag_id)
         target_standoff = float(goal.target_standoff) if goal.target_standoff > 0.0 else float(self.get_parameter("target_standoff").value)
-        tol_lat = float(goal.tol_lateral) if goal.tol_lateral > 0.0 else float(self.get_parameter("tol_lat").value)
-        tol_yaw = float(goal.tol_yaw) if goal.tol_yaw > 0.0 else float(self.get_parameter("tol_yaw").value)
-        tol_dist = float(self.get_parameter("tol_dist").value)
+        tol_lat = max(0.02, float(goal.tol_lateral) if goal.tol_lateral > 0.0 else float(self.get_parameter("tol_lat").value))
+        tol_yaw = max(0.05, float(goal.tol_yaw) if goal.tol_yaw > 0.0 else float(self.get_parameter("tol_yaw").value))
+        tol_dist = max(0.02, float(self.get_parameter("tol_dist").value))
 
         v_max = float(self.get_parameter("v_max").value)
         w_max = float(self.get_parameter("w_max").value)
@@ -192,7 +211,7 @@ class DockServer(Node):
         feedback = DockToSlot.Feedback()
 
         start_time = self.get_clock().now().nanoseconds * 1e-9
-        self.latest_tags.pop(slot_id, None)
+        last_seen_t = start_time
         iteration = 0
         consec_ok = 0
         retries = 0
@@ -229,30 +248,30 @@ class DockServer(Node):
                 self.get_logger().error(result.message)
                 return result
 
-            # Tra cứu tag yêu cầu (với dự phòng tag cùng cột kệ)
-            tag_data = self.latest_tags.get(slot_id, None)
-            is_tag_fresh = (tag_data is not None) and ((now_sec - tag_data[1]) < tag_lost_timeout)
-            if not is_tag_fresh:
-                alt_id = self.get_column_partner_tag(slot_id)
-                if alt_id is not None:
-                    alt_data = self.latest_tags.get(alt_id, None)
-                    if (alt_data is not None) and ((now_sec - alt_data[1]) < tag_lost_timeout):
-                        tag_data = alt_data
-                        is_tag_fresh = True
+            # Tra cứu tag yêu cầu (theo thứ tự ưu tiên: tag ô -> tag tầng đối diện -> tag hộp hàng)
+            tag_data = None
+            found_tag_id = None
+            is_tag_fresh = False
+            for tid in self.get_candidate_tags(slot_id):
+                cand_data = self.latest_tags.get(tid, None)
+                if (cand_data is not None) and ((now_sec - cand_data[1]) < tag_lost_timeout):
+                    tag_data = cand_data
+                    found_tag_id = tid
+                    is_tag_fresh = True
+                    break
 
-            if not is_tag_fresh:
+            if is_tag_fresh:
+                last_seen_t = now_sec
+                retries = 0
+            else:
                 consec_ok = 0
-                if (now_sec - tag_data[1] if tag_data else now_sec - start_time) > tag_lost_timeout:
+                self.stop_robot()
+                if (now_sec - last_seen_t) > tag_lost_timeout:
                     if retries < max_retries:
                         retries += 1
-                        self.get_logger().warn(f"Mất tag {slot_id} > {tag_lost_timeout}s! Hồi phục lần {retries}: lùi nhẹ...")
-                        # Lùi nhẹ 1s để tìm lại tag
-                        cmd_back = Twist()
-                        cmd_back.linear.x = -0.05
-                        for _ in range(int(rate_hz)):
-                            self.cmd_pub.publish(cmd_back)
-                            time.sleep(dt)
-                        self.stop_robot()
+                        last_seen_t = now_sec
+                        self.get_logger().warn(f"Mất tag {slot_id} > {tag_lost_timeout}s! Chờ nhận diện lại (lần {retries}/{max_retries})...")
+                        time.sleep(0.5)
                         continue
                     else:
                         self.stop_robot()
@@ -281,8 +300,9 @@ class DockServer(Node):
                 self.get_logger().error(result.message)
                 return result
 
-            # Tính sai lệch
-            e_dist = px - target_standoff
+            # Nếu nhận diện qua tag dán trên mặt hộp hàng (20..29), tag nằm lùi vào trong lòng kệ ~5.1cm
+            eff_standoff = target_standoff + (0.051 if (found_tag_id is not None and 20 <= found_tag_id <= 29) else 0.0)
+            e_dist = px - eff_standoff
             e_lat = py
             R_base_tag = quat_to_rotmat(q.x, q.y, q.z, q.w)
             # Pháp tuyến n của tag (hướng ra khỏi mặt kệ về phía robot)
@@ -347,9 +367,17 @@ class DockServer(Node):
             # e_yaw > 0 -> cần xoay CCW (+z, wz > 0)
             wz_cmd = np.clip(sign_w * kp_w * ctrl_yaw, -w_max, w_max)
 
-            # Ưu tiên an toàn: Nếu sai lệch góc hoặc ngang còn lớn, tạm dừng tiến/lùi (vx = 0)
-            if abs(e_lat) > 0.02 or abs(e_yaw) > math.radians(4.0):
-                vx_cmd = 0.0
+            # Giảm nhẹ tốc độ tiến nếu góc lệch lớn để vừa tiến vừa chỉnh góc
+            if abs(e_yaw) > math.radians(12.0):
+                vx_cmd *= 0.5
+
+            # Bù lực ma sát tĩnh tối thiểu cho bánh Mecanum
+            if abs(vx_cmd) > 0.001 and abs(vx_cmd) < 0.035:
+                vx_cmd = math.copysign(0.035, vx_cmd)
+            if abs(vy_cmd) > 0.001 and abs(vy_cmd) < 0.035:
+                vy_cmd = math.copysign(0.035, vy_cmd)
+            if abs(wz_cmd) > 0.001 and abs(wz_cmd) < 0.06:
+                wz_cmd = math.copysign(0.06, wz_cmd)
 
             cmd = Twist()
             cmd.linear.x = float(vx_cmd)

@@ -14,7 +14,13 @@ class ModePublisher(Node):
     def __init__(self):
         super().__init__("mode_publisher_node")
         self.declare_parameter("mode", "navigation")
-        self.mode = str(self.get_parameter("mode").value).strip().lower()
+        mode_val = str(self.get_parameter("mode").value).strip().lower()
+        if mode_val in ("nav", "navigation"):
+            self.mode = "navigation"
+        elif mode_val in ("mapping", "slam"):
+            self.mode = "mapping"
+        else:
+            self.mode = mode_val
 
         qos = QoSProfile(
             depth=1,

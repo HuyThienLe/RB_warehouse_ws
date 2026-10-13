@@ -31,10 +31,15 @@ robot:
         min_rad: -1.658062789394613
         max_rad: 1.658062789394613
       elbow_pan_q2:
-        min_deg: -140.0
-        max_deg: 140.0
-        min_rad: -2.443460952792061
-        max_rad: 2.443460952792061
+        min_deg: -160.0
+        max_deg: 160.0
+        min_rad: -2.792526803190927
+        max_rad: 2.792526803190927
+      wrist_pan_q3:
+        min_deg: -180.0
+        max_deg: 180.0
+        min_rad: -3.141592653589793
+        max_rad: 3.141592653589793
     gripper:
       type: "parallel_gripper"
       fingers: 2
@@ -45,7 +50,7 @@ robot:
     lidar:
       samples: 360
       frequency: 10.0  # Hz
-      range_min: 0.25  # m
+      range_min: 0.38  # m
       range_max: 12.0  # m
       position: {x: -0.15, y: 0.0, z: 0.076}
     imu:

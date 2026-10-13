@@ -1,0 +1,7 @@
+run_idx,seed,git_hash,success,failure_reason,total_duration_sec,mean_loc_err_m,max_loc_err_m,min_obstacle_dist_m,inventory_match_pct
+1,1,a9bd12469b4cd71704b4ed6e0bcaf3ad22e3c582,True,,236.93,0.0,0.0,0.2501,100.0
+2,2,a9bd12469b4cd71704b4ed6e0bcaf3ad22e3c582,True,,250.27,0.0,0.0,0.2502,100.0
+3,3,a9bd12469b4cd71704b4ed6e0bcaf3ad22e3c582,False,Sai số định vị vượt 10cm: max=329.7cm,0.0,1.1727,3.2972,0.2508,0.0
+1,1,a9bd12469b4cd71704b4ed6e0bcaf3ad22e3c582,False,Tồn kho DB không khớp 100% với Gazebo (83.3%),0.0,0.0,0.0,0.254,83.3
+1,1,a9bd12469b4cd71704b4ed6e0bcaf3ad22e3c582,False,Sai số định vị vượt 10cm: max=40.5cm,0.0,0.3965,0.4047,0.2502,0.0
+1,1,a9bd12469b4cd71704b4ed6e0bcaf3ad22e3c582,False,Sai số định vị vượt 10cm: max=311.8cm,0.0,1.9627,3.1177,0.25,0.0

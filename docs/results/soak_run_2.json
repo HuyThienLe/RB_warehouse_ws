@@ -1,0 +1,18 @@
+{
+  "run_idx": 2,
+  "seed": 2,
+  "git_hash": "a9bd12469b4cd71704b4ed6e0bcaf3ad22e3c582",
+  "success": true,
+  "failure_reason": "",
+  "phases_duration": {
+    "outbound": 66.74,
+    "inbound": 166.53
+  },
+  "docking_err_m": 0.0,
+  "docking_err_deg": 0.0,
+  "max_loc_err_m": 0.0,
+  "mean_loc_err_m": 0.0,
+  "min_obstacle_dist_m": 0.2502,
+  "inventory_match_pct": 100.0,
+  "total_duration_sec": 250.27
+}

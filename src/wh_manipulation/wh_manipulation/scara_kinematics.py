@@ -17,12 +17,14 @@ from typing import Optional, Tuple, List, Dict, Any
 
 
 DEFAULT_L1 = 0.18
-DEFAULT_L2 = 0.18
+DEFAULT_L2 = 0.14
+DEFAULT_L3 = 0.04
 DEFAULT_TOOL_DROP = 0.06
 
 DEFAULT_LIMITS = {
     "q1": (-math.radians(95.0), math.radians(95.0)),
-    "q2": (-math.radians(140.0), math.radians(140.0)),
+    "q2": (-math.radians(160.0), math.radians(160.0)),
+    "q3": (-math.radians(180.0), math.radians(180.0)),
     "d":  (0.0, 0.52),
 }
 
@@ -37,27 +39,32 @@ def forward_kinematics(
     q1: float,
     q2: float,
     d: float,
+    q3: Optional[float] = None,
     l1: float = DEFAULT_L1,
     l2: float = DEFAULT_L2,
+    l3: float = DEFAULT_L3,
     tool_drop: float = DEFAULT_TOOL_DROP,
     x_offset: float = 0.0,
     y_offset: float = 0.0,
 ) -> Tuple[float, float, float]:
-    """Tính động học thuận SCARA TRR.
+    """Tính động học thuận SCARA TRRR (kèm góc xoay cổ tay q3).
     
     Args:
         q1: Góc khớp vai (rad)
         q2: Góc khớp khuỷu (rad)
         d: Độ nâng lift_joint (m)
-        l1, l2: Chiều dài các khâu (m)
+        q3: Góc khớp cổ tay (rad), nếu None tự động tính q3 = -(q1 + q2) để đầu kẹp hướng thẳng 0 rad
+        l1, l2, l3: Chiều dài các khâu (m)
         tool_drop: Độ rơi đầu công tác dưới mặt phẳng tay (m)
         x_offset, y_offset: Tọa độ tâm vai so với gốc tham chiếu (m)
         
     Returns:
         (x, y, z): Tọa độ điểm thao tác TCP (m)
     """
-    x = x_offset + l1 * math.cos(q1) + l2 * math.cos(q1 + q2)
-    y = y_offset + l1 * math.sin(q1) + l2 * math.sin(q1 + q2)
+    if q3 is None:
+        q3 = -(q1 + q2)
+    x = x_offset + l1 * math.cos(q1) + l2 * math.cos(q1 + q2) + l3 * math.cos(q1 + q2 + q3)
+    y = y_offset + l1 * math.sin(q1) + l2 * math.sin(q1 + q2) + l3 * math.sin(q1 + q2 + q3)
     z = d - tool_drop
     return x, y, z
 
@@ -66,71 +73,73 @@ def inverse_kinematics(
     x: float,
     y: float,
     z: float,
+    phi: float = 0.0,
     l1: float = DEFAULT_L1,
     l2: float = DEFAULT_L2,
+    l3: float = DEFAULT_L3,
     tool_drop: float = DEFAULT_TOOL_DROP,
     limits: Dict[str, Tuple[float, float]] = DEFAULT_LIMITS,
-    prefer: Optional[Tuple[float, float, float]] = None,
+    prefer: Optional[Tuple] = None,
     x_offset: float = 0.0,
     y_offset: float = 0.0,
-) -> Tuple[Optional[Tuple[float, float, float]], str]:
-    """Tính động học nghịch SCARA TRR dạng giải tích (Closed-form).
+) -> Tuple[Optional[Tuple[float, float, float, float]], str]:
+    """Tính động học nghịch SCARA TRRR dạng giải tích với góc hướng đầu kẹp mong muốn phi.
     
     Args:
         x, y, z: Tọa độ mục tiêu cần với tới (m)
-        l1, l2: Chiều dài các khâu (m)
+        phi: Góc hướng mong muốn của đầu kẹp so với trục robot (rad, mặc định 0.0 hướng thẳng)
+        l1, l2, l3: Chiều dài các khâu (m)
         tool_drop: Độ rơi đầu công tác (m)
-        limits: Giới hạn các khớp {'q1': (min, max), 'q2': (min, max), 'd': (min, max)}
-        prefer: Tư thế ưu tiên gần nhất (q1_pref, q2_pref, d_pref)
+        limits: Giới hạn các khớp {'q1': (min, max), 'q2': (min, max), 'q3': (min, max), 'd': (min, max)}
+        prefer: Tư thế ưu tiên gần nhất (q1_pref, q2_pref, d_pref, ...)
         x_offset, y_offset: Tọa độ tâm vai so với gốc tham chiếu (m)
         
     Returns:
-        ((q1, q2, d), status): Nghiệm khớp và mã trạng thái ("OK", "OUT_OF_REACH", "JOINT_LIMIT")
+        ((q1, q2, d, q3), status): Nghiệm khớp và mã trạng thái ("OK", "OUT_OF_REACH", "JOINT_LIMIT")
     """
-    dx = x - x_offset
-    dy = y - y_offset
+    # Tọa độ tâm khớp cổ tay wrist
+    dx = (x - x_offset) - l3 * math.cos(phi)
+    dy = (y - y_offset) - l3 * math.sin(phi)
     r2 = dx * dx + dy * dy
     r = math.sqrt(r2)
 
-    # Kiểm tra tầm với hình học
+    # Kiểm tra tầm với hình học tới tâm cổ tay
     reach_max = l1 + l2
     reach_min = abs(l1 - l2)
 
-    # Dung sai số học dấu phẩy động 1e-12
     if r > (reach_max + 1e-12) or r < (reach_min - 1e-12):
         return None, "OUT_OF_REACH"
 
-    # Giới hạn cos(q2) trong [-1.0, 1.0] tránh lỗi số học
     c2 = (r2 - l1 * l1 - l2 * l2) / (2.0 * l1 * l2)
     c2 = max(-1.0, min(1.0, c2))
 
-    sols: List[Tuple[float, float, float]] = []
+    sols: List[Tuple[float, float, float, float]] = []
     d = z + tool_drop
 
-    # Hai nghiệm khuỷu (sgn = +1 khuỷu cong trái, sgn = -1 khuỷu cong phải)
     for sgn in (+1.0, -1.0):
         q2 = sgn * math.acos(c2)
         q1 = math.atan2(dy, dx) - math.atan2(l2 * math.sin(q2), l1 + l2 * math.cos(q2))
-        
-        # Chuẩn hóa q1 trong [-pi, pi]
         q1 = math.atan2(math.sin(q1), math.cos(q1))
+        
+        # Góc cổ tay q3 để đầu kẹp đạt đúng góc phi = q1 + q2 + q3
+        q3 = phi - (q1 + q2)
+        q3 = math.atan2(math.sin(q3), math.cos(q3))
 
-        # Kiểm tra giới hạn khớp
         q1_lim = limits.get("q1", (-math.pi, math.pi))
         q2_lim = limits.get("q2", (-math.pi, math.pi))
+        q3_lim = limits.get("q3", (-math.pi, math.pi))
         d_lim  = limits.get("d",  (0.0, 1.0))
 
         if (q1_lim[0] - 1e-9 <= q1 <= q1_lim[1] + 1e-9) and \
            (q2_lim[0] - 1e-9 <= q2 <= q2_lim[1] + 1e-9) and \
+           (q3_lim[0] - 1e-9 <= q3 <= q3_lim[1] + 1e-9) and \
            (d_lim[0]  - 1e-9 <= d  <= d_lim[1]  + 1e-9):
-            sols.append((q1, q2, d))
+            sols.append((q1, q2, d, q3))
 
     if not sols:
         return None, "JOINT_LIMIT"
 
-    # Chọn nghiệm tối ưu:
     if prefer is not None:
-        # Chọn nghiệm có khoảng cách góc nhỏ nhất so với prefer
         def dist(sol):
             dq1 = math.atan2(math.sin(sol[0] - prefer[0]), math.cos(sol[0] - prefer[0]))
             dq2 = math.atan2(math.sin(sol[1] - prefer[1]), math.cos(sol[1] - prefer[1]))
@@ -139,7 +148,6 @@ def inverse_kinematics(
         sols.sort(key=dist)
         return sols[0], "OK"
     else:
-        # Mặc định ưu tiên nghiệm khuỷu cong ra phía ngoài (q2 > 0 hoặc độ lớn nhỏ)
         sols.sort(key=lambda s: abs(s[1]))
         return sols[0], "OK"
 
@@ -198,3 +206,64 @@ def check_footprint(
             return False
 
     return True
+
+
+def generate_cartesian_trajectory(
+    start_pos: Tuple[float, float, float],
+    end_pos: Tuple[float, float, float],
+    num_points: int = 10,
+    phi: float = 0.0,
+    l1: float = DEFAULT_L1,
+    l2: float = DEFAULT_L2,
+    l3: float = DEFAULT_L3,
+    tool_drop: float = DEFAULT_TOOL_DROP,
+    limits: Dict[str, Tuple[float, float]] = DEFAULT_LIMITS,
+    prefer: Optional[Tuple] = None,
+    x_offset: float = 0.07,
+    y_offset: float = 0.0,
+) -> Tuple[Optional[List[Tuple[float, float, float, float]]], str]:
+    """Sinh quỹ đạo đường thẳng Cartesian từ start_pos tới end_pos qua giải nghịch từng điểm.
+
+    Args:
+        start_pos: (x, y, z) điểm bắt đầu trong khung arm_base_link (m)
+        end_pos: (x, y, z) điểm kết thúc trong khung arm_base_link (m)
+        num_points: Số điểm nội suy trên đường thẳng (tối thiểu 2)
+        phi: Góc hướng mong muốn của đầu kẹp (rad, mặc định 0.0 giữ thẳng theo trục xe)
+        l1, l2, l3: Chiều dài các khâu (m)
+        tool_drop: Độ rơi đầu kẹp (m)
+        limits: Giới hạn các khớp
+        prefer: Nghiệm ưu tiên ban đầu
+        x_offset, y_offset: Tọa độ tâm vai so với arm_base_link (m)
+
+    Returns:
+        (trajectory_points, status): Danh sách các bộ nghiệm [(q1, q2, d, q3), ...] và mã trạng thái
+    """
+    if num_points < 2:
+        num_points = 2
+
+    x0, y0, z0 = start_pos
+    x1, y1, z1 = end_pos
+
+    points: List[Tuple[float, float, float, float]] = []
+    prev_sol = prefer
+
+    for i in range(num_points):
+        alpha = float(i) / float(num_points - 1)
+        x_curr = x0 + alpha * (x1 - x0)
+        y_curr = y0 + alpha * (y1 - y0)
+        z_curr = z0 + alpha * (z1 - z0)
+
+        sol, st = inverse_kinematics(
+            x_curr, y_curr, z_curr, phi=phi,
+            l1=l1, l2=l2, l3=l3, tool_drop=tool_drop,
+            limits=limits, prefer=prev_sol,
+            x_offset=x_offset, y_offset=y_offset
+        )
+        if st != "OK" or sol is None:
+            return None, f"FAIL_AT_STEP_{i}_{st}"
+
+        points.append(sol)
+        prev_sol = sol
+
+    return points, "OK"
+

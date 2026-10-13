@@ -56,17 +56,17 @@ def main():
     fill_box(3.0, 3.1, -2.0, 2.0, 0)    # Đông
     fill_box(-3.1, -3.0, -2.0, 2.0, 0)  # Tây
 
-    # 3. Giá kệ A (x in [0.50, 2.00], y in [0.60, 0.82]) -> mặt trước tại y = +0.60
-    fill_box(0.50, 2.00, 0.60, 0.82, 0)
+    # 3. Giá kệ A (x in [0.49, 2.01], y in [1.76, 2.00]) -> áp sát tường Bắc (mặt trước tại y = +1.76)
+    fill_box(0.49, 2.01, 1.76, 2.00, 0)
 
-    # 4. Giá kệ B (x in [0.50, 2.00], y in [-0.82, -0.60]) -> mặt trước tại y = -0.60
-    fill_box(0.50, 2.00, -0.82, -0.60, 0)
+    # 4. Giá kệ B (x in [0.49, 2.01], y in [-2.00, -1.76]) -> áp sát tường Nam (mặt trước tại y = -1.76)
+    fill_box(0.49, 2.01, -2.00, -1.76, 0)
 
-    # 5. Bàn trạm IN (-2.4, 1.2), kích thước 0.3x0.3
-    fill_box(-2.55, -2.25, 1.05, 1.35, 0)
+    # 5. Bàn trạm IN (-2.4, 1.25), kích thước 0.70x0.40 (x in [-2.75, -2.05], y in [1.05, 1.45])
+    fill_box(-2.75, -2.05, 1.05, 1.45, 0)
 
-    # 6. Bàn trạm OUT (-2.4, -1.2), kích thước 0.3x0.3
-    fill_box(-2.55, -2.25, -1.35, -1.05, 0)
+    # 6. Bàn trạm OUT (-2.4, -1.25), kích thước 0.70x0.40 (x in [-2.75, -2.05], y in [-1.45, -1.05])
+    fill_box(-2.75, -2.05, -1.45, -1.05, 0)
 
     # Không gian di chuyển tự do hoàn toàn trong kho (không có vật cản tĩnh hardcode trên map)
 
@@ -94,7 +94,7 @@ def main():
     print(f"  - PGM : {pgm_path} ({width}x{height} pixels)")
     print(f"  - YAML: {yaml_path}")
     print(f"  - Resolution: {res} m/pixel | Origin: [{x_min}, {y_min}, 0.0]")
-    print(f"  - Mặt trước Kệ A: y = +0.600m | Mặt trước Kệ B: y = -0.600m (Lối đi: 1.200m)")
+    print(f"  - Mặt trước Kệ A: y = +1.760m | Mặt trước Kệ B: y = -1.760m (Lối đi: 3.520m)")
 
 
 if __name__ == "__main__":

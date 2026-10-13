@@ -36,6 +36,7 @@ from wh_web.web_bridge import WebBridge, make_placeholder_frame
 class OrderIn(BaseModel):
     item_code: str
     quantity: int = 1
+    slot_id: Optional[str] = None
 
     @field_validator("quantity")
     @classmethod
@@ -280,22 +281,33 @@ async def create_inbound_task(order: OrderIn):
             detail=f"Hết ô trống trên kệ (NO_FREE_SLOT): Yêu cầu {order.quantity} ô, hiện chỉ còn {free_slots} ô trống!",
         )
 
+    if order.slot_id:
+        target_slot = db.get_slot(order.slot_id)
+        if not target_slot:
+            raise HTTPException(status_code=404, detail=f"Ô kệ '{order.slot_id}' không tồn tại!")
+        if target_slot["state"] != "EMPTY":
+            raise HTTPException(
+                status_code=409,
+                detail=f"Ô kệ '{order.slot_id}' hiện không trống (Trạng thái: {target_slot['state']})!",
+            )
+
     # Gọi tạo nhiệm vụ qua WebBridge (hoặc DB trực tiếp nếu bridge chưa sẵn sàng)
     if bridge is not None:
-        success, task_id, msg = bridge.submit_task("INBOUND", order.item_code, order.quantity)
+        success, task_id, msg = bridge.submit_task("INBOUND", order.item_code, order.quantity, slot_id=order.slot_id)
         if not success:
             raise HTTPException(status_code=400, detail=msg)
     else:
-        task_id = db.create_task("INBOUND", order.item_code, quantity=order.quantity)
+        task_id = db.create_task("INBOUND", order.item_code, slot_id=order.slot_id)
         msg = f"Đã tiếp nhận nhiệm vụ INBOUND #{task_id}"
 
     # Broadcast cập nhật ngay
     await broadcast({"type": "inventory", "data": db.get_inventory()})
+    slot_notice = f" vào ô {order.slot_id}" if order.slot_id else ""
     await broadcast({
         "type": "notification",
         "data": {
             "level": "info",
-            "text": f"Đã tiếp nhận lệnh NHẬP {order.quantity} hộp '{order.item_code}' (Đơn #{task_id})",
+            "text": f"Đã tiếp nhận lệnh NHẬP {order.quantity} hộp '{order.item_code}'{slot_notice} (Đơn #{task_id})",
         },
     })
     return {"success": True, "task_id": task_id, "message": msg}
@@ -687,6 +699,10 @@ async def websocket_endpoint(ws: WebSocket):
 # ── Phục vụ Giao diện Tĩnh (Static Files - Mục 8.4) ──────────────────────────
 static_dir = os.path.join(os.path.dirname(__file__), "static")
 if os.path.exists(static_dir):
+    @app.get("/", include_in_schema=False)
+    async def serve_root():
+        return FileResponse(os.path.join(static_dir, "index.html"))
+
     app.mount("/", StaticFiles(directory=static_dir, html=True), name="static")
 
 

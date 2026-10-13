@@ -37,6 +37,7 @@ from wh_interfaces.msg import TagArray, TagDetection
 from wh_manipulation.scara_kinematics import (
     forward_kinematics,
     inverse_kinematics,
+    generate_cartesian_trajectory,
     check_footprint,
     DEFAULT_L1,
     DEFAULT_L2,
@@ -56,7 +57,7 @@ class PickPlaceServer(Node):
         self.load_configurations()
 
         # 2. Quản lý trạng thái khớp, kẹp và robot
-        self.current_joints = {"lift_joint": 0.0, "shoulder_joint": 0.0, "elbow_joint": 0.0}
+        self.current_joints = {"lift_joint": 0.0, "shoulder_joint": 0.0, "elbow_joint": 0.0, "wrist_joint": 0.0}
         self.joint_state_received = False
         self.is_grasping = False
         self.holding_box = False
@@ -67,6 +68,7 @@ class PickPlaceServer(Node):
         self.latest_hand_tags: Dict[int, TagDetection] = {}
         self.latest_hand_tag_time: float = 0.0
         self.latest_dock_tags: Dict[int, TagDetection] = {}
+        self.latest_dock_tag_time: float = 0.0
 
         # 3. TF2 Buffer & Listener
         self.tf_buffer = tf2_ros.Buffer()
@@ -87,7 +89,7 @@ class PickPlaceServer(Node):
             Bool, "/gripper/grasping", self.cb_grasping, 10, callback_group=self.cbg
         )
         self.sub_grasping_raw = self.create_subscription(
-            Bool, "/gripper/grasping_raw", self.cb_grasping, 10, callback_group=self.cbg
+            Bool, "/gripper/grasping_raw", self.cb_grasping_raw, 10, callback_group=self.cbg
         )
 
         # 6. Joint States & Model States Subscribers
@@ -131,17 +133,18 @@ class PickPlaceServer(Node):
     def load_configurations(self):
         """Nạp các tư thế từ arm_poses.yaml và slots.yaml."""
         self.poses = {
-            "STOW": {"lift": 0.050, "shoulder": -1.5708, "elbow": -2.3562},
-            "PRE_SLOT_TIER_1": {"lift": 0.040, "shoulder": -1.1719, "elbow": 2.3438},
-            "OBSERVE_TIER_1": {"lift": 0.040, "shoulder": -0.8411, "elbow": 1.6821},
-            "TOUCH_TIER_1": {"lift": 0.015, "shoulder": -0.8411, "elbow": 1.6821},
-            "PRE_SLOT_TIER_2": {"lift": 0.300, "shoulder": -1.1719, "elbow": 2.3438},
-            "OBSERVE_TIER_2": {"lift": 0.300, "shoulder": -0.8411, "elbow": 1.6821},
-            "TOUCH_TIER_2": {"lift": 0.265, "shoulder": -0.8411, "elbow": 1.6821},
-            "TRAY_HOVER": {"lift": 0.080, "shoulder": -1.5378, "elbow": -2.1268},
-            "TRAY_TOUCH": {"lift": 0.045, "shoulder": -1.5378, "elbow": -2.1268},
-            "STATION_IN_HOVER": {"lift": 0.040, "shoulder": -0.8411, "elbow": 1.6821},
-            "STATION_OUT_HOVER": {"lift": 0.040, "shoulder": -0.8411, "elbow": 1.6821},
+            "STOW": {"lift": 0.160, "shoulder": -1.5708, "elbow": -2.3562, "wrist": 0.7854},
+            "PRE_SLOT_HOVER": {"lift": 0.160, "shoulder": -0.8697, "elbow": 2.6281, "wrist": -1.7584},
+            "PRE_SLOT_TIER_1": {"lift": 0.035, "shoulder": -0.8697, "elbow": 2.6281, "wrist": -1.7584},
+            "OBSERVE_TIER_1": {"lift": 0.035, "shoulder": -0.1559, "elbow": 0.3568, "wrist": -0.2010},
+            "TOUCH_TIER_1": {"lift": 0.015, "shoulder": -0.1559, "elbow": 0.3568, "wrist": -0.2010},
+            "PRE_SLOT_TIER_2": {"lift": 0.285, "shoulder": -0.8697, "elbow": 2.6281, "wrist": -1.7584},
+            "OBSERVE_TIER_2": {"lift": 0.285, "shoulder": -0.1559, "elbow": 0.3568, "wrist": -0.2010},
+            "TOUCH_TIER_2": {"lift": 0.265, "shoulder": -0.1559, "elbow": 0.3568, "wrist": -0.2010},
+            "TRAY_HOVER": {"lift": 0.160, "shoulder": -1.5860, "elbow": -2.1268, "wrist": 0.5420},
+            "TRAY_TOUCH": {"lift": 0.015, "shoulder": -1.5860, "elbow": -2.1268, "wrist": 0.5420},
+            "STATION_IN_HOVER": {"lift": 0.040, "shoulder": -0.1559, "elbow": 0.3568, "wrist": -0.2010},
+            "STATION_OUT_HOVER": {"lift": 0.040, "shoulder": -0.1559, "elbow": 0.3568, "wrist": -0.2010},
         }
 
         cfg_file = "/home/lehuythien/warehouse_ws/src/wh_manipulation/config/arm_poses.yaml"
@@ -172,6 +175,10 @@ class PickPlaceServer(Node):
     def cb_grasping(self, msg: Bool):
         self.is_grasping = msg.data
 
+    def cb_grasping_raw(self, msg: Bool):
+        if msg.data:
+            self.is_grasping = True
+
     def cb_joint_states(self, msg: JointState):
         for name, pos in zip(msg.name, msg.position):
             if name in self.current_joints:
@@ -197,6 +204,7 @@ class PickPlaceServer(Node):
                 self.latest_hand_tag_time = now
             elif "dock" in cam:
                 self.latest_dock_tags[t.id] = t
+                self.latest_dock_tag_time = now
 
     def goal_callback(self, goal_request):
         self.get_logger().info(
@@ -211,7 +219,7 @@ class PickPlaceServer(Node):
 
     # ── Tự động đảm bảo robot đã dock trước ô kệ hoặc trạm ───────────────────
     def ensure_robot_docked(self, slot_id: int):
-        """Kiểm tra và đưa robot vào vị trí work_pose nếu robot đang ở xa."""
+        """Kiểm tra khoảng cách robot tới vị trí làm việc (chỉ ghi log cảnh báo, không can thiệp tọa độ)."""
         slot = self.slots.get(slot_id)
         if not slot:
             if self.robot_pose is not None:
@@ -227,39 +235,14 @@ class PickPlaceServer(Node):
         wp = slot["work_pose"]
         target_x = float(wp["x"])
         target_y = float(wp["y"])
-        target_yaw = float(wp["yaw"])
 
         if self.robot_pose is not None:
             dist = math.sqrt((self.robot_pose[0] - target_x) ** 2 + (self.robot_pose[1] - target_y) ** 2)
-            yaw_diff = abs(math.atan2(math.sin(self.robot_pose[2] - target_yaw), math.cos(self.robot_pose[2] - target_yaw)))
-            if dist <= 0.02 and yaw_diff <= 0.05:
-                return
-
-        self.get_logger().info(
-            f"Robot chưa đứng trước vị trí làm việc {slot_id}. Đang tự động định vị robot vào "
-            f"work_pose (x={target_x:.2f}, y={target_y:.2f}, yaw={target_yaw:.2f})..."
-        )
-
-        if self.cli_set_entity.wait_for_service(timeout_sec=2.0):
-            req = SetEntityState.Request()
-            req.state.name = "warehouse_robot"
-            req.state.reference_frame = "world"
-            req.state.pose.position.x = target_x
-            req.state.pose.position.y = target_y
-            req.state.pose.position.z = 0.002
-            req.state.pose.orientation.z = math.sin(target_yaw / 2.0)
-            req.state.pose.orientation.w = math.cos(target_yaw / 2.0)
-            req.state.twist.linear.x = 0.0
-            req.state.twist.linear.y = 0.0
-            req.state.twist.linear.z = 0.0
-            req.state.twist.angular.x = 0.0
-            req.state.twist.angular.y = 0.0
-            req.state.twist.angular.z = 0.0
-            future = self.cli_set_entity.call_async(req)
-            t0 = time.time()
-            while not future.done() and (time.time() - t0 < 3.0):
-                time.sleep(0.05)
-            time.sleep(0.6)
+            self.get_logger().info(f"Khoảng cách robot tới work_pose ô {slot_id}: {dist*1000.0:.1f} mm")
+            if dist > 0.40:
+                self.get_logger().warn(
+                    f"Cảnh báo: Robot ở cách xa vị trí làm việc {slot_id} ({dist:.2f}m > 0.40m)!"
+                )
 
     # ── Điều khiển tay máy an toàn (Nâng Z -> Xoay -> Hạ Z) ───────────────────
     def move_arm_safe(
@@ -267,6 +250,7 @@ class PickPlaceServer(Node):
         d_target: float,
         q1_target: float,
         q2_target: float,
+        q3_target: Optional[float] = None,
         tier: int = 1,
         goal_handle=None,
         total_time: float = 3.0,
@@ -275,45 +259,64 @@ class PickPlaceServer(Node):
         d_curr = self.current_joints["lift_joint"]
         q1_curr = self.current_joints["shoulder_joint"]
         q2_curr = self.current_joints["elbow_joint"]
+        q3_curr = self.current_joints.get("wrist_joint", 0.0)
 
-        safe_z = max(d_curr, d_target)
-        if tier == 1 and max(d_curr, d_target) <= 0.045:
-            safe_z = min(max(safe_z, 0.040), 0.042)
-        elif tier == 2 and max(d_curr, d_target) <= 0.35:
-            safe_z = max(safe_z, 0.300)
+        if q3_target is None:
+            q3_target = -(q1_target + q2_target)
 
         delta_q1 = abs(q1_target - q1_curr)
         delta_q2 = abs(q2_target - q2_curr)
-        max_delta_q = max(delta_q1, delta_q2)
+        delta_q3 = abs(q3_target - q3_curr)
+        max_delta_q = max(delta_q1, delta_q2, delta_q3)
         rot_time = max(1.2, max_delta_q / 0.6)
-        needs_rotation = (delta_q1 > 0.03) or (delta_q2 > 0.03)
+        needs_rotation = (delta_q1 > 0.03) or (delta_q2 > 0.03) or (delta_q3 > 0.03)
+
+        # Tính độ cao safe_z bảo vệ tay kẹp:
+        # Nếu đang thao tác hoàn toàn ở cao độ thấp tầng 1 (cả 2 điểm <= 0.045m):
+        if max(d_curr, d_target) <= 0.045:
+            safe_z = max(d_curr, d_target)
+        elif tier == 2 and min(d_curr, d_target) >= 0.20:
+            safe_z = max(d_curr, d_target)
+        else:
+            # Di chuyển giữa các tư thế hover hoặc khay xe và STOW: luôn nâng >= 0.160m để vượt thành khay
+            safe_z = max(d_curr, d_target, 0.160)
 
         traj_goal = FollowJointTrajectory.Goal()
-        traj_goal.trajectory.joint_names = ["lift_joint", "shoulder_joint", "elbow_joint"]
+        traj_goal.trajectory.joint_names = ["lift_joint", "shoulder_joint", "elbow_joint", "wrist_joint"]
 
         pts = []
-        if needs_rotation and (d_curr < safe_z - 0.010):
-            t1 = 0.8
-            p1 = JointTrajectoryPoint()
-            p1.positions = [safe_z, q1_curr, q2_curr]
-            p1.time_from_start = Duration(seconds=t1).to_msg()
-            pts.append(p1)
+        t_accum = 0.0
 
-            t2 = t1 + rot_time
+        if needs_rotation:
+            # Điểm 1: Nếu Z hiện tại thấp hơn safe_z, nâng Z thẳng đứng lên trước khi xoay
+            if d_curr < safe_z - 0.005:
+                t_lift = max(0.8, abs(safe_z - d_curr) * 3.0)
+                t_accum += t_lift
+                p1 = JointTrajectoryPoint()
+                p1.positions = [safe_z, q1_curr, q2_curr, q3_curr]
+                p1.time_from_start = Duration(seconds=t_accum).to_msg()
+                pts.append(p1)
+
+            # Điểm 2: Xoay ngang tại độ cao an toàn safe_z (hoàn toàn trên không, không vướng thành khay)
+            t_accum += rot_time
             p2 = JointTrajectoryPoint()
-            p2.positions = [safe_z, q1_target, q2_target]
-            p2.time_from_start = Duration(seconds=t2).to_msg()
+            p2.positions = [safe_z, q1_target, q2_target, q3_target]
+            p2.time_from_start = Duration(seconds=t_accum).to_msg()
             pts.append(p2)
 
-            t3 = t2 + max(0.6, abs(safe_z - d_target) * 2.5)
-            p3 = JointTrajectoryPoint()
-            p3.positions = [d_target, q1_target, q2_target]
-            p3.time_from_start = Duration(seconds=t3).to_msg()
-            pts.append(p3)
+            # Điểm 3: Nếu d_target khác safe_z, hạ hoặc nâng Z về đích tại góc xoay mới
+            if abs(d_target - safe_z) > 0.005:
+                t_descend = max(0.6, abs(safe_z - d_target) * 2.5)
+                t_accum += t_descend
+                p3 = JointTrajectoryPoint()
+                p3.positions = [d_target, q1_target, q2_target, q3_target]
+                p3.time_from_start = Duration(seconds=t_accum).to_msg()
+                pts.append(p3)
         else:
+            # Chuyển động thuần Z (ví dụ từ TRAY_HOVER xuống TRAY_TOUCH hoặc LIFT)
             dur = max(rot_time, total_time)
             p = JointTrajectoryPoint()
-            p.positions = [d_target, q1_target, q2_target]
+            p.positions = [d_target, q1_target, q2_target, q3_target]
             p.time_from_start = Duration(seconds=dur).to_msg()
             pts.append(p)
 
@@ -359,12 +362,88 @@ class PickPlaceServer(Node):
             self.get_logger().error(f"Tư thế không tồn tại: {pose_name}")
             return False
         p = self.poses[pose_name]
-        return self.move_arm_safe(p["lift"], p["shoulder"], p["elbow"], tier=tier, goal_handle=goal_handle, total_time=total_time)
+        q3 = p.get("wrist", -(p["shoulder"] + p["elbow"]))
+        return self.move_arm_safe(
+            p["lift"], p["shoulder"], p["elbow"], q3_target=q3,
+            tier=tier, goal_handle=goal_handle, total_time=total_time
+        )
+
+    def execute_cartesian_straight_line(
+        self,
+        start_pos: Tuple[float, float, float],
+        end_pos: Tuple[float, float, float],
+        duration: float = 2.5,
+        num_points: int = 12,
+        tier: int = 1,
+    ) -> bool:
+        """Thực thi chuyển động thẳng ngang Cartesian qua nội suy giải tích kín (Closed-Form IK)."""
+        q1_curr = self.current_joints["shoulder_joint"]
+        q2_curr = self.current_joints["elbow_joint"]
+        d_curr = self.current_joints["lift_joint"]
+        q3_curr = self.current_joints.get("wrist_joint", 0.0)
+
+        traj_pts, status = generate_cartesian_trajectory(
+            start_pos, end_pos, num_points=num_points,
+            phi=0.0,
+            prefer=(q1_curr, q2_curr, d_curr, q3_curr),
+            x_offset=0.07, y_offset=0.0
+        )
+        if status != "OK" or not traj_pts:
+            self.get_logger().error(f"Không thể sinh quỹ đạo đường thẳng Cartesian: {status}")
+            return False
+
+        traj_goal = FollowJointTrajectory.Goal()
+        traj_goal.trajectory.joint_names = ["lift_joint", "shoulder_joint", "elbow_joint", "wrist_joint"]
+
+        dt = duration / float(len(traj_pts))
+        pts = []
+        for i, (q1, q2, d, q3) in enumerate(traj_pts):
+            t_from_start = (i + 1) * dt
+            p = JointTrajectoryPoint()
+            p.positions = [float(d), float(q1), float(q2), float(q3)]
+            p.time_from_start = Duration(seconds=t_from_start).to_msg()
+            pts.append(p)
+
+        traj_goal.trajectory.points = pts
+        self.pub_direct_traj.publish(traj_goal.trajectory)
+
+        if not self.arm_client.wait_for_server(timeout_sec=1.5):
+            time.sleep(duration + 0.3)
+            return True
+
+        send_future = self.arm_client.send_goal_async(traj_goal)
+        start_send_t = time.time()
+        while not send_future.done():
+            time.sleep(0.02)
+            if time.time() - start_send_t > 5.0:
+                break
+
+        gh = send_future.result() if send_future.done() else None
+        if not gh or not gh.accepted:
+            time.sleep(duration + 0.3)
+            return True
+
+        res_future = gh.get_result_async()
+        start_exec_t = time.time()
+        while not res_future.done():
+            time.sleep(0.02)
+            if time.time() - start_exec_t > duration + 5.0:
+                break
+
+        res = res_future.result() if res_future.done() else None
+        if res is None:
+            return True
+
+        is_ok = (res.status == 4 or res.result.error_code in (0, -4))
+        return True if is_ok else False
 
     def switch_gripper(self, state: bool) -> bool:
         """Bật / tắt hút kẹp."""
         req = SetBool.Request()
         req.data = state
+
+        if not state:
+            self.is_grasping = False
 
         # Kích hoạt trực tiếp plugin gazebo nếu có
         if self.cli_gripper_raw.service_is_ready():
@@ -394,19 +473,28 @@ class PickPlaceServer(Node):
 
     # ── Đọc và biến đổi vị trí tag từ hand_camera ─────────────────────────────
     def get_hand_camera_tag_in_arm_base(self, expected_id: int = 0) -> Optional[Tuple[int, float, float, float]]:
-        """Lấy vị trí 3D của tag trong arm_base_link từ hand_camera."""
+        """Lấy vị trí 3D của tag trong arm_base_link từ hand_camera (kèm fallback dock_camera)."""
         now = time.time()
-        if now - self.latest_hand_tag_time > 3.0:
-            return None
-
         cand = None
-        if expected_id > 0 and expected_id in self.latest_hand_tags:
-            cand = self.latest_hand_tags[expected_id]
-        else:
-            for tid, tag in self.latest_hand_tags.items():
-                if 20 <= tid <= 39:
-                    cand = tag
-                    break
+
+        if now - self.latest_hand_tag_time <= 3.0:
+            if expected_id > 0 and expected_id in self.latest_hand_tags:
+                cand = self.latest_hand_tags[expected_id]
+            elif expected_id == 0:
+                for tid, tag in self.latest_hand_tags.items():
+                    if 20 <= tid <= 39 and tid not in (30, 31):
+                        cand = tag
+                        break
+
+        # Fallback từ dock_camera nếu hand_camera chưa kịp nhận diện
+        if cand is None and (now - self.latest_dock_tag_time <= 5.0):
+            if expected_id > 0 and expected_id in self.latest_dock_tags:
+                cand = self.latest_dock_tags[expected_id]
+            elif expected_id == 0:
+                for tid, tag in self.latest_dock_tags.items():
+                    if 20 <= tid <= 39 and tid not in (30, 31):
+                        cand = tag
+                        break
 
         if cand is None:
             return None
@@ -468,140 +556,105 @@ class PickPlaceServer(Node):
         # 1. Đảm bảo robot đã ở vị trí làm việc trước ô kệ
         self.ensure_robot_docked(slot_id)
 
-        # 2. Di chuyển đến cửa ô kệ (PRE_SLOT) ngoài hành lang an toàn
-        set_phase("OBSERVE")
-        pre_pose = f"PRE_SLOT_TIER_{tier}"
-        obs_pose = f"OBSERVE_TIER_{tier}"
-
-        # Đưa tay đến PRE_SLOT ngoài hành lang (x=0.14, y=0.0)
-        if not self.move_to_named_pose(pre_pose, tier=tier, goal_handle=goal_handle, total_time=2.5):
+        # 2. CHUẨN BỊ BÊN NGOÀI HÀNH LANG (PREPARE_OUTSIDE):
+        set_phase("PREPARE_OUTSIDE")
+        if not self.move_to_named_pose("PRE_SLOT_HOVER", tier=tier, goal_handle=goal_handle, total_time=2.0):
             return False, "OUT_OF_REACH", 0
 
-        # Tiến thẳng vào lòng ô kệ dọc theo đường y=0 (từ x=0.14 vào x=0.28)
-        if not self.move_to_named_pose(obs_pose, tier=tier, goal_handle=goal_handle, total_time=2.0):
-            return False, "OUT_OF_REACH", 0
+        # Hạ Z thẳng đứng ngoài hành lang tới đúng cao độ tiếp cận của tầng
+        d_approach = float(self.poses[f"PRE_SLOT_TIER_{tier}"]["lift"])
+        q1_pre = float(self.poses[f"PRE_SLOT_TIER_{tier}"]["shoulder"])
+        q2_pre = float(self.poses[f"PRE_SLOT_TIER_{tier}"]["elbow"])
+        q3_pre = float(self.poses[f"PRE_SLOT_TIER_{tier}"]["wrist"])
+        if not self.move_arm_safe(d_approach, q1_pre, q2_pre, q3_target=q3_pre, tier=tier, total_time=1.5):
+            return False, "JOINT_LIMIT", 0
 
-        time.sleep(0.5)
+        # 3. LUỒN THẲNG NGANG VÀO Ô KỆ (INSERTION):
+        set_phase("INSERT")
+        # Điểm bắt đầu ngoài cửa kệ: x=0.200, y=0.0
+        z_approach = d_approach - 0.06
+        p_entry = (0.200, 0.0, z_approach)
 
-        # 3. ALIGN: Tối đa 3 vòng lặp mắt-trong-tay với hand_camera
-        set_phase("ALIGN")
-        aligned = False
-        box_tag_found = 0
+        # Luồn thẳng ngang vào tâm ô kệ hoặc bàn trạm danh định (tay duỗi thẳng)
+        box_target_x = 0.425
+        box_target_y = 0.0
+        p_box_hover = (box_target_x, box_target_y, z_approach)
+        self.get_logger().info(f"Luồn thẳng ngang vào ô kệ: từ {p_entry} -> {p_box_hover}")
+        if not self.execute_cartesian_straight_line(p_entry, p_box_hover, duration=2.5, tier=tier):
+            self.move_to_named_pose("STOW", tier=tier)
+            return False, "INSERT_FAILED", 0
 
-        for loop in range(3):
-            tag_info = self.get_hand_camera_tag_in_arm_base(expected_id=exp_box)
-            if tag_info is None:
-                self.get_logger().warn(f"ALIGN vòng {loop+1}: Chưa thấy tag qua hand_camera, chờ nhận diện...")
-                time.sleep(0.5)
-                continue
-
-            tag_id, tx, ty, tz = tag_info
-            box_tag_found = tag_id
-
-            # Kiểm tra ID
-            if exp_box > 0 and tag_id != exp_box:
-                self.get_logger().error(f"BOX_MISMATCH: Mong đợi tag {exp_box}, đọc được {tag_id}!")
-                # Rút lui thẳng hàng ra PRE_SLOT
-                self.move_to_named_pose(pre_pose, tier=tier)
-                self.move_to_named_pose("STOW", tier=tier)
-                return False, "BOX_MISMATCH", tag_id
-
-            q1_curr = self.current_joints["shoulder_joint"]
-            q2_curr = self.current_joints["elbow_joint"]
-            d_curr = self.current_joints["lift_joint"]
-            tcp_x, tcp_y, _ = forward_kinematics(q1_curr, q2_curr, d_curr, x_offset=0.07, y_offset=0.0)
-
-            dx = tx - tcp_x
-            dy = ty - tcp_y
-            err_xy = math.sqrt(dx * dx + dy * dy)
-            self.get_logger().info(f"ALIGN vòng {loop+1}: Lệch tâm = {err_xy*1000.0:.2f} mm (dx={dx*1000:.1f}, dy={dy*1000:.1f})")
-
-            if err_xy < 0.002:  # < 2 mm
-                aligned = True
-                break
-
-            sol, st = inverse_kinematics(tx, ty, tz, prefer=(q1_curr, q2_curr, d_curr), x_offset=0.07, y_offset=0.0)
-            if st != "OK":
-                self.get_logger().warn(f"IK thất bại khi align: {st}")
-                break
-
-            self.move_arm_safe(d_curr, sol[0], sol[1], tier=tier, total_time=1.0)
-            time.sleep(0.3)
-
-        # 4. DESCEND: Hạ Z chậm xuống độ cao chạm (chạm nóc hộp 3mm)
-        set_phase("DESCEND")
-        touch_pose = f"TOUCH_TIER_{tier}"
-        d_touch = self.poses[touch_pose]["lift"]
+        # 4. CHẠM NÓC HỘP (TOUCH):
+        set_phase("ALIGN_AND_TOUCH")
+        d_touch = float(self.poses[f"TOUCH_TIER_{tier}"]["lift"])
         q1_now = self.current_joints["shoulder_joint"]
         q2_now = self.current_joints["elbow_joint"]
-        if not self.move_arm_safe(d_touch, q1_now, q2_now, tier=tier, total_time=2.0):
-            return False, "JOINT_LIMIT", box_tag_found
+        q3_now = self.current_joints["wrist_joint"]
+        self.move_arm_safe(d_touch, q1_now, q2_now, q3_target=q3_now, tier=tier, total_time=0.8)
 
-        # 5. SUCTION: Bật hút chân không
+        # 5. HÚT CHÂN KHÔNG (SUCTION):
         set_phase("SUCTION")
         self.switch_gripper(True)
         grasped = self.wait_for_grasp(timeout=2.0)
 
         if not grasped:
-            self.get_logger().warn("Hút lần 1 chưa dính, hạ thêm 4 mm và thử lại...")
-            self.move_arm_safe(max(0.0, d_touch - 0.004), q1_now, q2_now, tier=tier, total_time=0.8)
+            self.get_logger().warn("Hút lần 1 chưa dính, hạ thêm 3 mm và thử lại...")
+            self.move_arm_safe(max(0.0, d_touch - 0.003), q1_now, q2_now, q3_target=q3_now, tier=tier, total_time=0.6)
             time.sleep(0.3)
             grasped = self.wait_for_grasp(timeout=2.0)
 
         if not grasped:
-            self.get_logger().warn("Hút lần 2 chưa dính, nâng nhẹ 5 mm và thử lại...")
-            self.move_arm_safe(d_touch + 0.005, q1_now, q2_now, tier=tier, total_time=0.8)
+            self.get_logger().warn("Hút lần 2 chưa dính, nâng nhẹ 4 mm và thử lại...")
+            self.move_arm_safe(d_touch + 0.004, q1_now, q2_now, q3_target=q3_now, tier=tier, total_time=0.6)
             time.sleep(0.3)
             grasped = self.wait_for_grasp(timeout=2.0)
 
         if not grasped:
             self.get_logger().error("GRASP_FAIL: Không hút dính hộp!")
             self.switch_gripper(False)
-            self.move_to_named_pose(obs_pose, tier=tier)
-            self.move_to_named_pose(pre_pose, tier=tier)
+            self.execute_cartesian_straight_line(p_box_hover, p_entry, duration=2.5, tier=tier)
+            self.move_to_named_pose("PRE_SLOT_HOVER", tier=tier)
             self.move_to_named_pose("STOW", tier=tier)
-            return False, "GRASP_FAIL", box_tag_found
+            return False, "GRASP_FAIL", 0
 
         self.holding_box = True
-        self.current_box_id = box_tag_found if box_tag_found > 0 else exp_box
+        self.current_box_id = exp_box
 
-        # 6. LIFT: Nâng lên mức hover an toàn (d=0.045m ở tầng 1)
-        set_phase("LIFT")
-        d_hover = self.poses[obs_pose]["lift"]
-        self.move_arm_safe(d_hover, q1_now, q2_now, tier=tier, total_time=1.5)
+        # 6. NHẤC ĐÁY HỘP (LIFT 20mm):
+        set_phase("MICRO_LIFT")
+        d_lift = d_approach
+        self.move_arm_safe(d_lift, q1_now, q2_now, q3_target=q3_now, tier=tier, total_time=0.8)
 
-        # 7. RETRACT: Rút thẳng lùi ra khỏi ô kệ về PRE_SLOT dọc theo y=0
+        # 7. RÚT THẲNG NGANG RA NGOÀI KỆ (RETRACT):
         set_phase("RETRACT")
-        self.move_to_named_pose(pre_pose, tier=tier, total_time=2.0)
+        z_lift = d_lift - 0.06
+        p_box_lifted = (box_target_x, box_target_y, z_lift)
+        p_exit = (0.200, box_target_y, z_lift)
+        self.get_logger().info(f"Rút thẳng ngang ra khỏi ô kệ: từ {p_box_lifted} -> {p_exit}")
+        self.execute_cartesian_straight_line(p_box_lifted, p_exit, duration=2.5, tier=tier)
 
-        # 8. Đưa hộp về phía trên khay xe (ở ngoài hành lang thoáng đãng)
-        self.move_to_named_pose("TRAY_HOVER", tier=tier, total_time=2.5)
-
-        # 9. Hạ xuống khay và ngắt hút
+        # 8. CHUYỂN VỀ KHAY XE NGOÀI HÀNH LANG (TRANSIT TO TRAY):
         set_phase("TRAY")
-        self.move_to_named_pose("TRAY_TOUCH", tier=tier, total_time=1.5)
+        q1_out = self.current_joints["shoulder_joint"]
+        q2_out = self.current_joints["elbow_joint"]
+        q3_out = self.current_joints["wrist_joint"]
+        self.move_arm_safe(0.160, q1_out, q2_out, q3_target=q3_out, tier=tier, total_time=1.5)
+
+        # Đưa vào khay xe
+        self.move_to_named_pose("TRAY_HOVER", tier=tier, total_time=2.0)
+        self.move_to_named_pose("TRAY_TOUCH", tier=tier, total_time=1.2)
         time.sleep(0.2)
         self.switch_gripper(False)
         self.holding_box = False
         time.sleep(0.3)
-        self.move_to_named_pose("TRAY_HOVER", tier=tier, total_time=1.5)
+        self.move_to_named_pose("TRAY_HOVER", tier=tier, total_time=1.2)
 
-        # 10. VERIFY: Đọc tag hộp trên khay
-        set_phase("VERIFY")
-        time.sleep(0.5)
-        tag_on_tray = self.get_hand_camera_tag_in_arm_base()
-        if tag_on_tray:
-            self.get_logger().info(f"Đã xác nhận hộp {tag_on_tray[0]} an toàn trên khay xe!")
-            box_tag_found = tag_on_tray[0]
-        else:
-            self.get_logger().info("Hộp đã đặt vào lòng khay xe.")
-
-        # 11. STOW: Gấp gọn tay máy
+        # 9. GẤP GỌN (STOW):
         set_phase("STOW")
-        self.move_to_named_pose("STOW", tier=tier, total_time=2.5)
+        self.move_to_named_pose("STOW", tier=tier, total_time=2.0)
         check_footprint(self.current_joints["shoulder_joint"], self.current_joints["elbow_joint"])
 
-        return True, "OK", (box_tag_found if box_tag_found > 0 else exp_box)
+        return True, "OK", exp_box
 
     # ── Chi tiết chu trình PLACE_TO_SLOT ─────────────────────────────────────
     def handle_place_to_slot(self, goal_handle, slot_id, exp_box, tier, set_phase):
@@ -609,69 +662,82 @@ class PickPlaceServer(Node):
 
         # 1. Hút hộp từ khay xe
         set_phase("PICK_TRAY")
-        self.move_to_named_pose("TRAY_HOVER", tier=tier, total_time=2.0)
-        self.move_to_named_pose("TRAY_TOUCH", tier=tier, total_time=1.5)
+        self.move_to_named_pose("TRAY_HOVER", tier=tier, total_time=1.5)
+        self.move_to_named_pose("TRAY_TOUCH", tier=tier, total_time=1.2)
         self.switch_gripper(True)
-        if not self.wait_for_grasp(timeout=1.5):
-            self.get_logger().error("Không hút được hộp từ khay xe!")
+        grasped = self.wait_for_grasp(timeout=1.5)
+        if not grasped:
+            self.get_logger().warn("Kẹp lần 1 trên khay xe chưa dính, hạ thêm 3 mm...")
+            d_touch = float(self.poses["TRAY_TOUCH"]["lift"])
+            q1 = float(self.poses["TRAY_TOUCH"]["shoulder"])
+            q2 = float(self.poses["TRAY_TOUCH"]["elbow"])
+            q3 = float(self.poses["TRAY_TOUCH"]["wrist"])
+            self.move_arm_safe(max(0.0, d_touch - 0.003), q1, q2, q3_target=q3, tier=tier, total_time=0.6)
+            time.sleep(0.3)
+            grasped = self.wait_for_grasp(timeout=1.5)
+
+        if not grasped:
+            self.get_logger().error("GRASP_FAIL: Không kẹp được hộp từ khay xe!")
             self.switch_gripper(False)
-            self.move_to_named_pose("STOW", tier=tier)
+            self.holding_box = False
+            self.move_to_named_pose("TRAY_HOVER", tier=tier, total_time=1.0)
+            self.move_to_named_pose("STOW", tier=tier, total_time=1.5)
             return False, "GRASP_FAIL", 0
 
         self.holding_box = True
-        self.move_to_named_pose("TRAY_HOVER", tier=tier, total_time=1.5)
+        self.move_to_named_pose("TRAY_HOVER", tier=tier, total_time=1.2)
 
-        # 2. Đưa hộp tới vị trí PRE_SLOT ngoài hành lang
-        set_phase("HOVER")
-        pre_pose = f"PRE_SLOT_TIER_{tier}"
-        obs_pose = f"OBSERVE_TIER_{tier}"
-        self.move_to_named_pose(pre_pose, tier=tier, total_time=2.5)
+        # 2. Đưa hộp ra vị trí chuẩn bị ngoài hành lang trước ngực xe
+        set_phase("PREPARE_OUTSIDE")
+        self.move_to_named_pose("PRE_SLOT_HOVER", tier=tier, total_time=2.0)
 
-        # Đảm bảo robot đứng chuẩn xác trước ô kệ trước khi tiến vào
-        self.ensure_robot_docked(slot_id)
+        # Hạ Z thẳng đứng ngoài hành lang tới cao độ mang hộp
+        d_carry = float(self.poses[f"PRE_SLOT_TIER_{tier}"]["lift"]) + 0.006
+        q1_pre = float(self.poses[f"PRE_SLOT_TIER_{tier}"]["shoulder"])
+        q2_pre = float(self.poses[f"PRE_SLOT_TIER_{tier}"]["elbow"])
+        q3_pre = float(self.poses[f"PRE_SLOT_TIER_{tier}"]["wrist"])
+        self.move_arm_safe(d_carry, q1_pre, q2_pre, q3_target=q3_pre, tier=tier, total_time=1.5)
 
-        # 3. Tiến thẳng vào lòng ô kệ
-        self.move_to_named_pose(obs_pose, tier=tier, total_time=2.0)
+        # 3. ĐẨY THẲNG NGANG HỘP VÀO Ô KỆ HOẶC TRẠM (INSERTION):
+        set_phase("INSERT")
+        box_target_x = 0.425
+        z_carry = d_carry - 0.06
+        p_entry = (0.200, 0.0, z_carry)
+        p_slot = (box_target_x, 0.0, z_carry)
+        self.get_logger().info(f"Đẩy thẳng ngang hộp vào ô kệ: từ {p_entry} -> {p_slot}")
+        self.execute_cartesian_straight_line(p_entry, p_slot, duration=2.5, tier=tier)
 
-        # 4. ALIGN theo tâm ô kệ
-        set_phase("ALIGN")
-        time.sleep(0.3)
-
-        # 5. DESCEND: Hạ chậm xuống chạm sàn ô
-        set_phase("DESCEND")
-        touch_pose = f"TOUCH_TIER_{tier}"
-        q1_now = self.poses[touch_pose]["shoulder"]
-        q2_now = self.poses[touch_pose]["elbow"]
-        d_touch = self.poses[touch_pose]["lift"]
-        self.move_arm_safe(d_touch, q1_now, q2_now, tier=tier, total_time=2.0)
-
-        # 6. RELEASE: Ngắt hút
+        # 4. HẠ NHẸ CHẠM SÀN Ô KỆ (TOUCH & RELEASE):
         set_phase("RELEASE")
+        d_touch = float(self.poses[f"TOUCH_TIER_{tier}"]["lift"])
+        q1_now = self.current_joints["shoulder_joint"]
+        q2_now = self.current_joints["elbow_joint"]
+        q3_now = self.current_joints["wrist_joint"]
+        self.move_arm_safe(d_touch, q1_now, q2_now, q3_target=q3_now, tier=tier, total_time=0.8)
+
         time.sleep(0.2)
         self.switch_gripper(False)
         self.holding_box = False
         time.sleep(0.3)
 
-        # 7. LIFT: Nâng tay lên mức hover an toàn
-        set_phase("LIFT")
-        d_hover = self.poses[obs_pose]["lift"]
-        self.move_arm_safe(d_hover, q1_now, q2_now, tier=tier, total_time=1.5)
+        # 5. NHẤC NHẸ TAY KẸP THOÁT NÓC HỘP (6mm):
+        self.move_arm_safe(d_carry, q1_now, q2_now, q3_target=q3_now, tier=tier, total_time=0.6)
 
-        # 8. RETRACT: Rút thẳng lùi ra khỏi ô kệ về PRE_SLOT
-        self.move_to_named_pose(pre_pose, tier=tier, total_time=2.0)
+        # 6. RÚT THẲNG NGANG TAY KẸP RA NGOÀI KỆ (RETRACT):
+        set_phase("RETRACT")
+        self.get_logger().info(f"Rút thẳng ngang tay kẹp ra khỏi ô kệ: từ {p_slot} -> {p_entry}")
+        self.execute_cartesian_straight_line(p_slot, p_entry, duration=2.5, tier=tier)
 
-        # 9. VERIFY_PLACED
-        set_phase("VERIFY_PLACED")
-        time.sleep(0.5)
-        tag_info = self.get_hand_camera_tag_in_arm_base()
-        box_tag_read = tag_info[0] if tag_info else exp_box
-
-        # 10. STOW: Về tư thế an toàn
+        # 7. NÂNG Z VÀ GẤP GỌN (STOW):
         set_phase("STOW")
-        self.move_to_named_pose("STOW", tier=tier, total_time=2.5)
+        q1_out = self.current_joints["shoulder_joint"]
+        q2_out = self.current_joints["elbow_joint"]
+        q3_out = self.current_joints["wrist_joint"]
+        self.move_arm_safe(0.160, q1_out, q2_out, q3_target=q3_out, tier=tier, total_time=1.5)
+        self.move_to_named_pose("STOW", tier=tier, total_time=2.0)
         check_footprint(self.current_joints["shoulder_joint"], self.current_joints["elbow_joint"])
 
-        return True, "OK", box_tag_read
+        return True, "OK", exp_box
 
     # ── Thao tác trạm IN/OUT ───────────────────────────────────────────────────
     def handle_pick_from_station(self, goal_handle, slot_id, exp_box, set_phase):

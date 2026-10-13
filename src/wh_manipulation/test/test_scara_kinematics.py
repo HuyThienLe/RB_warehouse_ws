@@ -10,6 +10,7 @@ from wh_manipulation.scara_kinematics import (
     check_footprint,
     DEFAULT_L1,
     DEFAULT_L2,
+    DEFAULT_L3,
     DEFAULT_TOOL_DROP,
     DEFAULT_LIMITS,
 )
@@ -34,19 +35,19 @@ def test_roundtrip_1000_random_reachable_points():
         d_gen = random.uniform(d_min + 0.01, d_max - 0.01)
 
         # Tính FK
-        x, y, z = forward_kinematics(q1_gen, q2_gen, d_gen, l1, l2, tool_drop)
+        x, y, z = forward_kinematics(q1_gen, q2_gen, d_gen, l1=l1, l2=l2, tool_drop=tool_drop)
 
         # Tính IK với prefer là góc ban đầu
         sol, status = inverse_kinematics(
-            x, y, z, l1, l2, tool_drop, DEFAULT_LIMITS, prefer=(q1_gen, q2_gen, d_gen)
+            x, y, z, phi=0.0, l1=l1, l2=l2, tool_drop=tool_drop, limits=DEFAULT_LIMITS, prefer=(q1_gen, q2_gen, d_gen, -(q1_gen + q2_gen))
         )
 
         assert status == "OK", f"IK thất bại tại ({x}, {y}, {z}): {status}"
         assert sol is not None
-        q1_calc, q2_calc, d_calc = sol
+        q1_calc, q2_calc, d_calc, q3_calc = sol
 
         # Kiểm tra FK ngược lại từ nghiệm tính toán
-        x_rec, y_rec, z_rec = forward_kinematics(q1_calc, q2_calc, d_calc, l1, l2, tool_drop)
+        x_rec, y_rec, z_rec = forward_kinematics(q1_calc, q2_calc, d_calc, q3=q3_calc, l1=l1, l2=l2, tool_drop=tool_drop)
 
         err_x = abs(x_rec - x)
         err_y = abs(y_rec - y)
@@ -69,18 +70,19 @@ def test_roundtrip_1000_random_reachable_points():
 
 
 def test_boundary_reach_max():
-    """Kiểm thử điểm biên ngoài cùng r = l1 + l2 (tay duỗi thẳng q2 = 0)."""
+    """Kiểm thử điểm biên ngoài cùng r = l1 + l2 + l3 (tay duỗi thẳng q2 = 0)."""
     l1 = DEFAULT_L1
     l2 = DEFAULT_L2
-    r_max = l1 + l2
+    l3 = DEFAULT_L3
+    r_max = l1 + l2 + l3
     x = r_max
     y = 0.0
     z = 0.20
 
-    sol, status = inverse_kinematics(x, y, z, l1, l2)
+    sol, status = inverse_kinematics(x, y, z, phi=0.0, l1=l1, l2=l2, l3=l3)
     assert status == "OK"
     assert sol is not None
-    q1, q2, d = sol
+    q1, q2, d, q3 = sol
     assert abs(q1) < 1e-7
     assert abs(q2) < 1e-7
 
@@ -134,4 +136,27 @@ def test_stow_footprint():
     # Tư thế stowed gấp gọn về sau: q1 = -2.60 rad (-149 deg), q2 = -2.40 rad (-137.5 deg)
     is_inside = check_footprint(q1=-2.60, q2=-2.40)
     assert is_inside is True, "Tư thế STOW phải nằm gọn trong footprint thân xe"
+
+
+def test_cartesian_straight_line_trajectory():
+    """Kiểm thử sinh quỹ đạo đường thẳng ngang Cartesian luồn vào ô kệ."""
+    from wh_manipulation.scara_kinematics import generate_cartesian_trajectory
+    p_start = (0.20, 0.0, -0.042)
+    p_end = (0.31, 0.005, -0.042)
+    traj, status = generate_cartesian_trajectory(p_start, p_end, num_points=12, x_offset=0.07, y_offset=0.0)
+    assert status == "OK"
+    assert traj is not None
+    assert len(traj) == 12
+
+    # Kiểm tra sai số bám đường thẳng của từng điểm
+    for i, (q1, q2, d, q3) in enumerate(traj):
+        alpha = i / 11.0
+        exp_x = p_start[0] + alpha * (p_end[0] - p_start[0])
+        exp_y = p_start[1] + alpha * (p_end[1] - p_start[1])
+        exp_z = p_start[2]
+        fk_x, fk_y, fk_z = forward_kinematics(q1, q2, d, q3=q3, x_offset=0.07, y_offset=0.0)
+        assert abs(fk_x - exp_x) < 1e-4
+        assert abs(fk_y - exp_y) < 1e-4
+        assert abs(fk_z - exp_z) < 1e-4
+
 

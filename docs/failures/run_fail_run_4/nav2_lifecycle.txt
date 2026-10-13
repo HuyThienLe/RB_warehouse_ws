@@ -1,0 +1,7 @@
+=== NAV2 LIFECYCLE ===
+/map_server: inactive [2]
+/amcl: unconfigured [1]
+/controller_server: unconfigured [1]
+/planner_server: unconfigured [1]
+/behavior_server: unconfigured [1]
+/bt_navigator: unconfigured [1]

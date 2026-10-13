@@ -1,0 +1,14 @@
+/arm/pick_place
+/arm_controller/follow_joint_trajectory
+/backup
+/compute_path_through_poses
+/compute_path_to_pose
+/dock_to_slot
+/follow_path
+/follow_waypoints
+/navigate_through_poses
+/navigate_to_pose
+/spin
+/wait
+/wh/dock_to_slot
+/wh/pick_place

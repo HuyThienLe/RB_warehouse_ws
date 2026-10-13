@@ -229,32 +229,32 @@
       </geometry>
       <material name="arm_hub_mat"/>
     </visual>
-    <!-- Thân đòn cánh tay 2 (dài 0.18 m) -->
+    <!-- Thân đòn cánh tay 2 (dài 0.14 m kết hợp ngàm kẹp ngang vươn ra 0.04 m -> tổng tâm kẹp đúng 0.18 m) -->
     <visual>
-      <origin xyz="0.09 0 0.013" rpy="0 0 0"/>
+      <origin xyz="0.07 0 0.013" rpy="0 0 0"/>
       <geometry>
-        <box size="0.18 0.038 0.026"/>
+        <box size="0.14 0.038 0.026"/>
       </geometry>
       <material name="arm_link_color"/>
     </visual>
-    <!-- Trụ cổ tay (Wrist Housing) đâm xuống dưới để nhận đế kẹp -->
+    <!-- Trụ cổ tay (Wrist Housing) nhận khớp nối tay kẹp bẻ ngang -->
     <visual>
-      <origin xyz="0.18 0 0.005" rpy="0 0 0"/>
+      <origin xyz="0.14 0 0.005" rpy="0 0 0"/>
       <geometry>
         <cylinder radius="0.022" length="0.036"/>
       </geometry>
       <material name="arm_hub_mat"/>
     </visual>
     <collision>
-      <origin xyz="0.09 0 0.013" rpy="0 0 0"/>
+      <origin xyz="0.07 0 0.013" rpy="0 0 0"/>
       <geometry>
         <box size="0.14 0.035 0.024"/>
       </geometry>
     </collision>
     <inertial>
-      <origin xyz="0.09 0 0.013" rpy="0 0 0"/>
+      <origin xyz="0.07 0 0.013" rpy="0 0 0"/>
       <mass value="0.35"/>
-      <xacro:box_inertia m="0.35" x="0.18" y="0.038" z="0.026"/>
+      <xacro:box_inertia m="0.35" x="0.14" y="0.038" z="0.026"/>
     </inertial>
   </link>
 
@@ -264,62 +264,78 @@
   </gazebo>
 
   <!-- ======================================================== -->
-  <!-- 5. TAY KẸP CƠ KHÍ 2 NGÓN (PARALLEL GRIPPER)               -->
+  <!-- 5. TAY KẸP CƠ KHÍ 2 NGÓN BẺ NGANG (HORIZONTAL GRIPPER)    -->
   <!-- ======================================================== -->
-  <!-- Khớp gắn đế kẹp cắm khít vào đáy trụ cổ tay của cánh tay 2 -->
-  <joint name="tool_joint" type="fixed">
+  <!-- Khớp cổ tay xoay (Revolute Wrist Joint) kết nối cánh tay 2 với đế tay kẹp -->
+  <joint name="wrist_joint" type="revolute">
     <parent link="elbow_link"/>
     <child link="tool_link"/>
-    <origin xyz="0.18 0 -0.013" rpy="0 0 0"/>
+    <origin xyz="0.14 0 -0.013" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="-3.141592653589793" upper="3.141592653589793" effort="30.0" velocity="2.0"/>
+    <dynamics damping="0.5" friction="0.1"/>
   </joint>
 
-  <!-- Thân đế tay kẹp (Gripper Base / Palm) -->
+  <gazebo reference="wrist_joint">
+    <implicitSpringDamper>true</implicitSpringDamper>
+    <provideFeedback>true</provideFeedback>
+  </gazebo>
+
+  <!-- Thân đế tay kẹp bẻ ngang (Horizontal Gripper Base / Palm) -->
   <link name="tool_link">
-    <!-- Trụ cổ kẹp cắm trực tiếp vào cổ tay -->
+    <!-- Cổ trụ đứng thả từ cổ tay xuống cao độ thao tác -->
     <visual>
-      <origin xyz="0 0 -0.018" rpy="0 0 0"/>
+      <origin xyz="0 0 -0.028" rpy="0 0 0"/>
       <geometry>
-        <cylinder radius="0.014" length="0.036"/>
+        <cylinder radius="0.014" length="0.056"/>
       </geometry>
       <material name="gripper_stem_mat">
         <color rgba="0.15 0.15 0.15 1.0"/>
       </material>
     </visual>
-    <!-- Thanh ngang thân đế kẹp -->
+    <!-- Khớp khuỷu adapter bẻ 90 độ sang ngang vươn về phía trước (+x) -->
     <visual>
-      <origin xyz="0 0 -0.042" rpy="0 0 0"/>
+      <origin xyz="0.008 0 -0.056" rpy="0 0 0"/>
       <geometry>
-        <box size="0.045 0.096 0.014"/>
+        <box size="0.022 0.032 0.020"/>
       </geometry>
       <material name="gripper_palm_mat">
         <color rgba="0.22 0.25 0.30 1.0"/>
       </material>
     </visual>
-    <!-- Bulông chốt má kẹp hai bên -->
+    <!-- Mặt bích đế kẹp dựng đứng hướng mặt về phía trước (+x) -->
     <visual>
-      <origin xyz="0 0.038 -0.049" rpy="0 0 0"/>
+      <origin xyz="0.018 0 -0.056" rpy="0 0 0"/>
       <geometry>
-        <cylinder radius="0.008" length="0.006"/>
+        <box size="0.008 0.096 0.038"/>
+      </geometry>
+      <material name="gripper_palm_mat"/>
+    </visual>
+    <!-- Bulông chốt má kẹp hai bên nằm ngang -->
+    <visual>
+      <origin xyz="0.014 0.038 -0.056" rpy="0 1.5707963 0"/>
+      <geometry>
+        <cylinder radius="0.007" length="0.012"/>
       </geometry>
       <material name="gripper_stem_mat"/>
     </visual>
     <visual>
-      <origin xyz="0 -0.038 -0.049" rpy="0 0 0"/>
+      <origin xyz="0.014 -0.038 -0.056" rpy="0 1.5707963 0"/>
       <geometry>
-        <cylinder radius="0.008" length="0.006"/>
+        <cylinder radius="0.007" length="0.012"/>
       </geometry>
       <material name="gripper_stem_mat"/>
     </visual>
     <collision>
-      <origin xyz="0 0 -0.042" rpy="0 0 0"/>
+      <origin xyz="0.008 0 -0.056" rpy="0 0 0"/>
       <geometry>
-        <box size="0.045 0.096 0.014"/>
+        <box size="0.024 0.096 0.038"/>
       </geometry>
     </collision>
     <inertial>
-      <origin xyz="0 0 -0.035" rpy="0 0 0"/>
+      <origin xyz="0.008 0 -0.045" rpy="0 0 0"/>
       <mass value="0.25"/>
-      <xacro:box_inertia m="0.25" x="0.045" y="0.096" z="0.035"/>
+      <xacro:box_inertia m="0.25" x="0.030" y="0.096" z="0.050"/>
     </inertial>
   </link>
 
@@ -329,46 +345,46 @@
   </gazebo>
 
   <!-- ======================================================== -->
-  <!-- 6. HAI MÁ KẸP SONG SONG (PARALLEL FINGERS)               -->
+  <!-- 6. HAI MÁ KẸP SONG SONG BẺ NGANG (HORIZONTAL FINGERS)    -->
   <!-- ======================================================== -->
-  <!-- Má kẹp trái (Left Finger) gắn liền dưới đế kẹp -->
+  <!-- Má kẹp trái (Left Finger) vươn ngang về phía trước (+x) -->
   <joint name="left_finger_joint" type="fixed">
     <parent link="tool_link"/>
     <child link="left_finger_link"/>
-    <origin xyz="0 0.038 -0.049" rpy="0 0 0"/>
+    <origin xyz="0.022 0.038 -0.056" rpy="0 0 0"/>
   </joint>
 
   <link name="left_finger_link">
-    <!-- Khung ngón kẹp kim loại -->
+    <!-- Khung ngón kẹp kim loại vươn ngang ra -->
     <visual>
-      <origin xyz="0 0 -0.021" rpy="0 0 0"/>
+      <origin xyz="0.022 0 0" rpy="0 0 0"/>
       <geometry>
-        <box size="0.036 0.010 0.042"/>
+        <box size="0.044 0.010 0.028"/>
       </geometry>
       <material name="finger_metal_mat">
         <color rgba="0.2 0.22 0.25 1.0"/>
       </material>
     </visual>
-    <!-- Đệm cao su ma sát cao màu cam phía trong lòng ngón kẹp -->
+    <!-- Đệm cao su ma sát cao màu cam phía trong lòng ngón kẹp (hướng vào -y) -->
     <visual>
-      <origin xyz="0 -0.0055 -0.021" rpy="0 0 0"/>
+      <origin xyz="0.022 -0.0055 0" rpy="0 0 0"/>
       <geometry>
-        <box size="0.032 0.0025 0.038"/>
+        <box size="0.040 0.0025 0.024"/>
       </geometry>
       <material name="rubber_pad_mat">
         <color rgba="0.95 0.35 0.10 1.0"/>
       </material>
     </visual>
     <collision>
-      <origin xyz="0 0 -0.021" rpy="0 0 0"/>
+      <origin xyz="0.022 0 0" rpy="0 0 0"/>
       <geometry>
-        <box size="0.036 0.010 0.042"/>
+        <box size="0.044 0.010 0.028"/>
       </geometry>
     </collision>
     <inertial>
-      <origin xyz="0 0 -0.021" rpy="0 0 0"/>
+      <origin xyz="0.022 0 0" rpy="0 0 0"/>
       <mass value="0.05"/>
-      <xacro:box_inertia m="0.05" x="0.036" y="0.010" z="0.042"/>
+      <xacro:box_inertia m="0.05" x="0.044" y="0.010" z="0.028"/>
     </inertial>
   </link>
 
@@ -379,40 +395,40 @@
     <selfCollide>false</selfCollide>
   </gazebo>
 
-  <!-- Má kẹp phải (Right Finger) gắn liền dưới đế kẹp -->
+  <!-- Má kẹp phải (Right Finger) vươn ngang về phía trước (+x) -->
   <joint name="right_finger_joint" type="fixed">
     <parent link="tool_link"/>
     <child link="right_finger_link"/>
-    <origin xyz="0 -0.038 -0.049" rpy="0 0 0"/>
+    <origin xyz="0.022 -0.038 -0.056" rpy="0 0 0"/>
   </joint>
 
   <link name="right_finger_link">
-    <!-- Khung ngón kẹp kim loại -->
+    <!-- Khung ngón kẹp kim loại vươn ngang ra -->
     <visual>
-      <origin xyz="0 0 -0.021" rpy="0 0 0"/>
+      <origin xyz="0.022 0 0" rpy="0 0 0"/>
       <geometry>
-        <box size="0.036 0.010 0.042"/>
+        <box size="0.044 0.010 0.028"/>
       </geometry>
       <material name="finger_metal_mat"/>
     </visual>
-    <!-- Đệm cao su ma sát cao màu cam phía trong lòng ngón kẹp -->
+    <!-- Đệm cao su ma sát cao màu cam phía trong lòng ngón kẹp (hướng vào +y) -->
     <visual>
-      <origin xyz="0 0.0055 -0.021" rpy="0 0 0"/>
+      <origin xyz="0.022 0.0055 0" rpy="0 0 0"/>
       <geometry>
-        <box size="0.032 0.0025 0.038"/>
+        <box size="0.040 0.0025 0.024"/>
       </geometry>
       <material name="rubber_pad_mat"/>
     </visual>
     <collision>
-      <origin xyz="0 0 -0.021" rpy="0 0 0"/>
+      <origin xyz="0.022 0 0" rpy="0 0 0"/>
       <geometry>
-        <box size="0.036 0.010 0.042"/>
+        <box size="0.044 0.010 0.028"/>
       </geometry>
     </collision>
     <inertial>
-      <origin xyz="0 0 -0.021" rpy="0 0 0"/>
+      <origin xyz="0.022 0 0" rpy="0 0 0"/>
       <mass value="0.05"/>
-      <xacro:box_inertia m="0.05" x="0.036" y="0.010" z="0.042"/>
+      <xacro:box_inertia m="0.05" x="0.044" y="0.010" z="0.028"/>
     </inertial>
   </link>
 
@@ -426,11 +442,12 @@
   <!-- ======================================================== -->
   <!-- 7. TÂM KẸP (TCP - TOOL CENTER POINT) & GRASP LINK         -->
   <!-- ======================================================== -->
-  <!-- Điểm tâm kẹp nằm chính giữa 2 má kẹp (z = -0.070 m từ tool_link) -->
+  <!-- Điểm tâm kẹp nằm chính giữa 2 má kẹp (x = 0.040 m, z = -0.056 m từ tool_link) -->
+  <!-- Tổng tầm vươn khâu 2 đến tâm kẹp: 0.14 m + 0.04 m = 0.180 m chuẩn xác -->
   <joint name="gripper_grasp_joint" type="fixed">
     <parent link="tool_link"/>
     <child link="gripper_grasp_link"/>
-    <origin xyz="0 0 -0.070" rpy="0 0 0"/>
+    <origin xyz="0.040 0 -0.056" rpy="0 0 0"/>
   </joint>
 
   <link name="gripper_grasp_link">

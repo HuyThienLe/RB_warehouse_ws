@@ -442,10 +442,25 @@ class WebBridge(Node):
             # Khi kết thúc nhiệm vụ (chuyển sang DONE hoặc IDLE)
             if curr_state in ("DONE", "IDLE") and self.prev_state not in ("DONE", "IDLE"):
                 self.push("inventory", self.db.get_inventory())
-                self.push("notification", {
-                    "level": "info",
-                    "text": f"Nhiệm vụ #{curr_task_id} đã hoàn tất thành công!",
-                })
+                task_info = self.db.get_task(curr_task_id) if curr_task_id > 0 else None
+                task_status = task_info.get("status") if task_info else ("FAILED" if curr_error else "SUCCEEDED")
+                task_err = task_info.get("error") if task_info else curr_error
+
+                if task_status == "SUCCEEDED" and not task_err:
+                    self.push("notification", {
+                        "level": "info",
+                        "text": f"Nhiệm vụ #{curr_task_id} đã hoàn tất thành công!",
+                    })
+                elif task_status == "CANCELLED":
+                    self.push("notification", {
+                        "level": "warn",
+                        "text": f"Nhiệm vụ #{curr_task_id} đã bị hủy bỏ.",
+                    })
+                else:
+                    self.push("notification", {
+                        "level": "error",
+                        "text": f"Nhiệm vụ #{curr_task_id} THẤT BẠI: {task_err or 'Lỗi thực thi'}",
+                    })
                 self._check_low_stock()
 
             elif curr_state == "ESTOP":
@@ -628,31 +643,34 @@ class WebBridge(Node):
         item_code: str,
         quantity: int = 1,
         priority: int = 1,
+        slot_id: Optional[str] = None,
     ) -> Tuple[bool, int, str]:
-        """Gửi lệnh nhập/xuất tới Task Manager qua ROS service (fallback CSDL nếu offline)."""
-        if self.cli_submit.wait_for_service(timeout_sec=0.5):
-            req = SubmitTask.Request()
-            req.task_type = task_type.upper()
-            req.item_code = item_code
-            req.quantity = int(quantity)
-            req.priority = int(priority)
+        """Gửi lệnh nhập/xuất tới Task Manager qua ROS service (hoặc CSDL trực tiếp nếu có ô chỉ định)."""
+        # Nếu có ô chỉ định cụ thể, ghi trực tiếp vào CSDL để truyền kèm slot_id
+        if slot_id or not self.cli_submit.wait_for_service(timeout_sec=0.5):
+            first_id = 0
+            for i in range(quantity):
+                tid = self.db.create_task(task_type.upper(), item_code, priority=priority, slot_id=slot_id)
+                if i == 0:
+                    first_id = tid
+            slot_str = f" vào ô {slot_id}" if slot_id else ""
+            return True, first_id, f"Tiếp nhận {quantity} đơn {task_type} cho '{item_code}'{slot_str} (Đơn #{first_id})"
 
-            future = self.cli_submit.call_async(req)
-            t0 = time.time()
-            while not future.done() and (time.time() - t0 < 3.0):
-                time.sleep(0.02)
+        req = SubmitTask.Request()
+        req.task_type = task_type.upper()
+        req.item_code = item_code
+        req.quantity = int(quantity)
+        req.priority = int(priority)
 
-            if future.done() and future.result():
-                res = future.result()
-                return res.success, res.task_id, res.message
-            return False, 0, "Quá thời gian chờ phản hồi từ Task Manager"
+        future = self.cli_submit.call_async(req)
+        t0 = time.time()
+        while not future.done() and (time.time() - t0 < 3.0):
+            time.sleep(0.02)
 
-        first_id = 0
-        for i in range(quantity):
-            tid = self.db.create_task(task_type.upper(), item_code, priority=priority)
-            if i == 0:
-                first_id = tid
-        return True, first_id, f"Tiếp nhận {quantity} đơn {task_type} (DB Direct: #{first_id})"
+        if future.done() and future.result():
+            res = future.result()
+            return res.success, res.task_id, res.message
+        return False, 0, "Quá thời gian chờ phản hồi từ Task Manager"
 
     def cancel_task(self, task_id: int) -> Tuple[bool, str]:
         if self.cli_cancel.wait_for_service(timeout_sec=0.5):
@@ -773,23 +791,24 @@ class WebBridge(Node):
 
     def trigger_arm_pose(self, pose_name: str) -> Tuple[bool, str]:
         POSES = {
-            "STOW": [0.050, -1.5708, -2.3562],
-            "PRE_SLOT_1": [0.040, -1.1719, 2.3438],
-            "OBSERVE_1": [0.040, -0.8411, 1.6821],
-            "TOUCH_1": [0.015, -0.8411, 1.6821],
-            "PRE_SLOT_2": [0.300, -1.1719, 2.3438],
-            "OBSERVE_2": [0.300, -0.8411, 1.6821],
-            "TOUCH_2": [0.265, -0.8411, 1.6821],
-            "TRAY_HOVER": [0.080, -1.5378, -2.1268],
-            "TRAY_TOUCH": [0.045, -1.5378, -2.1268],
-            "PRE_SLOT_TIER_1": [0.040, -1.1719, 2.3438],
-            "OBSERVE_TIER_1": [0.040, -0.8411, 1.6821],
-            "TOUCH_TIER_1": [0.015, -0.8411, 1.6821],
-            "PRE_SLOT_TIER_2": [0.300, -1.1719, 2.3438],
-            "OBSERVE_TIER_2": [0.300, -0.8411, 1.6821],
-            "TOUCH_TIER_2": [0.265, -0.8411, 1.6821],
-            "STATION_IN_HOVER": [0.040, -0.8411, 1.6821],
-            "STATION_OUT_HOVER": [0.040, -0.8411, 1.6821],
+            "STOW": [0.160, -1.5708, -2.3562, 0.7854],
+            "PRE_SLOT_HOVER": [0.160, -0.8697, 2.6281, -1.7584],
+            "PRE_SLOT_1": [0.015, -0.8697, 2.6281, -1.7584],
+            "OBSERVE_1": [0.015, -0.5796, 1.3609, -0.7813],
+            "TOUCH_1": [0.015, -0.5796, 1.3609, -0.7813],
+            "PRE_SLOT_2": [0.265, -0.8697, 2.6281, -1.7584],
+            "OBSERVE_2": [0.265, -0.5796, 1.3609, -0.7813],
+            "TOUCH_2": [0.265, -0.5796, 1.3609, -0.7813],
+            "TRAY_HOVER": [0.160, -1.5860, -2.2536, 0.6980],
+            "TRAY_TOUCH": [0.015, -1.5860, -2.2536, 0.6980],
+            "PRE_SLOT_TIER_1": [0.015, -0.8697, 2.6281, -1.7584],
+            "OBSERVE_TIER_1": [0.015, -0.5796, 1.3609, -0.7813],
+            "TOUCH_TIER_1": [0.015, -0.5796, 1.3609, -0.7813],
+            "PRE_SLOT_TIER_2": [0.265, -0.8697, 2.6281, -1.7584],
+            "OBSERVE_TIER_2": [0.265, -0.5796, 1.3609, -0.7813],
+            "TOUCH_TIER_2": [0.265, -0.5796, 1.3609, -0.7813],
+            "STATION_IN_HOVER": [0.040, -0.5796, 1.3609, -0.7813],
+            "STATION_OUT_HOVER": [0.040, -0.5796, 1.3609, -0.7813],
         }
         p_upper = pose_name.upper()
         if p_upper not in POSES:
@@ -797,7 +816,7 @@ class WebBridge(Node):
 
         q = POSES[p_upper]
         traj = JointTrajectory()
-        traj.joint_names = ["lift_joint", "shoulder_joint", "elbow_joint"]
+        traj.joint_names = ["lift_joint", "shoulder_joint", "elbow_joint", "wrist_joint"]
         p = JointTrajectoryPoint()
         p.positions = q
         p.time_from_start.sec = 2

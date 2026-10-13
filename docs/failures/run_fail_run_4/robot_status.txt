@@ -1,0 +1,11 @@
+state: IDLE
+task_id: 0
+slot_id: ''
+x: -2.6467199325561523
+y: 0.342801570892334
+yaw: -0.318043053150177
+battery_pct: 100.0
+holding_box: false
+held_box_tag: 0
+last_error: ''
+---

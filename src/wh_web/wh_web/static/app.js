@@ -666,6 +666,26 @@ function renderInventoryView() {
 
   // 3. Render bảng mặt hàng
   renderItemsTable(inventoryData.items || []);
+
+  // 4. Cập nhật danh sách ô trống vào dropdown ô đích nhập hàng
+  updateInboundSlotOptions(slots);
+}
+
+function updateInboundSlotOptions(slots) {
+  const slotSelect = document.getElementById("order-slot-id");
+  if (!slotSelect) return;
+  const currentVal = slotSelect.value;
+  const emptySlots = (slots || []).filter((s) => s.state === "EMPTY");
+  
+  let html = `<option value="">-- Tự động chọn ô tối ưu (gần trạm nhất) --</option>`;
+  emptySlots.forEach((s) => {
+    const rackName = (s.rack || "").toLowerCase().includes("a") ? "Kệ A" : "Kệ B";
+    html += `<option value="${s.slot_id}">${s.slot_id} (${rackName}, Cột ${s.col + 1}, Tầng ${s.tier})</option>`;
+  });
+  slotSelect.innerHTML = html;
+  if (currentVal && emptySlots.some((s) => s.slot_id === currentVal)) {
+    slotSelect.value = currentVal;
+  }
 }
 
 function renderSlotRow(containerId, slotList) {
@@ -716,7 +736,15 @@ function renderItemsTable(items) {
 }
 
 function showSlotDetail(slotId, state, itemCode, qty) {
-  showToast(`Ô ${slotId}: Trạng thái ${state}${itemCode ? ` (Chứa ${qty} hộp ${itemCode})` : ""}`, "info");
+  if (state === "EMPTY") {
+    const slotSelect = document.getElementById("order-slot-id");
+    if (slotSelect) {
+      slotSelect.value = slotId;
+    }
+    showToast(`Đã chọn ô trống ${slotId} làm ô đích nhập hàng trong form tạo đơn!`, "info");
+  } else {
+    showToast(`Ô ${slotId}: Trạng thái ${state}${itemCode ? ` (Chứa ${qty} hộp ${itemCode})` : ""}`, "info");
+  }
 }
 
 // ── 5. FORM NHẬP / XUẤT HÀNG (Mục 8.4 Tab 3) ───────────────────────────────
@@ -767,16 +795,24 @@ function getSelectedPriority() {
 async function submitInboundOrder() {
   const itemCode = document.getElementById("order-item-code").value;
   const quantity = parseInt(document.getElementById("order-quantity").value, 10);
+  const slotSelect = document.getElementById("order-slot-id");
+  const slotId = slotSelect && slotSelect.value ? slotSelect.value : null;
+
   if (!itemCode) {
     showToast("Vui lòng chọn mặt hàng nhập!", "warn");
     return;
+  }
+
+  const payload = { item_code: itemCode, quantity: quantity };
+  if (slotId) {
+    payload.slot_id = slotId;
   }
 
   try {
     const res = await fetch("/api/tasks/inbound", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ item_code: itemCode, quantity: quantity }),
+      body: JSON.stringify(payload),
     });
     const data = await res.json();
     if (res.ok) {

@@ -1,0 +1,7 @@
+/arm_controller/follow_joint_trajectory
+/backup
+/compute_path_through_poses
+/compute_path_to_pose
+/follow_path
+/spin
+/wait

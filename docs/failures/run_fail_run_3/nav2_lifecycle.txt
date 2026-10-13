@@ -1,0 +1,13 @@
+=== NAV2 LIFECYCLE ===
+/map_server: Node not found
+failed
+/amcl: Node not found
+failed
+/controller_server: Node not found
+failed
+/planner_server: Node not found
+failed
+/behavior_server: Node not found
+failed
+/bt_navigator: Node not found
+failed

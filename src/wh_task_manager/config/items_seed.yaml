@@ -34,3 +34,14 @@ items:
     name: "Trà xanh đóng chai"
     box_tag_id: 26
     low_stock_threshold: 1
+
+  - item_code: "ITEM_27"
+    name: "Cà phê rang xay đóng túi"
+    box_tag_id: 27
+    low_stock_threshold: 1
+
+  - item_code: "ITEM_28"
+    name: "Nước khoáng thiên nhiên"
+    box_tag_id: 28
+    low_stock_threshold: 1
+

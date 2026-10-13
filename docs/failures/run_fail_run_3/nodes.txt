@@ -1,0 +1,13 @@
+/arm_controller
+/controller_manager
+/dock_camera_plugin
+/gazebo
+/gazebo/gazebo_ros_state
+/gazebo_ros2_control
+/gripper/parallel_gripper
+/hand_camera_plugin
+/imu_plugin
+/joint_state_broadcaster
+/lidar_plugin
+/lifecycle_manager_navigation
+/planar_move

@@ -72,8 +72,8 @@ class GripperNode(Node):
         self.get_logger().info("GripperNode (Hard-Lock Enhanced) đã sẵn sàng.")
 
     def raw_grasping_cb(self, msg: Bool):
-        if msg.data and not self.is_grasping:
-            self.is_grasping = True
+        # Không tự ý bật is_grasping nếu chưa khóa cứng một hộp hàng cụ thể
+        pass
 
     def cb_link_states(self, msg: LinkStates):
         for name, pose in zip(msg.name, msg.pose):
@@ -117,29 +117,41 @@ class GripperNode(Node):
             response.message = "Gripper OFF (đã nhả hộp)"
             return response
 
-        # Khi bật kẹp, tìm hộp gần nhất trong bán kính mở rộng 25 cm
+        # Khi bật kẹp, tìm hộp gần nhất trong bán kính tiếp xúc 100 mm
         g_pose = self.get_gripper_pose()
         if g_pose is not None:
             gx, gy, gz = g_pose.position.x, g_pose.position.y, g_pose.position.z
             closest_box = None
-            min_dist = 0.25  # 25 cm
+            min_dist = 0.100  # 100 mm tiếp xúc an toàn (hộp kích thước 120mm, ô kệ cách nhau 500mm)
+            self.get_logger().info(f"Gripper TCP tại: ({gx:.3f}, {gy:.3f}, {gz:.3f})")
 
             for b_name, b_pose in self.model_poses.items():
                 bx, by, bz = b_pose.position.x, b_pose.position.y, b_pose.position.z
-                dist = math.sqrt((gx - bx) ** 2 + (gy - by) ** 2 + (gz - bz) ** 2)
-                if dist < min_dist:
-                    min_dist = dist
+                dz = abs(gz - bz)
+                # Bắt buộc cùng cao độ tầng (tránh bắt nhầm hộp tầng trên/dưới cách 250mm)
+                if dz > 0.070:
+                    continue
+                dist_xy = math.sqrt((gx - bx) ** 2 + (gy - by) ** 2)
+                if dist_xy < min_dist:
+                    min_dist = dist_xy
                     closest_box = b_name
 
             if closest_box:
                 self.grasped_box_name = closest_box
                 self.is_grasping = True
                 self.get_logger().info(
-                    f"Kẹp dính thành công hộp: {closest_box} (khoảng cách = {min_dist*1000.0:.1f} mm)"
+                    f"Kẹp dính thành công hộp: {closest_box} (khoảng cách ngang = {min_dist*1000.0:.1f} mm)"
+                )
+            else:
+                self.grasped_box_name = None
+                self.is_grasping = False
+                self.get_logger().warn(
+                    f"Không tìm thấy hộp trong bán kính {min_dist*1000.0:.1f} mm xung quanh TCP ({gx:.3f}, {gy:.3f}, {gz:.3f})"
                 )
         else:
-            # Nếu chưa đọc được link pose nhưng có lệnh hút, đánh dấu sẵn sàng bắt hộp
-            self.is_grasping = True
+            self.grasped_box_name = None
+            self.is_grasping = False
+            self.get_logger().warn("g_pose is None! Chưa nhận được vị trí link gripper")
 
         response.success = True
         response.message = f"Gripper ON (hộp={self.grasped_box_name})"
@@ -154,17 +166,19 @@ class GripperNode(Node):
         if g_pose is None or not self.cli_set_entity.service_is_ready():
             return
 
-        # Quét tìm hộp liên tục nếu đang bật hút mà chưa khóa hộp
+        # Quét tìm hộp liên tục nếu đang bật hút mà chưa khóa hộp (bán kính tiếp xúc 100 mm)
         if not self.grasped_box_name:
             gx, gy, gz = g_pose.position.x, g_pose.position.y, g_pose.position.z
             closest_box = None
-            min_dist = 0.25  # 25 cm
+            min_dist = 0.100  # 100 mm
 
             for b_name, b_pose in self.model_poses.items():
                 bx, by, bz = b_pose.position.x, b_pose.position.y, b_pose.position.z
-                dist = math.sqrt((gx - bx) ** 2 + (gy - by) ** 2 + (gz - bz) ** 2)
-                if dist < min_dist:
-                    min_dist = dist
+                if abs(gz - bz) > 0.070:
+                    continue
+                dist_xy = math.sqrt((gx - bx) ** 2 + (gy - by) ** 2)
+                if dist_xy < min_dist:
+                    min_dist = dist_xy
                     closest_box = b_name
 
             if closest_box:
@@ -173,6 +187,8 @@ class GripperNode(Node):
                 self.get_logger().info(
                     f"Hút dính thành công hộp: {closest_box} (tự động khóa ở khoảng cách {min_dist*1000.0:.1f} mm)"
                 )
+            else:
+                self.is_grasping = False
 
         if not self.grasped_box_name:
             return
@@ -197,7 +213,7 @@ class GripperNode(Node):
 
     def publish_status(self):
         msg = Bool()
-        msg.data = bool(self.is_grasping if self.is_active else False)
+        msg.data = bool(self.is_active and (self.grasped_box_name is not None))
         self.pub_grasping.publish(msg)
 
 

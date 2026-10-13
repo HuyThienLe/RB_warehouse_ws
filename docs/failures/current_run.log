@@ -1,0 +1,1388 @@
+[INFO] [launch]: All log files can be found below /home/lehuythien/.ros/log/2026-10-09-19-42-24-014338-LeHuyThien-333639
+[INFO] [launch]: Default logging verbosity is set to INFO
+[INFO] [gzserver-1]: process started with pid [333737]
+[INFO] [robot_state_publisher-2]: process started with pid [333739]
+[INFO] [spawn_entity.py-3]: process started with pid [333741]
+[INFO] [mecanum_wheel_state_node.py-4]: process started with pid [333743]
+[INFO] [slip_odom_node.py-5]: process started with pid [333745]
+[INFO] [ekf_node-6]: process started with pid [333747]
+[INFO] [gripper_node.py-7]: process started with pid [333749]
+[robot_state_publisher-2] [INFO] [1791549747.733347406] [robot_state_publisher]: got segment arm_base_link
+[robot_state_publisher-2] [INFO] [1791549747.733517483] [robot_state_publisher]: got segment base_footprint
+[robot_state_publisher-2] [INFO] [1791549747.733537322] [robot_state_publisher]: got segment base_link
+[robot_state_publisher-2] [INFO] [1791549747.733547551] [robot_state_publisher]: got segment dock_camera_link
+[robot_state_publisher-2] [INFO] [1791549747.733556509] [robot_state_publisher]: got segment dock_camera_optical_frame
+[robot_state_publisher-2] [INFO] [1791549747.733565496] [robot_state_publisher]: got segment elbow_link
+[robot_state_publisher-2] [INFO] [1791549747.733574794] [robot_state_publisher]: got segment gripper_grasp_link
+[robot_state_publisher-2] [INFO] [1791549747.733584503] [robot_state_publisher]: got segment hand_camera_link
+[robot_state_publisher-2] [INFO] [1791549747.733594021] [robot_state_publisher]: got segment hand_camera_optical_frame
+[robot_state_publisher-2] [INFO] [1791549747.733602006] [robot_state_publisher]: got segment imu_link
+[robot_state_publisher-2] [INFO] [1791549747.733610122] [robot_state_publisher]: got segment left_finger_link
+[robot_state_publisher-2] [INFO] [1791549747.733618919] [robot_state_publisher]: got segment lidar_link
+[robot_state_publisher-2] [INFO] [1791549747.733628457] [robot_state_publisher]: got segment lift_carriage_link
+[robot_state_publisher-2] [INFO] [1791549747.733637946] [robot_state_publisher]: got segment motor_fl_mount
+[robot_state_publisher-2] [INFO] [1791549747.733647234] [robot_state_publisher]: got segment motor_fr_mount
+[robot_state_publisher-2] [INFO] [1791549747.733655650] [robot_state_publisher]: got segment motor_rl_mount
+[robot_state_publisher-2] [INFO] [1791549747.733664327] [robot_state_publisher]: got segment motor_rr_mount
+[robot_state_publisher-2] [INFO] [1791549747.733672643] [robot_state_publisher]: got segment right_finger_link
+[robot_state_publisher-2] [INFO] [1791549747.733681289] [robot_state_publisher]: got segment shoulder_link
+[robot_state_publisher-2] [INFO] [1791549747.733690196] [robot_state_publisher]: got segment suction_link
+[robot_state_publisher-2] [INFO] [1791549747.733699825] [robot_state_publisher]: got segment tool_link
+[robot_state_publisher-2] [INFO] [1791549747.733709203] [robot_state_publisher]: got segment tray_link
+[robot_state_publisher-2] [INFO] [1791549747.733717379] [robot_state_publisher]: got segment wheel_fl_link
+[robot_state_publisher-2] [INFO] [1791549747.733726546] [robot_state_publisher]: got segment wheel_fr_link
+[robot_state_publisher-2] [INFO] [1791549747.733735754] [robot_state_publisher]: got segment wheel_rl_link
+[robot_state_publisher-2] [INFO] [1791549747.733743088] [robot_state_publisher]: got segment wheel_rr_link
+[gzserver-1] Gazebo multi-robot simulator, version 11.10.2
+[gzserver-1] Copyright (C) 2012 Open Source Robotics Foundation.
+[gzserver-1] Released under the Apache 2 License.
+[gzserver-1] http://gazebosim.org
+[gzserver-1] 
+[slip_odom_node.py-5] [INFO] [1791549748.179449946] [slip_odom_node]: SlipOdomNode started (publishes degraded /odom from /odom_gt).
+[mecanum_wheel_state_node.py-4] [INFO] [1791549748.232831360] [mecanum_wheel_state_node]: MecanumWheelStateNode initialized successfully.
+[gripper_node.py-7] [INFO] [1791549748.244840052] [gripper_node]: GripperNode (Hard-Lock Enhanced) đã sẵn sàng.
+[spawn_entity.py-3] [INFO] [1791549748.263126987] [spawn_entity]: Spawn Entity started
+[spawn_entity.py-3] [INFO] [1791549748.263864439] [spawn_entity]: Loading entity published on topic robot_description
+[spawn_entity.py-3] [INFO] [1791549748.268395424] [spawn_entity]: Waiting for entity xml on robot_description
+[spawn_entity.py-3] [INFO] [1791549748.270963816] [spawn_entity]: Waiting for service /spawn_entity, timeout = 30
+[spawn_entity.py-3] [INFO] [1791549748.271521270] [spawn_entity]: Waiting for service /spawn_entity
+[gzserver-1] [1;33m[Wrn] [gazebo_ros_init.cpp:178] [0m[1;33m
+[gzserver-1] #     # ####### ####### ###  #####  #######
+[gzserver-1] ##    # #     #    #     #  #     # #
+[gzserver-1] # #   # #     #    #     #  #       #
+[gzserver-1] #  #  # #     #    #     #  #       #####
+[gzserver-1] #   # # #     #    #     #  #       #
+[gzserver-1] #    ## #     #    #     #  #     # #
+[gzserver-1] #     # #######    #    ###  #####  #######
+[gzserver-1] 
+[gzserver-1] This version of Gazebo, now called Gazebo classic, reaches end-of-life
+[gzserver-1] in January 2025. Users are highly encouraged to migrate to the new Gazebo
+[gzserver-1] using our migration guides (https://gazebosim.org/docs/latest/gazebo_classic_migration?utm_source=gazebo_ros_pkgs&utm_medium=cli)
+[gzserver-1] 
+[gzserver-1] [0m[1;33m
+[gzserver-1] [0m[1;33m[0m[1;33m[0m[INFO] [1791549749.028401836] [gazebo.gazebo_ros_state]: Publishing states of gazebo models at [/gazebo/model_states]
+[gzserver-1] [INFO] [1791549749.029485576] [gazebo.gazebo_ros_state]: Publishing states of gazebo links at [/gazebo/link_states]
+[spawn_entity.py-3] [INFO] [1791549749.030215002] [spawn_entity]: Calling service /spawn_entity
+[gzserver-1] [1;32m[Msg] [0m[1;32mWaiting for master.[0m[1;32m
+[gzserver-1] [0m[1;32m[0m[1;32m[0m[1;32m[Msg] [0m[1;32mConnected to gazebo master @ [0m[1;32mhttp://127.0.0.1:11345[0m[1;32m
+[gzserver-1] [0m[1;32m[0m[1;32m[0m[1;32m[Msg] [0m[1;32mPublicized address: [0m[1;32m192.168.1.105[0m[1;32m
+[gzserver-1] [0m[1;32m[0m[1;32m[0m[1;32m[Msg] [0m[1;32mLoading world file [[0m[1;32m/home/lehuythien/warehouse_ws/install/wh_gazebo/share/wh_gazebo/worlds/warehouse.world[0m[1;32m][0m[1;32m
+[gzserver-1] [1;33m[Wrn] [Event.cc:61] [0m[1;33mWarning: Deleting a connection right after creation. [0m[1;33mMake sure to save the ConnectionPtr from a Connect call
+[gzserver-1] [0m[INFO] [1791549749.944244737] [dock_camera_plugin]: Publishing camera info to [/dock_camera/camera_info]
+[gzserver-1] [INFO] [1791549749.954173353] [hand_camera_plugin]: Publishing camera info to [/hand_camera/camera_info]
+[spawn_entity.py-3] [INFO] [1791549749.955602499] [spawn_entity]: Spawn status: SpawnEntity: Successfully spawned entity [warehouse_robot]
+[gzserver-1] [INFO] [1791549749.977488862] [planar_move]: Subscribed to [/cmd_vel]
+[gzserver-1] [INFO] [1791549749.979185404] [planar_move]: Advertise odometry on [/odom_gt]
+[gzserver-1] [INFO] [1791549749.988730360] [gripper.parallel_gripper]: Model/Link [ground_plane] exempted from gripper force
+[gzserver-1] [INFO] [1791549749.988773413] [gripper.parallel_gripper]: Model/Link [rack_a_level_1_plank] exempted from gripper force
+[gzserver-1] [INFO] [1791549749.988783432] [gripper.parallel_gripper]: Model/Link [rack_a_level_2_plank] exempted from gripper force
+[gzserver-1] [INFO] [1791549749.988790426] [gripper.parallel_gripper]: Model/Link [rack_b_level_1_plank] exempted from gripper force
+[gzserver-1] [INFO] [1791549749.988796487] [gripper.parallel_gripper]: Model/Link [rack_b_level_2_plank] exempted from gripper force
+[gzserver-1] [INFO] [1791549749.988802779] [gripper.parallel_gripper]: Model/Link [shelf_tray_0] exempted from gripper force
+[gzserver-1] [INFO] [1791549749.988808811] [gripper.parallel_gripper]: Model/Link [shelf_tray_1] exempted from gripper force
+[gzserver-1] [INFO] [1791549749.989565210] [gripper.parallel_gripper]: Advertise gripper status on [/gripper/grasping_raw]
+[gzserver-1] [INFO] [1791549749.990127544] [gripper.parallel_gripper]: Advertise gripper switch service on [/gripper/switch_raw]
+[gzserver-1] [INFO] [1791549750.013879922] [gazebo_ros2_control]: Loading gazebo_ros2_control plugin
+[gzserver-1] [INFO] [1791549750.017510153] [gazebo_ros2_control]: Starting gazebo_ros2_control plugin in namespace: /
+[gzserver-1] [INFO] [1791549750.017556523] [gazebo_ros2_control]: Starting gazebo_ros2_control plugin in ros 2 node: gazebo_ros2_control
+[gzserver-1] [INFO] [1791549750.019866628] [gazebo_ros2_control]: connected to service!! robot_state_publisher
+[gzserver-1] [INFO] [1791549750.020438171] [gazebo_ros2_control]: Received urdf from param server, parsing...
+[gzserver-1] [INFO] [1791549750.020483749] [gazebo_ros2_control]: Loading parameter files /home/lehuythien/warehouse_ws/install/wh_description/share/wh_description/config/arm_controllers.yaml
+[gzserver-1] [INFO] [1791549750.033848686] [gazebo_ros2_control]: Loading joint: lift_joint
+[gzserver-1] [INFO] [1791549750.033979489] [gazebo_ros2_control]: 	State:
+[gzserver-1] [INFO] [1791549750.033994628] [gazebo_ros2_control]: 		 position
+[gzserver-1] [INFO] [1791549750.034009657] [gazebo_ros2_control]: 			 found initial value: 0.000000
+[gzserver-1] [INFO] [1791549750.034029345] [gazebo_ros2_control]: 		 velocity
+[gzserver-1] [INFO] [1791549750.034042811] [gazebo_ros2_control]: 	Command:
+[gzserver-1] [INFO] [1791549750.034053642] [gazebo_ros2_control]: 		 position
+[gzserver-1] [INFO] [1791549750.034699758] [gazebo_ros2_control]: Loading joint: shoulder_joint
+[gzserver-1] [INFO] [1791549750.034815020] [gazebo_ros2_control]: 	State:
+[gzserver-1] [INFO] [1791549750.034906667] [gazebo_ros2_control]: 		 position
+[gzserver-1] [INFO] [1791549750.035048069] [gazebo_ros2_control]: 			 found initial value: 0.000000
+[gzserver-1] [INFO] [1791549750.035310926] [gazebo_ros2_control]: 		 velocity
+[gzserver-1] [INFO] [1791549750.035537523] [gazebo_ros2_control]: 	Command:
+[gzserver-1] [INFO] [1791549750.035564846] [gazebo_ros2_control]: 		 position
+[gzserver-1] [INFO] [1791549750.035777717] [gazebo_ros2_control]: Loading joint: elbow_joint
+[gzserver-1] [INFO] [1791549750.035799970] [gazebo_ros2_control]: 	State:
+[gzserver-1] [INFO] [1791549750.035807153] [gazebo_ros2_control]: 		 position
+[gzserver-1] [INFO] [1791549750.035816131] [gazebo_ros2_control]: 			 found initial value: 0.000000
+[gzserver-1] [INFO] [1791549750.035825759] [gazebo_ros2_control]: 		 velocity
+[gzserver-1] [INFO] [1791549750.035833354] [gazebo_ros2_control]: 	Command:
+[gzserver-1] [INFO] [1791549750.035840378] [gazebo_ros2_control]: 		 position
+[gzserver-1] [INFO] [1791549750.036043239] [resource_manager]: Initialize hardware 'GazeboSystem' 
+[gzserver-1] [INFO] [1791549750.036350481] [resource_manager]: Successful initialization of hardware 'GazeboSystem'
+[gzserver-1] [INFO] [1791549750.036465123] [resource_manager]: 'configure' hardware 'GazeboSystem' 
+[gzserver-1] [INFO] [1791549750.036474841] [resource_manager]: Successful 'configure' of hardware 'GazeboSystem'
+[gzserver-1] [INFO] [1791549750.036521942] [resource_manager]: 'activate' hardware 'GazeboSystem' 
+[gzserver-1] [INFO] [1791549750.036531871] [resource_manager]: Successful 'activate' of hardware 'GazeboSystem'
+[gzserver-1] [INFO] [1791549750.036635441] [gazebo_ros2_control]: Loading controller_manager
+[gzserver-1] [WARN] [1791549750.053340250] [gazebo_ros2_control]:  Desired controller update period (0.01 s) is slower than the gazebo simulation period (0.002 s).
+[gzserver-1] [INFO] [1791549750.053538413] [gazebo_ros2_control]: Loaded gazebo_ros2_control.
+[INFO] [spawn_entity.py-3]: process has finished cleanly [pid 333741]
+[INFO] [spawner-8]: process started with pid [333938]
+[gzserver-1] [INFO] [1791549750.648301776] [controller_manager]: Loading controller 'joint_state_broadcaster'
+[spawner-8] [INFO] [1791549750.686366503] [spawner_joint_state_broadcaster]: [94mLoaded [1mjoint_state_broadcaster[0m
+[gzserver-1] [INFO] [1791549750.687566547] [controller_manager]: Configuring controller 'joint_state_broadcaster'
+[gzserver-1] [INFO] [1791549750.687886003] [joint_state_broadcaster]: 'joints' or 'interfaces' parameter is empty. All available state interfaces will be published
+[spawner-8] [INFO] [1791549750.732781305] [spawner_joint_state_broadcaster]: [92mConfigured and activated [1mjoint_state_broadcaster[0m
+[INFO] [spawner-8]: process has finished cleanly [pid 333938]
+[INFO] [spawner-9]: process started with pid [333966]
+[gzserver-1] [INFO] [1791549751.446331741] [controller_manager]: Loading controller 'arm_controller'
+[gzserver-1] [WARN] [1791549751.459496237] [arm_controller]: [Deprecated]: "allow_nonzero_velocity_at_trajectory_end" is set to true. The default behavior will change to false.
+[spawner-9] [INFO] [1791549751.487522194] [spawner_arm_controller]: [94mLoaded [1marm_controller[0m
+[gzserver-1] [INFO] [1791549751.488611946] [controller_manager]: Configuring controller 'arm_controller'
+[gzserver-1] [INFO] [1791549751.488798856] [arm_controller]: No specific joint names are used for command interfaces. Using 'joints' parameter.
+[gzserver-1] [INFO] [1791549751.488845146] [arm_controller]: Command interfaces are [position] and state interfaces are [position velocity].
+[gzserver-1] [INFO] [1791549751.488898679] [arm_controller]: Using 'splines' interpolation method.
+[gzserver-1] [INFO] [1791549751.490068706] [arm_controller]: Controller state will be published at 50.00 Hz.
+[gzserver-1] [INFO] [1791549751.492344967] [arm_controller]: Action status changes will be monitored at 20.00 Hz.
+[spawner-9] [INFO] [1791549751.526864831] [spawner_arm_controller]: [92mConfigured and activated [1marm_controller[0m
+[INFO] [box_manager-10]: process started with pid [333991]
+[INFO] [spawner-9]: process has finished cleanly [pid 333966]
+[box_manager-10] [INFO] [1791549752.207503911] [box_manager]: Loaded 14 slots from /home/lehuythien/warehouse_ws/install/wh_navigation/share/wh_navigation/config/slots.yaml
+[box_manager-10] [INFO] [1791549752.209193040] [box_manager]: BoxManager node ready.
+[INFO] [map_server-11]: process started with pid [334058]
+[INFO] [amcl-12]: process started with pid [334060]
+[INFO] [controller_server-13]: process started with pid [334062]
+[INFO] [planner_server-14]: process started with pid [334064]
+[INFO] [behavior_server-15]: process started with pid [334066]
+[INFO] [bt_navigator-16]: process started with pid [334068]
+[INFO] [waypoint_follower-17]: process started with pid [334070]
+[INFO] [velocity_smoother-18]: process started with pid [334072]
+[INFO] [lifecycle_manager-19]: process started with pid [334074]
+[INFO] [auto_initial_pose.py-20]: process started with pid [334076]
+[INFO] [twist_mux-21]: process started with pid [334078]
+[INFO] [collision_monitor-22]: process started with pid [334088]
+[INFO] [estop_safety_node.py-23]: process started with pid [334090]
+[INFO] [mode_publisher.py-24]: process started with pid [334092]
+[amcl-12] [INFO] [1791549753.720452759] [amcl]: 
+[amcl-12] 	amcl lifecycle node launched. 
+[amcl-12] 	Waiting on external lifecycle transitions to activate
+[amcl-12] 	See https://design.ros2.org/articles/node_lifecycle.html for more information.
+[amcl-12] [INFO] [1791549753.721191996] [amcl]: Creating
+[waypoint_follower-17] [INFO] [1791549753.723922255] [waypoint_follower]: 
+[waypoint_follower-17] 	waypoint_follower lifecycle node launched. 
+[waypoint_follower-17] 	Waiting on external lifecycle transitions to activate
+[waypoint_follower-17] 	See https://design.ros2.org/articles/node_lifecycle.html for more information.
+[waypoint_follower-17] [INFO] [1791549753.724812022] [waypoint_follower]: Creating
+[lifecycle_manager-19] [INFO] [1791549753.725205041] [lifecycle_manager_navigation]: Creating
+[controller_server-13] [INFO] [1791549753.730119515] [controller_server]: 
+[controller_server-13] 	controller_server lifecycle node launched. 
+[controller_server-13] 	Waiting on external lifecycle transitions to activate
+[controller_server-13] 	See https://design.ros2.org/articles/node_lifecycle.html for more information.
+[lifecycle_manager-19] [INFO] [1791549753.737020594] [lifecycle_manager_navigation]: [34m[1mCreating and initializing lifecycle service clients[0m[0m
+[bt_navigator-16] [INFO] [1791549753.743845416] [bt_navigator]: 
+[bt_navigator-16] 	bt_navigator lifecycle node launched. 
+[bt_navigator-16] 	Waiting on external lifecycle transitions to activate
+[bt_navigator-16] 	See https://design.ros2.org/articles/node_lifecycle.html for more information.
+[bt_navigator-16] [INFO] [1791549753.743987580] [bt_navigator]: Creating
+[twist_mux-21] [INFO] [1791549753.743941742] [twist_mux]: Topic handler 'topics.navigation' subscribed to topic '/cmd_vel_smoothed': timeout = 0.500000s , priority = 50.
+[twist_mux-21] [INFO] [1791549753.744620231] [twist_mux]: Topic handler 'topics.servo' subscribed to topic '/cmd_vel_servo': timeout = 0.500000s , priority = 100.
+[twist_mux-21] [INFO] [1791549753.744757586] [twist_mux]: Topic handler 'topics.teleop' subscribed to topic '/cmd_vel_teleop': timeout = 0.500000s , priority = 10.
+[twist_mux-21] [INFO] [1791549753.744881265] [twist_mux]: Topic handler 'locks.estop' subscribed to topic '/estop': timeout = None , priority = 255.
+[velocity_smoother-18] [INFO] [1791549753.747736285] [velocity_smoother]: 
+[velocity_smoother-18] 	velocity_smoother lifecycle node launched. 
+[velocity_smoother-18] 	Waiting on external lifecycle transitions to activate
+[velocity_smoother-18] 	See https://design.ros2.org/articles/node_lifecycle.html for more information.
+[map_server-11] [INFO] [1791549753.755672672] [map_server]: 
+[map_server-11] 	map_server lifecycle node launched. 
+[map_server-11] 	Waiting on external lifecycle transitions to activate
+[map_server-11] 	See https://design.ros2.org/articles/node_lifecycle.html for more information.
+[map_server-11] [INFO] [1791549753.755795760] [map_server]: Creating
+[controller_server-13] [INFO] [1791549753.755790940] [controller_server]: Creating controller server
+[controller_server-13] [INFO] [1791549753.760676590] [local_costmap.local_costmap]: 
+[controller_server-13] 	local_costmap lifecycle node launched. 
+[controller_server-13] 	Waiting on external lifecycle transitions to activate
+[controller_server-13] 	See https://design.ros2.org/articles/node_lifecycle.html for more information.
+[controller_server-13] [INFO] [1791549753.761472846] [local_costmap.local_costmap]: Creating Costmap
+[behavior_server-15] [INFO] [1791549753.766498846] [behavior_server]: 
+[behavior_server-15] 	behavior_server lifecycle node launched. 
+[behavior_server-15] 	Waiting on external lifecycle transitions to activate
+[behavior_server-15] 	See https://design.ros2.org/articles/node_lifecycle.html for more information.
+[collision_monitor-22] [INFO] [1791549753.773117200] [collision_monitor]: 
+[collision_monitor-22] 	collision_monitor lifecycle node launched. 
+[collision_monitor-22] 	Waiting on external lifecycle transitions to activate
+[collision_monitor-22] 	See https://design.ros2.org/articles/node_lifecycle.html for more information.
+[planner_server-14] [INFO] [1791549753.782919367] [planner_server]: 
+[planner_server-14] 	planner_server lifecycle node launched. 
+[planner_server-14] 	Waiting on external lifecycle transitions to activate
+[planner_server-14] 	See https://design.ros2.org/articles/node_lifecycle.html for more information.
+[planner_server-14] [INFO] [1791549753.790965606] [planner_server]: Creating
+[planner_server-14] [INFO] [1791549753.799458678] [global_costmap.global_costmap]: 
+[planner_server-14] 	global_costmap lifecycle node launched. 
+[planner_server-14] 	Waiting on external lifecycle transitions to activate
+[planner_server-14] 	See https://design.ros2.org/articles/node_lifecycle.html for more information.
+[planner_server-14] [INFO] [1791549753.800342423] [global_costmap.global_costmap]: Creating Costmap
+[lifecycle_manager-19] [INFO] [1791549753.957136801] [lifecycle_manager_navigation]: [34m[1mStarting managed nodes bringup...[0m[0m
+[lifecycle_manager-19] [INFO] [1791549753.957209091] [lifecycle_manager_navigation]: [34m[1mConfiguring map_server[0m[0m
+[map_server-11] [INFO] [1791549753.957541683] [map_server]: Configuring
+[map_server-11] [INFO] [1791549753.957637548] [map_io]: Loading yaml file: /home/lehuythien/warehouse_ws/install/wh_navigation/share/wh_navigation/maps/warehouse_map.yaml
+[map_server-11] [INFO] [1791549753.957977884] [map_io]: resolution: 0.025
+[map_server-11] [INFO] [1791549753.957991240] [map_io]: origin[0]: -3.5
+[map_server-11] [INFO] [1791549753.957998053] [map_io]: origin[1]: -2.5
+[map_server-11] [INFO] [1791549753.958004456] [map_io]: origin[2]: 0
+[map_server-11] [INFO] [1791549753.958011068] [map_io]: free_thresh: 0.25
+[map_server-11] [INFO] [1791549753.958017781] [map_io]: occupied_thresh: 0.65
+[map_server-11] [INFO] [1791549753.958024865] [map_io]: mode: trinary
+[map_server-11] [INFO] [1791549753.958031788] [map_io]: negate: 0
+[map_server-11] [INFO] [1791549753.958262664] [map_io]: Loading image_file: /home/lehuythien/warehouse_ws/install/wh_navigation/share/wh_navigation/maps/warehouse_map.pgm
+[map_server-11] [INFO] [1791549753.968599854] [map_io]: Read map /home/lehuythien/warehouse_ws/install/wh_navigation/share/wh_navigation/maps/warehouse_map.pgm: 280 X 200 map @ 0.025 m/cell
+[lifecycle_manager-19] [INFO] [1791549753.981697052] [lifecycle_manager_navigation]: [34m[1mConfiguring amcl[0m[0m
+[amcl-12] [INFO] [1791549753.982143092] [amcl]: Configuring
+[amcl-12] [INFO] [1791549753.982286980] [amcl]: initTransforms
+[amcl-12] [INFO] [1791549753.992208649] [amcl]: initPubSub
+[amcl-12] [INFO] [1791549754.002747179] [amcl]: Subscribed to map topic.
+[lifecycle_manager-19] [INFO] [1791549754.011648732] [lifecycle_manager_navigation]: [34m[1mConfiguring controller_server[0m[0m
+[controller_server-13] [INFO] [1791549754.011993938] [controller_server]: Configuring controller interface
+[controller_server-13] [INFO] [1791549754.013526968] [controller_server]: getting goal checker plugins..
+[controller_server-13] [INFO] [1791549754.014972759] [controller_server]: Controller frequency set to 20.0000Hz
+[controller_server-13] [INFO] [1791549754.015043215] [local_costmap.local_costmap]: Configuring
+[controller_server-13] [INFO] [1791549754.035267445] [local_costmap.local_costmap]: Using plugin "obstacle_layer"
+[controller_server-13] [INFO] [1791549754.043235326] [local_costmap.local_costmap]: Subscribed to Topics: scan
+[controller_server-13] [INFO] [1791549754.062242236] [local_costmap.local_costmap]: Initialized plugin "obstacle_layer"
+[controller_server-13] [INFO] [1791549754.062291812] [local_costmap.local_costmap]: Using plugin "inflation_layer"
+[controller_server-13] [INFO] [1791549754.063292083] [local_costmap.local_costmap]: Initialized plugin "inflation_layer"
+[controller_server-13] [INFO] [1791549754.095122978] [controller_server]: Created progress_checker : progress_checker of type nav2_controller::SimpleProgressChecker
+[controller_server-13] [INFO] [1791549754.100214627] [controller_server]: Created goal checker : goal_checker of type nav2_controller::SimpleGoalChecker
+[controller_server-13] [INFO] [1791549754.103870314] [controller_server]: Controller Server has goal_checker  goal checkers available.
+[controller_server-13] [INFO] [1791549754.109974217] [controller_server]: Created controller : FollowPath of type dwb_core::DWBLocalPlanner
+[controller_server-13] [INFO] [1791549754.117065916] [controller_server]: Setting transform_tolerance to 0.500000
+[controller_server-13] [INFO] [1791549754.164016207] [controller_server]: Using critic "RotateToGoal" (dwb_critics::RotateToGoalCritic)
+[controller_server-13] [INFO] [1791549754.168708776] [controller_server]: Critic plugin initialized
+[controller_server-13] [INFO] [1791549754.168991301] [controller_server]: Using critic "Oscillation" (dwb_critics::OscillationCritic)
+[controller_server-13] [INFO] [1791549754.173099852] [controller_server]: Critic plugin initialized
+[controller_server-13] [INFO] [1791549754.175963871] [controller_server]: Using critic "BaseObstacle" (dwb_critics::BaseObstacleCritic)
+[controller_server-13] [INFO] [1791549754.177975424] [controller_server]: Critic plugin initialized
+[controller_server-13] [INFO] [1791549754.178990924] [controller_server]: Using critic "GoalAlign" (dwb_critics::GoalAlignCritic)
+[controller_server-13] [INFO] [1791549754.181705464] [controller_server]: Critic plugin initialized
+[controller_server-13] [INFO] [1791549754.182611603] [controller_server]: Using critic "PathAlign" (dwb_critics::PathAlignCritic)
+[controller_server-13] [INFO] [1791549754.185045672] [controller_server]: Critic plugin initialized
+[controller_server-13] [INFO] [1791549754.185930821] [controller_server]: Using critic "PathDist" (dwb_critics::PathDistCritic)
+[controller_server-13] [INFO] [1791549754.186392622] [controller_server]: Critic plugin initialized
+[controller_server-13] [INFO] [1791549754.186606786] [controller_server]: Using critic "GoalDist" (dwb_critics::GoalDistCritic)
+[controller_server-13] [INFO] [1791549754.187072815] [controller_server]: Critic plugin initialized
+[controller_server-13] [INFO] [1791549754.188735775] [controller_server]: Controller Server has FollowPath  controllers available.
+[lifecycle_manager-19] [INFO] [1791549754.201523360] [lifecycle_manager_navigation]: [34m[1mConfiguring planner_server[0m[0m
+[planner_server-14] [INFO] [1791549754.203309548] [planner_server]: Configuring
+[planner_server-14] [INFO] [1791549754.203380004] [global_costmap.global_costmap]: Configuring
+[box_manager-10] [INFO] [1791549754.217444253] [box_manager]: Spawning seed boxes from /home/lehuythien/warehouse_ws/install/wh_gazebo/share/wh_gazebo/config/inventory_seed.yaml
+[planner_server-14] [INFO] [1791549754.217971781] [global_costmap.global_costmap]: Using plugin "static_layer"
+[planner_server-14] [INFO] [1791549754.227378881] [global_costmap.global_costmap]: Subscribing to the map topic (/map) with transient local durability
+[planner_server-14] [INFO] [1791549754.228497290] [global_costmap.global_costmap]: Initialized plugin "static_layer"
+[planner_server-14] [INFO] [1791549754.228541575] [global_costmap.global_costmap]: Using plugin "obstacle_layer"
+[amcl-12] [INFO] [1791549754.231500306] [amcl]: Message Filter dropping message: frame 'lidar_link' at time 3.990 for reason 'the timestamp on the message is earlier than all the data in the transform cache'
+[planner_server-14] [INFO] [1791549754.234775629] [global_costmap.global_costmap]: Subscribed to Topics: scan
+[planner_server-14] [INFO] [1791549754.247598081] [global_costmap.global_costmap]: Initialized plugin "obstacle_layer"
+[planner_server-14] [INFO] [1791549754.247670080] [global_costmap.global_costmap]: Using plugin "inflation_layer"
+[planner_server-14] [INFO] [1791549754.254609977] [global_costmap.global_costmap]: Initialized plugin "inflation_layer"
+[planner_server-14] [INFO] [1791549754.284675685] [planner_server]: Created global planner plugin GridBased of type nav2_navfn_planner/NavfnPlanner
+[planner_server-14] [INFO] [1791549754.284761811] [planner_server]: Configuring plugin GridBased of type NavfnPlanner
+[planner_server-14] [INFO] [1791549754.285928493] [planner_server]: Planner Server has GridBased  planners available.
+[lifecycle_manager-19] [INFO] [1791549754.317672942] [lifecycle_manager_navigation]: [34m[1mConfiguring behavior_server[0m[0m
+[behavior_server-15] [INFO] [1791549754.318116167] [behavior_server]: Configuring
+[behavior_server-15] [INFO] [1791549754.347500169] [behavior_server]: Creating behavior plugin spin of type nav2_behaviors/Spin
+[behavior_server-15] [INFO] [1791549754.348659216] [behavior_server]: Configuring spin
+[behavior_server-15] [INFO] [1791549754.358867582] [behavior_server]: Creating behavior plugin backup of type nav2_behaviors/BackUp
+[behavior_server-15] [INFO] [1791549754.361578536] [behavior_server]: Configuring backup
+[behavior_server-15] [INFO] [1791549754.377842451] [behavior_server]: Creating behavior plugin wait of type nav2_behaviors/Wait
+[behavior_server-15] [INFO] [1791549754.379238846] [behavior_server]: Configuring wait
+[lifecycle_manager-19] [INFO] [1791549754.389467271] [lifecycle_manager_navigation]: [34m[1mConfiguring bt_navigator[0m[0m
+[bt_navigator-16] [INFO] [1791549754.389742132] [bt_navigator]: Configuring
+[mode_publisher.py-24] [INFO] [1791549754.431865175] [mode_publisher]: ModePublisher khởi động thành công. Chế độ hiện tại: 'NAVIGATION'
+[estop_safety_node.py-23] [INFO] [1791549754.456941581] [estop_safety_node]: EstopSafetyNode khởi động và sẵn sàng bảo vệ an toàn.
+[auto_initial_pose.py-20] [INFO] [1791549754.486100499] [auto_initial_pose]: AutoInitialPose node khởi động.
+[amcl-12] [INFO] [1791549754.487768839] [amcl]: initialPoseReceived
+[amcl-12] [WARN] [1791549754.487892388] [amcl]: Received initial pose request, but AMCL is not yet in the active state
+[auto_initial_pose.py-20] [INFO] [1791549754.489663156] [auto_initial_pose]: Đã phát initial pose (1/5): x=-2.40, y=0.00, yaw=0.00 + stowed arm
+[lifecycle_manager-19] [INFO] [1791549754.498257757] [lifecycle_manager_navigation]: [34m[1mConfiguring waypoint_follower[0m[0m
+[waypoint_follower-17] [INFO] [1791549754.499774976] [waypoint_follower]: Configuring
+[waypoint_follower-17] [INFO] [1791549754.514368847] [waypoint_follower]: Created waypoint_task_executor : wait_at_waypoint of type nav2_waypoint_follower::WaitAtWaypoint
+[lifecycle_manager-19] [INFO] [1791549754.515455354] [lifecycle_manager_navigation]: [34m[1mConfiguring velocity_smoother[0m[0m
+[velocity_smoother-18] [INFO] [1791549754.515704525] [velocity_smoother]: Configuring velocity smoother
+[lifecycle_manager-19] [INFO] [1791549754.520306659] [lifecycle_manager_navigation]: [34m[1mConfiguring collision_monitor[0m[0m
+[collision_monitor-22] [INFO] [1791549754.520677355] [collision_monitor]: Configuring
+[collision_monitor-22] [INFO] [1791549754.526437354] [collision_monitor]: [StopZone]: Creating Polygon
+[collision_monitor-22] [INFO] [1791549754.528449207] [collision_monitor]: [SlowZone]: Creating Polygon
+[collision_monitor-22] [INFO] [1791549754.533407178] [collision_monitor]: [scan]: Creating Scan
+[lifecycle_manager-19] [INFO] [1791549754.538644318] [lifecycle_manager_navigation]: [34m[1mActivating map_server[0m[0m
+[map_server-11] [INFO] [1791549754.538929859] [map_server]: Activating
+[map_server-11] [INFO] [1791549754.539361993] [map_server]: Creating bond (map_server) to lifecycle manager.
+[amcl-12] [INFO] [1791549754.539491483] [amcl]: Received a 280 X 200 map @ 0.025 m/pix
+[planner_server-14] [INFO] [1791549754.539540738] [global_costmap.global_costmap]: StaticLayer: Resizing costmap to 280 X 200 at 0.025000 m/pix
+[box_manager-10] [INFO] [1791549754.564972461] [box_manager]: Spawned box_20 at (0.750,0.710,0.171)
+[lifecycle_manager-19] [INFO] [1791549754.643175070] [lifecycle_manager_navigation]: Server map_server connected with bond.
+[lifecycle_manager-19] [INFO] [1791549754.643237190] [lifecycle_manager_navigation]: [34m[1mActivating amcl[0m[0m
+[amcl-12] [INFO] [1791549754.643608988] [amcl]: Activating
+[amcl-12] [INFO] [1791549754.643650809] [amcl]: initialPoseReceived
+[amcl-12] [INFO] [1791549754.643724321] [amcl]: Setting pose (4.400000): -2.400 0.000 0.000
+[amcl-12] [INFO] [1791549754.644028829] [amcl]: Creating bond (amcl) to lifecycle manager.
+[INFO] [tag_detector_node-25]: process started with pid [334272]
+[INFO] [tag_detector_node-26]: process started with pid [334274]
+[INFO] [dock_server-27]: process started with pid [334276]
+[amcl-12] [INFO] [1791549754.682274297] [amcl]: initialPoseReceived
+[amcl-12] [INFO] [1791549754.682428053] [amcl]: Setting pose (4.500000): -2.400 0.000 0.000
+[auto_initial_pose.py-20] [INFO] [1791549754.682532395] [auto_initial_pose]: Đã phát initial pose (2/5): x=-2.40, y=0.00, yaw=0.00 + stowed arm
+[amcl-12] [INFO] [1791549754.683610165] [amcl]: createLaserObject
+[lifecycle_manager-19] [INFO] [1791549754.746816937] [lifecycle_manager_navigation]: Server amcl connected with bond.
+[lifecycle_manager-19] [INFO] [1791549754.746867986] [lifecycle_manager_navigation]: [34m[1mActivating controller_server[0m[0m
+[controller_server-13] [INFO] [1791549754.747166332] [controller_server]: Activating
+[controller_server-13] [INFO] [1791549754.747329176] [local_costmap.local_costmap]: Activating
+[controller_server-13] [INFO] [1791549754.747348634] [local_costmap.local_costmap]: Checking transform
+[controller_server-13] [INFO] [1791549754.747571604] [local_costmap.local_costmap]: start
+[controller_server-13] [INFO] [1791549754.901632899] [controller_server]: Creating bond (controller_server) to lifecycle manager.
+[lifecycle_manager-19] [INFO] [1791549755.013115407] [lifecycle_manager_navigation]: Server controller_server connected with bond.
+[lifecycle_manager-19] [INFO] [1791549755.013188097] [lifecycle_manager_navigation]: [34m[1mActivating planner_server[0m[0m
+[planner_server-14] [INFO] [1791549755.013560596] [planner_server]: Activating
+[planner_server-14] [INFO] [1791549755.013628017] [global_costmap.global_costmap]: Activating
+[planner_server-14] [INFO] [1791549755.013653776] [global_costmap.global_costmap]: Checking transform
+[planner_server-14] [INFO] [1791549755.013820067] [global_costmap.global_costmap]: start
+[box_manager-10] [INFO] [1791549755.013640911] [box_manager]: Spawned box_21 at (1.250,0.710,0.171)
+[INFO] [pick_place_server-28]: process started with pid [334313]
+[auto_initial_pose.py-20] [INFO] [1791549755.251472289] [auto_initial_pose]: Đã phát initial pose (3/5): x=-2.40, y=0.00, yaw=0.00 + stowed arm
+[amcl-12] [INFO] [1791549755.252937538] [amcl]: initialPoseReceived
+[amcl-12] [WARN] [1791549755.253033092] [amcl]: Failed to transform initial pose in time (Lookup would require extrapolation into the future.  Requested time 5.000000 but the latest data is at time 4.996000, when looking up transform from frame [base_footprint] to frame [odom])
+[amcl-12] [INFO] [1791549755.253055866] [amcl]: Setting pose (5.000000): -2.400 0.000 0.000
+[planner_server-14] [INFO] [1791549755.265891058] [planner_server]: Activating plugin GridBased of type NavfnPlanner
+[planner_server-14] [INFO] [1791549755.266736019] [planner_server]: Creating bond (planner_server) to lifecycle manager.
+[dock_server-27] [INFO] [1791549755.336880893] [dock_server]: DockServer đã khởi động. Lệnh servo ra: /cmd_vel_servo, Standoff=0.32m, Safety min=0.28m
+[lifecycle_manager-19] [INFO] [1791549755.372172703] [lifecycle_manager_navigation]: Server planner_server connected with bond.
+[lifecycle_manager-19] [INFO] [1791549755.372295310] [lifecycle_manager_navigation]: [34m[1mActivating behavior_server[0m[0m
+[behavior_server-15] [INFO] [1791549755.372841605] [behavior_server]: Activating
+[behavior_server-15] [INFO] [1791549755.372893916] [behavior_server]: Activating spin
+[behavior_server-15] [INFO] [1791549755.372922962] [behavior_server]: Activating backup
+[behavior_server-15] [INFO] [1791549755.372940095] [behavior_server]: Activating wait
+[behavior_server-15] [INFO] [1791549755.373245244] [behavior_server]: Creating bond (behavior_server) to lifecycle manager.
+[box_manager-10] [INFO] [1791549755.484667765] [box_manager]: Spawned box_22 at (0.750,0.710,0.421)
+[lifecycle_manager-19] [INFO] [1791549755.484699606] [lifecycle_manager_navigation]: Server behavior_server connected with bond.
+[lifecycle_manager-19] [INFO] [1791549755.484752939] [lifecycle_manager_navigation]: [34m[1mActivating bt_navigator[0m[0m
+[bt_navigator-16] [INFO] [1791549755.485200584] [bt_navigator]: Activating
+[tag_detector_node-26] [INFO] [1791549755.553540883] [tag_detector_hand]: Đã nạp 32 tag sizes từ /home/lehuythien/warehouse_ws/install/wh_vision/share/wh_vision/config/marker_sizes.yaml.
+[tag_detector_node-25] [INFO] [1791549755.571197063] [tag_detector_dock]: Đã nạp 32 tag sizes từ /home/lehuythien/warehouse_ws/install/wh_vision/share/wh_vision/config/marker_sizes.yaml.
+[tag_detector_node-26] [INFO] [1791549755.585313939] [tag_detector_hand]: TagDetectorNode (hand) đã khởi động. Image: /hand_camera/image_raw, Optical frame: hand_camera_optical_frame, Window: 10, Max reproj: 1.0 px
+[tag_detector_node-25] [INFO] [1791549755.607155931] [tag_detector_dock]: TagDetectorNode (dock) đã khởi động. Image: /dock_camera/image_raw, Optical frame: dock_camera_optical_frame, Window: 10, Max reproj: 1.0 px
+[tag_detector_node-25] [INFO] [1791549755.640870166] [tag_detector_dock]: Đã cập nhật CameraInfo (dock). fx=467.7, fy=467.7
+[tag_detector_node-26] [INFO] [1791549755.642663648] [tag_detector_hand]: Đã cập nhật CameraInfo (hand). fx=467.7, fy=467.7
+[INFO] [task_manager_node-29]: process started with pid [334376]
+[bt_navigator-16] [INFO] [1791549755.667764603] [bt_navigator]: Creating bond (bt_navigator) to lifecycle manager.
+[lifecycle_manager-19] [INFO] [1791549755.781728019] [lifecycle_manager_navigation]: Server bt_navigator connected with bond.
+[lifecycle_manager-19] [INFO] [1791549755.781900643] [lifecycle_manager_navigation]: [34m[1mActivating waypoint_follower[0m[0m
+[waypoint_follower-17] [INFO] [1791549755.782855426] [waypoint_follower]: Activating
+[waypoint_follower-17] [INFO] [1791549755.782963354] [waypoint_follower]: Creating bond (waypoint_follower) to lifecycle manager.
+[lifecycle_manager-19] [INFO] [1791549755.889271771] [lifecycle_manager_navigation]: Server waypoint_follower connected with bond.
+[lifecycle_manager-19] [INFO] [1791549755.889351245] [lifecycle_manager_navigation]: [34m[1mActivating velocity_smoother[0m[0m
+[velocity_smoother-18] [INFO] [1791549755.890129327] [velocity_smoother]: Activating
+[velocity_smoother-18] [INFO] [1791549755.890246133] [velocity_smoother]: Creating bond (velocity_smoother) to lifecycle manager.
+[amcl-12] [INFO] [1791549755.921386357] [amcl]: initialPoseReceived
+[amcl-12] [WARN] [1791549755.921469909] [amcl]: Failed to transform initial pose in time (Lookup would require extrapolation into the future.  Requested time 5.500000 but the latest data is at time 5.498000, when looking up transform from frame [base_footprint] to frame [odom])
+[amcl-12] [INFO] [1791549755.921485729] [amcl]: Setting pose (5.500000): -2.400 0.000 0.000
+[auto_initial_pose.py-20] [INFO] [1791549755.921523833] [auto_initial_pose]: Đã phát initial pose (4/5): x=-2.40, y=0.00, yaw=0.00 + stowed arm
+[box_manager-10] [INFO] [1791549755.931873025] [box_manager]: Spawned box_23 at (0.750,-0.710,0.171)
+[lifecycle_manager-19] [INFO] [1791549755.996568306] [lifecycle_manager_navigation]: Server velocity_smoother connected with bond.
+[lifecycle_manager-19] [INFO] [1791549755.996626448] [lifecycle_manager_navigation]: [34m[1mActivating collision_monitor[0m[0m
+[collision_monitor-22] [INFO] [1791549756.002579934] [collision_monitor]: Activating
+[collision_monitor-22] [INFO] [1791549756.002689185] [collision_monitor]: Creating bond (collision_monitor) to lifecycle manager.
+[lifecycle_manager-19] [INFO] [1791549756.122105738] [lifecycle_manager_navigation]: Server collision_monitor connected with bond.
+[lifecycle_manager-19] [INFO] [1791549756.122163409] [lifecycle_manager_navigation]: [34m[1mManaged nodes are active[0m[0m
+[lifecycle_manager-19] [INFO] [1791549756.122181234] [lifecycle_manager_navigation]: [34m[1mCreating bond timer...[0m[0m
+[INFO] [uvicorn-30]: process started with pid [334421]
+[pick_place_server-28] [INFO] [1791549756.245400150] [pick_place_server]: Đã nạp 11 tư thế từ /home/lehuythien/warehouse_ws/src/wh_manipulation/config/arm_poses.yaml
+[pick_place_server-28] [INFO] [1791549756.276073515] [pick_place_server]: Đã nạp 14 ô kệ từ /home/lehuythien/warehouse_ws/src/wh_navigation/config/slots.yaml
+[pick_place_server-28] [INFO] [1791549756.376680193] [pick_place_server]: PickPlaceServer đã sẵn sàng phục vụ trên cả /arm/pick_place và /wh/pick_place.
+[box_manager-10] [INFO] [1791549756.385715632] [box_manager]: Spawned box_24 at (1.750,-0.710,0.171)
+[amcl-12] [INFO] [1791549756.545663538] [amcl]: initialPoseReceived
+[amcl-12] [INFO] [1791549756.545744364] [amcl]: Setting pose (5.900000): -2.400 0.000 -0.000
+[auto_initial_pose.py-20] [INFO] [1791549756.546553236] [auto_initial_pose]: Đã phát initial pose (5/5): x=-2.40, y=0.00, yaw=0.00 + stowed arm
+[auto_initial_pose.py-20] [INFO] [1791549756.547239872] [auto_initial_pose]: Hoàn tất phát initial pose và stowed arm.
+[task_manager_node-29] [INFO] [1791549756.754457233] [task_manager_node]: TaskManagerNode khởi động thành công. CSDL tại: /home/lehuythien/.warehouse/inventory.db
+[box_manager-10] [INFO] [1791549756.831506678] [box_manager]: Spawned box_25 at (1.250,-0.710,0.421)
+[planner_server-14] [INFO] [1791549756.892261766] [global_costmap.global_costmap]: Message Filter dropping message: frame 'lidar_link' at time 6.094 for reason 'the timestamp on the message is earlier than all the data in the transform cache'
+[amcl-12] [INFO] [1791549757.322087556] [amcl]: Message Filter dropping message: frame 'lidar_link' at time 6.496 for reason 'the timestamp on the message is earlier than all the data in the transform cache'
+[box_manager-10] [INFO] [1791549757.330937641] [box_manager]: Spawned box_26 at (-2.400,1.200,0.170)
+
+====================================================================
+  🚀 HỆ THỐNG SẴN SÀNG — mở giao diện Web tại:
+     🌐 Trình duyệt máy tính:  http://127.0.0.1:8000
+     📱 Thiết bị di động (Wi-Fi): http://192.168.1.105:8000
+====================================================================
+
+[uvicorn-30] INFO:     Started server process [334421]
+[uvicorn-30] INFO:     Waiting for application startup.
+[uvicorn-30] [INFO] [1791549758.429970804] [web_bridge_node]: WebBridge node (Vision & Arm Enhanced) khởi động thành công.
+[uvicorn-30] =================================================================
+[uvicorn-30]   🚀 HỆ THỐNG QUẢN LÝ KHO (WAREHOUSE WEB PORTAL) ĐÃ KHỞI ĐỘNG
+[uvicorn-30]   🌐 Truy cập cục bộ: http://127.0.0.1:8000
+[uvicorn-30]   📱 Truy cập từ điện thoại (Cùng Wi-Fi): http://192.168.1.105:8000
+[uvicorn-30] =================================================================
+[uvicorn-30] INFO:     Application startup complete.
+[uvicorn-30] INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+[uvicorn-30] INFO:     127.0.0.1:33828 - "GET /api/mode HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:33830 - "GET /api/mode HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:33838 - "POST /api/tasks/outbound HTTP/1.1" 200 OK
+[task_manager_node-29] [INFO] [1791549759.505152664] [task_manager_node]: >>> Bắt đầu thực thi nhiệm vụ #1: OUTBOUND ITEM_22 <<<
+[task_manager_node-29] [INFO] [1791549759.508508910] [task_manager_node]: FSM State: OUT_RESERVE
+[task_manager_node-29] [INFO] [1791549759.619744815] [task_manager_node]: FSM State: OUT_NAV_TO_SLOT
+[bt_navigator-16] [INFO] [1791549759.623181225] [bt_navigator]: Begin navigating from current location (-2.41, 0.00) to (0.75, 0.05)
+[controller_server-13] [INFO] [1791549759.646153796] [controller_server]: Received a goal, begin computing control effort.
+[controller_server-13] [WARN] [1791549759.646248168] [controller_server]: No goal checker was specified in parameter 'current_goal_checker'. Server will use only plugin loaded goal_checker . This warning will appear once.
+[uvicorn-30] INFO:     127.0.0.1:33850 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] [INFO] [1791549759.730785563] [web_bridge_node]: FSM State thay đổi: IDLE -> OUT_NAV_TO_SLOT
+[controller_server-13] [WARN] [1791549759.755600864] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[bt_navigator-16] [WARN] [1791549759.814170159] [BehaviorTreeEngine]: Behavior Tree tick rate 100.00 was exceeded!
+[controller_server-13] [WARN] [1791549759.919070111] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549759.982728781] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549760.045214161] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549760.104523619] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549760.165776193] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549760.323859955] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549760.393030151] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549760.474361652] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[uvicorn-30] INFO:     127.0.0.1:58584 - "GET /api/tasks HTTP/1.1" 200 OK
+[controller_server-13] [WARN] [1791549760.635667161] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549760.710487758] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [INFO] [1791549760.710594153] [controller_server]: Passing new path to controller.
+[controller_server-13] [WARN] [1791549760.766367738] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549760.831221432] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549761.001924884] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549761.073521798] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549761.144282265] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[uvicorn-30] INFO:     127.0.0.1:58598 - "GET /api/tasks HTTP/1.1" 200 OK
+[controller_server-13] [WARN] [1791549761.309851677] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549761.378774392] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549761.441177864] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549761.519986028] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549761.709237650] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [INFO] [1791549761.709335119] [controller_server]: Passing new path to controller.
+[controller_server-13] [WARN] [1791549761.778464843] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549761.934935637] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549761.998654101] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[uvicorn-30] INFO:     127.0.0.1:58600 - "WebSocket /ws" [accepted]
+[uvicorn-30] INFO:     connection open
+[uvicorn-30] INFO:     127.0.0.1:58614 - "GET /api/tasks HTTP/1.1" 200 OK
+[controller_server-13] [WARN] [1791549762.049214488] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549762.105950546] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549762.153395119] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549762.203511548] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549762.256054859] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549762.308009843] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549762.368429353] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549762.437941984] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549762.642218719] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549762.691433053] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549762.741034847] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [INFO] [1791549762.741196881] [controller_server]: Passing new path to controller.
+[uvicorn-30] INFO:     127.0.0.1:58618 - "GET /api/tasks HTTP/1.1" 200 OK
+[controller_server-13] [WARN] [1791549762.790692700] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549762.851918869] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549762.914039749] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549762.957266617] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549763.009005916] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549763.056809451] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549763.105738764] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549763.160280209] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549763.214535911] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549763.258257492] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549763.310253766] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549763.350938785] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549763.388640925] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549763.446227769] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[uvicorn-30] INFO:     127.0.0.1:58628 - "GET /api/tasks HTTP/1.1" 200 OK
+[controller_server-13] [WARN] [1791549763.506951150] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549763.553419623] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549763.600456996] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549763.639894302] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [INFO] [1791549763.788033201] [controller_server]: Passing new path to controller.
+[controller_server-13] [WARN] [1791549763.842736088] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549764.090909743] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[uvicorn-30] INFO:     127.0.0.1:58640 - "GET /api/tasks HTTP/1.1" 200 OK
+[controller_server-13] [WARN] [1791549764.638299929] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549764.688243461] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549764.741047697] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[uvicorn-30] INFO:     127.0.0.1:58646 - "GET /api/tasks HTTP/1.1" 200 OK
+[controller_server-13] [WARN] [1791549764.789559830] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [INFO] [1791549764.789690814] [controller_server]: Passing new path to controller.
+[controller_server-13] [WARN] [1791549764.851985716] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549764.911504459] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549764.973875949] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549765.029795761] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[bt_navigator-16] [WARN] [1791549765.094341702] [BehaviorTreeEngine]: Behavior Tree tick rate 100.00 was exceeded!
+[controller_server-13] [WARN] [1791549765.101127399] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549765.266247550] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[uvicorn-30] INFO:     127.0.0.1:58656 - "GET /api/tasks HTTP/1.1" 200 OK
+[controller_server-13] [WARN] [1791549765.325169390] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549765.388283801] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549765.441948490] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549765.499993293] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549765.570434588] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549765.726726179] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549765.784495660] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[uvicorn-30] INFO:     127.0.0.1:58664 - "GET /api/tasks HTTP/1.1" 200 OK
+[controller_server-13] [WARN] [1791549765.837417653] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [INFO] [1791549765.837507246] [controller_server]: Passing new path to controller.
+[controller_server-13] [WARN] [1791549765.906634840] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549765.965573402] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549766.024910594] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549766.175285203] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549766.225198724] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549766.281749397] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[uvicorn-30] INFO:     127.0.0.1:58674 - "GET /api/tasks HTTP/1.1" 200 OK
+[controller_server-13] [WARN] [1791549766.331896079] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549766.395965280] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549766.454822076] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549766.515431303] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549766.573323472] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549766.637997994] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549766.790426097] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549766.844202743] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [INFO] [1791549766.844282176] [controller_server]: Passing new path to controller.
+[uvicorn-30] INFO:     127.0.0.1:58690 - "GET /api/tasks HTTP/1.1" 200 OK
+[controller_server-13] [WARN] [1791549766.909121318] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549766.969578530] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549767.025567315] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549767.075264315] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549767.130538138] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549767.182659069] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549767.239268156] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[uvicorn-30] INFO:     127.0.0.1:58702 - "GET /api/mode HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:58704 - "GET /api/inventory HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:58720 - "GET /api/tasks?limit=30 HTTP/1.1" 200 OK
+[bt_navigator-16] [WARN] [1791549767.315734312] [BehaviorTreeEngine]: Behavior Tree tick rate 100.00 was exceeded!
+[uvicorn-30] INFO:     127.0.0.1:58736 - "GET /api/tasks HTTP/1.1" 200 OK
+[controller_server-13] [WARN] [1791549767.411493347] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549767.470891011] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549767.523534604] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549767.580318800] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549767.627853675] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549767.686011148] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549767.741509366] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[uvicorn-30] INFO:     127.0.0.1:58746 - "GET /api/tasks HTTP/1.1" 200 OK
+[controller_server-13] [WARN] [1791549767.911741640] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [INFO] [1791549767.911854559] [controller_server]: Passing new path to controller.
+[controller_server-13] [WARN] [1791549767.968031950] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549768.017892423] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549768.074062971] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549768.133816044] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549768.185907938] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549768.245558342] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549768.398374947] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[uvicorn-30] INFO:     127.0.0.1:58750 - "GET /api/tasks HTTP/1.1" 200 OK
+[controller_server-13] [WARN] [1791549768.459558940] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549768.519070045] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549768.574342064] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549768.629920016] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549768.683786965] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549768.735599237] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549768.783699825] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549768.831485864] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549768.887450343] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [INFO] [1791549768.887573652] [controller_server]: Passing new path to controller.
+[uvicorn-30] INFO:     127.0.0.1:58766 - "GET /api/tasks HTTP/1.1" 200 OK
+[controller_server-13] [WARN] [1791549768.944120830] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549768.994669526] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549769.050232316] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549769.202356785] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549769.255819872] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549769.312796972] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549769.371434557] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549769.427292852] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[uvicorn-30] INFO:     127.0.0.1:58780 - "GET /api/tasks HTTP/1.1" 200 OK
+[controller_server-13] [WARN] [1791549769.479387609] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549769.526576489] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549769.577349538] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549769.621452423] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549769.675976584] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549769.721985519] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549769.771194450] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549769.823748938] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549769.877693637] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549769.955348731] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [INFO] [1791549769.955451479] [controller_server]: Passing new path to controller.
+[uvicorn-30] INFO:     127.0.0.1:58796 - "GET /api/tasks HTTP/1.1" 200 OK
+[controller_server-13] [WARN] [1791549770.149688273] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549770.221367903] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549770.395576270] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549770.480439469] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[uvicorn-30] INFO:     127.0.0.1:53790 - "GET /api/tasks HTTP/1.1" 200 OK
+[controller_server-13] [WARN] [1791549770.659050101] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549770.738049034] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549770.842155055] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549770.922242035] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549770.979713964] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [INFO] [1791549770.979800812] [controller_server]: Passing new path to controller.
+[uvicorn-30] INFO:     127.0.0.1:53792 - "GET /api/tasks HTTP/1.1" 200 OK
+[controller_server-13] [WARN] [1791549771.036737938] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549771.090724596] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549771.246192449] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549771.300015821] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549771.353696558] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549771.405101115] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549771.458077728] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549771.508010686] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[uvicorn-30] INFO:     127.0.0.1:53806 - "GET /api/tasks HTTP/1.1" 200 OK
+[controller_server-13] [WARN] [1791549771.557341437] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549771.603187038] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549771.654118570] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549771.701635228] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549771.753188354] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549771.798061993] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549771.854472466] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549771.907917506] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549771.953019316] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549772.005514328] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [INFO] [1791549772.005591407] [controller_server]: Passing new path to controller.
+[uvicorn-30] INFO:     127.0.0.1:53822 - "GET /api/tasks HTTP/1.1" 200 OK
+[controller_server-13] [WARN] [1791549772.057405506] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549772.107798272] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549772.151954727] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549772.201781898] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549772.254155110] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549772.304473672] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549772.361652874] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549772.417628384] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549772.472534653] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549772.524425110] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[uvicorn-30] INFO:     127.0.0.1:53826 - "GET /api/tasks HTTP/1.1" 200 OK
+[controller_server-13] [WARN] [1791549772.575240545] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549772.622539297] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549772.677959331] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549772.722273693] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549772.780668219] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549772.827305901] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549772.879325027] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549772.924858961] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549772.977853156] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [INFO] [1791549772.978029087] [controller_server]: Passing new path to controller.
+[controller_server-13] [WARN] [1791549773.014316734] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549773.047873379] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[uvicorn-30] INFO:     127.0.0.1:53842 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:53850 - "GET /api/tasks HTTP/1.1" 200 OK
+[controller_server-13] [WARN] [1791549773.805840100] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549773.884190289] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549773.961550310] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [INFO] [1791549774.061716497] [controller_server]: Passing new path to controller.
+[uvicorn-30] INFO:     127.0.0.1:53866 - "GET /api/tasks HTTP/1.1" 200 OK
+[controller_server-13] [WARN] [1791549774.119227772] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549774.175782554] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549774.226442923] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549774.289366405] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549774.341782036] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549774.402572786] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549774.457312359] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549774.512887382] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[uvicorn-30] INFO:     127.0.0.1:53874 - "GET /api/tasks HTTP/1.1" 200 OK
+[controller_server-13] [WARN] [1791549774.694582449] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549774.773108707] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549774.952175852] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549775.027652178] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [INFO] [1791549775.027731392] [controller_server]: Passing new path to controller.
+[uvicorn-30] INFO:     127.0.0.1:53882 - "GET /api/tasks HTTP/1.1" 200 OK
+[controller_server-13] [WARN] [1791549775.207163786] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549775.277205405] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549775.350485773] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549775.528486932] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549775.609568590] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[uvicorn-30] INFO:     127.0.0.1:53884 - "GET /api/tasks HTTP/1.1" 200 OK
+[controller_server-13] [WARN] [1791549775.786911484] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549775.859646905] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549776.057680810] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [INFO] [1791549776.057751728] [controller_server]: Passing new path to controller.
+[controller_server-13] [WARN] [1791549776.155453369] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[uvicorn-30] INFO:     127.0.0.1:53894 - "GET /api/tasks HTTP/1.1" 200 OK
+[controller_server-13] [WARN] [1791549776.342174463] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549776.427067806] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549776.606227092] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549776.683613623] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[uvicorn-30] INFO:     127.0.0.1:53910 - "GET /api/tasks HTTP/1.1" 200 OK
+[controller_server-13] [WARN] [1791549776.867763613] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549776.949665067] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [INFO] [1791549777.138375543] [controller_server]: Reached the goal!
+[controller_server-13] [INFO] [1791549777.139291318] [controller_server]: Received a goal, begin computing control effort.
+[controller_server-13] [INFO] [1791549777.216357094] [controller_server]: Reached the goal!
+[bt_navigator-16] [INFO] [1791549777.253753308] [bt_navigator]: Goal succeeded
+[uvicorn-30] INFO:     127.0.0.1:53914 - "GET /api/tasks HTTP/1.1" 200 OK
+[task_manager_node-29] [INFO] [1791549777.420897218] [task_manager_node]: FSM State: OUT_DOCK_SLOT
+[dock_server-27] [INFO] [1791549777.423892656] [dock_server]: Nhận yêu cầu DockToSlot: slot_tag_id=3
+[dock_server-27] [INFO] [1791549777.426443792] [dock_server]: >>> Bắt đầu Visual Servoing vào ô tag ID=3: standoff=0.320m, tol_lat=5.0mm, tol_yaw=2.0deg
+[uvicorn-30] [INFO] [1791549777.440422334] [web_bridge_node]: FSM State thay đổi: OUT_NAV_TO_SLOT -> OUT_DOCK_SLOT
+[uvicorn-30] INFO:     127.0.0.1:53916 - "GET /api/tasks?limit=30 HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:53930 - "GET /api/tasks?limit=30 HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:53940 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:53946 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:53952 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:53966 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:53976 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:58700 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:58716 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:58720 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:58734 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:58742 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:58754 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:58756 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:58760 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:58774 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:58782 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:58796 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:58808 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:58820 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:58834 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:58848 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:58850 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:58852 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:58854 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:58860 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:58864 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:50626 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:50634 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:50648 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:50660 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:50662 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:50668 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:50672 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:50678 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:50680 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:50684 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:50690 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:50694 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:50710 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:50714 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:50722 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:50730 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:50734 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:50742 - "GET /api/tasks HTTP/1.1" 200 OK
+[dock_server-27] [WARN] [1791549799.364807736] [dock_server]: Mất tag 3 > 2.0s! Hồi phục lần 1: lùi nhẹ...
+[uvicorn-30] INFO:     127.0.0.1:50758 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:55130 - "GET /api/tasks HTTP/1.1" 200 OK
+[dock_server-27] [WARN] [1791549800.424068475] [dock_server]: Mất tag 3 > 2.0s! Hồi phục lần 2: lùi nhẹ...
+[uvicorn-30] INFO:     127.0.0.1:55142 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:55148 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:55158 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:55172 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:55188 - "GET /api/tasks HTTP/1.1" 200 OK
+[dock_server-27] [ERROR] [1791549802.748020701] [dock_server]: TIMEOUT vượt quá 25.0s!
+[task_manager_node-29] [INFO] [1791549802.858426496] [task_manager_node]: FSM State: OUT_DOCK_SLOT
+[dock_server-27] [INFO] [1791549802.860555830] [dock_server]: Nhận yêu cầu DockToSlot: slot_tag_id=3
+[dock_server-27] [INFO] [1791549802.861833788] [dock_server]: >>> Bắt đầu Visual Servoing vào ô tag ID=3: standoff=0.320m, tol_lat=5.0mm, tol_yaw=2.0deg
+[uvicorn-30] INFO:     127.0.0.1:55198 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:55200 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:55206 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:55214 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:55216 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:55226 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:55230 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:55234 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:55240 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:55244 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:55258 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:55264 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:55268 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:55272 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:39582 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:39596 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:39604 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:39610 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:39620 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:39622 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:39628 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:39642 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:39650 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:39654 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:39658 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:39670 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:39678 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:39694 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:39708 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:39724 - "GET /api/tasks HTTP/1.1" 200 OK
+[dock_server-27] [WARN] [1791549818.941848778] [dock_server]: Mất tag 3 > 2.0s! Hồi phục lần 1: lùi nhẹ...
+[uvicorn-30] INFO:     127.0.0.1:39738 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:39740 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:56854 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:56862 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:56866 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:56870 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:56880 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:56894 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:56902 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:56910 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:56916 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:56920 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:56924 - "GET /api/mode HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:56934 - "GET /api/inventory HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:56938 - "GET /api/tasks?limit=30 HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:56952 - "GET /api/tasks HTTP/1.1" 200 OK
+[dock_server-27] [ERROR] [1791549828.094217434] [dock_server]: TIMEOUT vượt quá 25.0s!
+[task_manager_node-29] [INFO] [1791549828.258288455] [task_manager_node]: FSM State: OUT_DOCK_SLOT
+[dock_server-27] [INFO] [1791549828.260862422] [dock_server]: Nhận yêu cầu DockToSlot: slot_tag_id=3
+[dock_server-27] [INFO] [1791549828.262658209] [dock_server]: >>> Bắt đầu Visual Servoing vào ô tag ID=3: standoff=0.320m, tol_lat=5.0mm, tol_yaw=2.0deg
+[uvicorn-30] INFO:     127.0.0.1:56958 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:56974 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:56980 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:49240 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:49254 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:49262 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:49274 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:49280 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:49292 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:49304 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:49308 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:49314 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:49316 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:49332 - "GET /api/tasks HTTP/1.1" 200 OK
+[dock_server-27] [WARN] [1791549837.774779804] [dock_server]: Mất tag 3 > 2.0s! Hồi phục lần 1: lùi nhẹ...
+[uvicorn-30] INFO:     127.0.0.1:49334 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:49338 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:49350 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:52332 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:52344 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:52348 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:52360 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:52370 - "GET /api/tasks HTTP/1.1" 200 OK
+[dock_server-27] [WARN] [1791549843.688074640] [dock_server]: Mất tag 3 > 2.0s! Hồi phục lần 2: lùi nhẹ...
+[uvicorn-30] INFO:     127.0.0.1:52376 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:52390 - "GET /api/tasks HTTP/1.1" 200 OK
+[dock_server-27] [WARN] [1791549844.745807906] [dock_server]: Mất tag 3 > 2.0s! Hồi phục lần 3: lùi nhẹ...
+[uvicorn-30] INFO:     127.0.0.1:52402 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:52406 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:52408 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:52422 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:52426 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:52442 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:52458 - "GET /api/tasks HTTP/1.1" 200 OK
+[dock_server-27] [ERROR] [1791549850.253063174] [dock_server]: TAG_LOST: Không tìm thấy tag sau số lần thử lại tối đa!
+[uvicorn-30] INFO:     127.0.0.1:55400 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] [INFO] [1791549850.380851579] [web_bridge_node]: FSM State thay đổi: OUT_DOCK_SLOT -> ERROR_RECOVERY
+[uvicorn-30] INFO:     127.0.0.1:55416 - "GET /api/tasks?limit=30 HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:55420 - "GET /api/tasks?limit=30 HTTP/1.1" 200 OK
+[task_manager_node-29] [INFO] [1791549850.444988422] [task_manager_node]: FSM State: ERROR_RECOVERY
+[task_manager_node-29] [WARN] [1791549850.445947589] [task_manager_node]: === TIẾN HÀNH PHỤC HỒI LỖI (ERROR_RECOVERY) CHO NHIỆM VỤ #1 ===
+[pick_place_server-28] [INFO] [1791549850.450555589] [pick_place_server]: Nhận yêu cầu PickPlace: mode=STOW, slot=0, box_tag=0, tier=1
+[pick_place_server-28] [INFO] [1791549850.452835051] [pick_place_server]: Bắt đầu thực thi nhiệm vụ: STOW (Tier 1, Slot 0)
+[pick_place_server-28] [INFO] [1791549850.454134875] [pick_place_server]: === PHA: STOW ===
+[gzserver-1] [INFO] [1791549850.456441941] [arm_controller]: Received new action goal
+[gzserver-1] [INFO] [1791549850.456522649] [arm_controller]: Accepted new action goal
+[uvicorn-30] INFO:     127.0.0.1:55430 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:55440 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:55448 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:55460 - "GET /api/tasks HTTP/1.1" 200 OK
+[gzserver-1] [INFO] [1791549853.476948963] [arm_controller]: Goal reached, success!
+[task_manager_node-29] [INFO] [1791549853.616160316] [task_manager_node]: Phục hồi: Chưa gắp hộp. Ô đã được giải phóng, tồn kho nguyên vẹn.
+[uvicorn-30] [INFO] [1791549853.702088251] [web_bridge_node]: FSM State thay đổi: ERROR_RECOVERY -> DONE
+[uvicorn-30] INFO:     127.0.0.1:55420 - "GET /api/tasks?limit=30 HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:55416 - "GET /api/tasks?limit=30 HTTP/1.1" 200 OK
+[task_manager_node-29] [INFO] [1791549853.732116796] [task_manager_node]: >>> Kết thúc nhiệm vụ #1: SUCCEEDED <<<
+[uvicorn-30] [INFO] [1791549853.797057208] [web_bridge_node]: FSM State thay đổi: DONE -> IDLE
+[uvicorn-30] INFO:     127.0.0.1:55416 - "GET /api/tasks?limit=30 HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:55420 - "GET /api/tasks?limit=30 HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:55474 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:55486 - "GET /api/items HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:55494 - "POST /api/tasks/inbound HTTP/1.1" 200 OK
+[task_manager_node-29] [INFO] [1791549854.005113027] [task_manager_node]: >>> Bắt đầu thực thi nhiệm vụ #2: INBOUND ITEM_20 <<<
+[task_manager_node-29] [INFO] [1791549854.005920839] [task_manager_node]: FSM State: IN_RESERVE
+[task_manager_node-29] [INFO] [1791549854.113981609] [task_manager_node]: FSM State: IN_NAV_TO_IN
+[bt_navigator-16] [INFO] [1791549854.115183543] [bt_navigator]: Begin navigating from current location (0.89, 0.34) to (-2.40, 0.45)
+[uvicorn-30] [INFO] [1791549854.115731406] [web_bridge_node]: FSM State thay đổi: IDLE -> IN_NAV_TO_IN
+[controller_server-13] [INFO] [1791549854.136331133] [controller_server]: Received a goal, begin computing control effort.
+[uvicorn-30] INFO:     127.0.0.1:55420 - "GET /api/tasks?limit=30 HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:55416 - "GET /api/tasks?limit=30 HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:55502 - "GET /api/tasks HTTP/1.1" 200 OK
+[collision_monitor-22] [INFO] [1791549854.798625583] [collision_monitor]: Robot to slowdown for 50.000000 percents due to SlowZone polygon
+[uvicorn-30] INFO:     127.0.0.1:55512 - "GET /api/tasks HTTP/1.1" 200 OK
+[controller_server-13] [INFO] [1791549855.186768373] [controller_server]: Passing new path to controller.
+[collision_monitor-22] [INFO] [1791549855.614666895] [collision_monitor]: Robot to continue normal operation
+[uvicorn-30] INFO:     127.0.0.1:55514 - "GET /api/tasks HTTP/1.1" 200 OK
+[controller_server-13] [INFO] [1791549856.236769758] [controller_server]: Passing new path to controller.
+[uvicorn-30] INFO:     127.0.0.1:55520 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:55526 - "GET /api/tasks HTTP/1.1" 200 OK
+[controller_server-13] [INFO] [1791549857.236786839] [controller_server]: Passing new path to controller.
+[uvicorn-30] INFO:     127.0.0.1:55538 - "GET /api/tasks HTTP/1.1" 200 OK
+[controller_server-13] [INFO] [1791549858.286835524] [controller_server]: Passing new path to controller.
+[uvicorn-30] INFO:     127.0.0.1:55544 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:55550 - "GET /api/tasks HTTP/1.1" 200 OK
+[controller_server-13] [INFO] [1791549859.286774216] [controller_server]: Passing new path to controller.
+[uvicorn-30] INFO:     127.0.0.1:55564 - "GET /api/tasks HTTP/1.1" 200 OK
+[controller_server-13] [INFO] [1791549860.336780379] [controller_server]: Passing new path to controller.
+[uvicorn-30] INFO:     127.0.0.1:35250 - "GET /api/tasks HTTP/1.1" 200 OK
+[controller_server-13] [INFO] [1791549861.336769190] [controller_server]: Passing new path to controller.
+[uvicorn-30] INFO:     127.0.0.1:35252 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:35268 - "GET /api/tasks HTTP/1.1" 200 OK
+[controller_server-13] [INFO] [1791549862.386783262] [controller_server]: Passing new path to controller.
+[uvicorn-30] INFO:     127.0.0.1:35276 - "GET /api/tasks HTTP/1.1" 200 OK
+[controller_server-13] [INFO] [1791549863.436771242] [controller_server]: Passing new path to controller.
+[uvicorn-30] INFO:     127.0.0.1:35282 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:35286 - "GET /api/tasks HTTP/1.1" 200 OK
+[controller_server-13] [INFO] [1791549864.436784494] [controller_server]: Passing new path to controller.
+[uvicorn-30] INFO:     127.0.0.1:35298 - "GET /api/tasks HTTP/1.1" 200 OK
+[controller_server-13] [INFO] [1791549865.486776218] [controller_server]: Passing new path to controller.
+[uvicorn-30] INFO:     127.0.0.1:35312 - "GET /api/tasks HTTP/1.1" 200 OK
+[controller_server-13] [WARN] [1791549865.799085732] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549865.849836278] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549865.897125609] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549865.938493735] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[uvicorn-30] INFO:     127.0.0.1:35324 - "GET /api/tasks HTTP/1.1" 200 OK
+[controller_server-13] [INFO] [1791549866.486770638] [controller_server]: Passing new path to controller.
+[uvicorn-30] INFO:     127.0.0.1:35338 - "GET /api/tasks HTTP/1.1" 200 OK
+[controller_server-13] [INFO] [1791549867.486767069] [controller_server]: Passing new path to controller.
+[controller_server-13] [WARN] [1791549867.644236245] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549867.708295368] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549867.768134258] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[uvicorn-30] INFO:     127.0.0.1:35346 - "GET /api/tasks HTTP/1.1" 200 OK
+[controller_server-13] [WARN] [1791549867.821600314] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549867.880347814] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549867.935819722] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549867.988317470] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549868.150789949] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549868.209196270] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549868.269986264] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549868.335572933] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549868.402680964] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[uvicorn-30] INFO:     127.0.0.1:35358 - "GET /api/tasks HTTP/1.1" 200 OK
+[controller_server-13] [WARN] [1791549868.559088494] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [INFO] [1791549868.559183040] [controller_server]: Passing new path to controller.
+[uvicorn-30] INFO:     127.0.0.1:35372 - "GET /api/tasks HTTP/1.1" 200 OK
+[controller_server-13] [WARN] [1791549869.409889993] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549869.457117835] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549869.512051336] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549869.562045492] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [INFO] [1791549869.562113846] [controller_server]: Passing new path to controller.
+[controller_server-13] [WARN] [1791549869.618132124] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549869.669194294] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549869.734930136] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549869.790361743] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549869.847457454] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549869.897477009] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549869.944626638] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[uvicorn-30] INFO:     127.0.0.1:35384 - "GET /api/tasks HTTP/1.1" 200 OK
+[controller_server-13] [WARN] [1791549869.995444790] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549870.049876204] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549870.098870658] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549870.148667415] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549870.201257680] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549870.248245499] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549870.304798234] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549870.455312940] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549870.517525744] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549870.571093566] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549870.623444512] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [INFO] [1791549870.623520310] [controller_server]: Passing new path to controller.
+[uvicorn-30] INFO:     127.0.0.1:38846 - "GET /api/tasks HTTP/1.1" 200 OK
+[controller_server-13] [WARN] [1791549870.671155108] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549870.729530828] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549870.778230554] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549870.832968731] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549870.877926599] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549870.932732499] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549870.982615465] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549871.038914378] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549871.089019498] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549871.144434231] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549871.195669286] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549871.246677507] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549871.301468947] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549871.355884210] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[uvicorn-30] INFO:     127.0.0.1:38850 - "GET /api/tasks HTTP/1.1" 200 OK
+[controller_server-13] [INFO] [1791549871.506143149] [controller_server]: Reached the goal!
+[bt_navigator-16] [INFO] [1791549871.545584967] [bt_navigator]: Goal succeeded
+[uvicorn-30] [INFO] [1791549871.731023295] [web_bridge_node]: FSM State thay đổi: IN_NAV_TO_IN -> IN_DOCK_IN
+[task_manager_node-29] [INFO] [1791549871.732052323] [task_manager_node]: FSM State: IN_DOCK_IN
+[task_manager_node-29] [INFO] [1791549871.732732998] [task_manager_node]: Đã dock tại trạm giao nhận hàng.
+[uvicorn-30] INFO:     127.0.0.1:38854 - "GET /api/tasks?limit=30 HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:38862 - "GET /api/tasks?limit=30 HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:38870 - "GET /api/tasks HTTP/1.1" 200 OK
+[task_manager_node-29] [INFO] [1791549872.333817313] [task_manager_node]: FSM State: IN_PICK_FROM_STATION
+[uvicorn-30] [INFO] [1791549872.333987536] [web_bridge_node]: FSM State thay đổi: IN_DOCK_IN -> IN_PICK_FROM_STATION
+[uvicorn-30] INFO:     127.0.0.1:38862 - "GET /api/tasks?limit=30 HTTP/1.1" 200 OK
+[pick_place_server-28] [INFO] [1791549872.338847628] [pick_place_server]: Nhận yêu cầu PickPlace: mode=PICK_FROM_STATION, slot=30, box_tag=20, tier=1
+[uvicorn-30] INFO:     127.0.0.1:38854 - "GET /api/tasks?limit=30 HTTP/1.1" 200 OK
+[pick_place_server-28] [INFO] [1791549872.342351460] [pick_place_server]: Bắt đầu thực thi nhiệm vụ: PICK_FROM_STATION (Tier 1, Slot 30)
+[pick_place_server-28] [INFO] [1791549872.343377663] [pick_place_server]: Robot chưa đứng trước vị trí làm việc 30. Đang tự động định vị robot vào work_pose (x=-2.40, y=0.88, yaw=1.57)...
+[uvicorn-30] INFO:     127.0.0.1:38872 - "GET /api/tasks HTTP/1.1" 200 OK
+[pick_place_server-28] [INFO] [1791549872.995890532] [pick_place_server]: === PHA: OBSERVE ===
+[gzserver-1] [INFO] [1791549872.996966492] [arm_controller]: Received new action goal
+[gzserver-1] [INFO] [1791549872.997013114] [arm_controller]: Accepted new action goal
+[uvicorn-30] INFO:     127.0.0.1:38882 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:38896 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:38902 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:38914 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:38918 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:38932 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:38942 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:38952 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:38954 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:38970 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:51720 - "GET /api/tasks HTTP/1.1" 200 OK
+[gzserver-1] [INFO] [1791549880.866028592] [arm_controller]: Goal reached, success!
+[gzserver-1] [INFO] [1791549880.904314978] [arm_controller]: Received new action goal
+[gzserver-1] [INFO] [1791549880.904371379] [arm_controller]: Accepted new action goal
+[uvicorn-30] INFO:     127.0.0.1:51732 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:51742 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:51744 - "GET /api/tasks HTTP/1.1" 200 OK
+[gzserver-1] [INFO] [1791549882.922592611] [arm_controller]: Goal reached, success!
+[uvicorn-30] INFO:     127.0.0.1:51746 - "GET /api/tasks HTTP/1.1" 200 OK
+[pick_place_server-28] [INFO] [1791549883.473264779] [pick_place_server]: === PHA: ALIGN ===
+[pick_place_server-28] [WARN] [1791549883.475143467] [pick_place_server]: ALIGN vòng 1: Chưa thấy tag qua hand_camera, chờ nhận diện...
+[pick_place_server-28] [WARN] [1791549883.982191225] [pick_place_server]: ALIGN vòng 2: Chưa thấy tag qua hand_camera, chờ nhận diện...
+[uvicorn-30] INFO:     127.0.0.1:51756 - "GET /api/tasks HTTP/1.1" 200 OK
+[pick_place_server-28] [WARN] [1791549884.484184783] [pick_place_server]: ALIGN vòng 3: Chưa thấy tag qua hand_camera, chờ nhận diện...
+[uvicorn-30] INFO:     127.0.0.1:51766 - "GET /api/tasks HTTP/1.1" 200 OK
+[pick_place_server-28] [INFO] [1791549884.985731335] [pick_place_server]: === PHA: DESCEND ===
+[gzserver-1] [INFO] [1791549884.986966990] [arm_controller]: Received new action goal
+[gzserver-1] [INFO] [1791549884.987057678] [arm_controller]: Accepted new action goal
+[uvicorn-30] INFO:     127.0.0.1:51782 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:51788 - "GET /api/tasks HTTP/1.1" 200 OK
+[gzserver-1] [INFO] [1791549886.990673964] [arm_controller]: Goal reached, success!
+[uvicorn-30] INFO:     127.0.0.1:51802 - "GET /api/tasks HTTP/1.1" 200 OK
+[pick_place_server-28] [INFO] [1791549887.058499897] [pick_place_server]: === PHA: SUCTION ===
+[gripper_node.py-7] [INFO] [1791549887.059853204] [gripper_node]: Yêu cầu chuyển mạch tay kẹp: active=True
+[gzserver-1] [WARN] [1791549887.060352785] [gripper.parallel_gripper]: Gripper is already on
+[gripper_node.py-7] [INFO] [1791549887.060920630] [gripper_node]: Kẹp dính thành công hộp: box_26 (khoảng cách = 64.1 mm)
+[pick_place_server-28] [INFO] [1791549887.082069035] [pick_place_server]: === PHA: LIFT ===
+[gzserver-1] [INFO] [1791549887.082811262] [arm_controller]: Received new action goal
+[gzserver-1] [INFO] [1791549887.082852002] [arm_controller]: Accepted new action goal
+[uvicorn-30] INFO:     127.0.0.1:51818 - "GET /api/mode HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:51824 - "GET /api/inventory HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:51826 - "GET /api/tasks?limit=30 HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:51836 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:51850 - "GET /api/tasks HTTP/1.1" 200 OK
+[gzserver-1] [INFO] [1791549888.600894978] [arm_controller]: Goal reached, success!
+[pick_place_server-28] [INFO] [1791549888.656193584] [pick_place_server]: === PHA: RETRACT ===
+[gzserver-1] [INFO] [1791549888.657072870] [arm_controller]: Received new action goal
+[gzserver-1] [INFO] [1791549888.657135523] [arm_controller]: Accepted new action goal
+[uvicorn-30] INFO:     127.0.0.1:51862 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:51866 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:50270 - "GET /api/tasks HTTP/1.1" 200 OK
+[gzserver-1] [INFO] [1791549890.669061884] [arm_controller]: Goal reached, success!
+[gzserver-1] [INFO] [1791549890.723606946] [arm_controller]: Received new action goal
+[gzserver-1] [INFO] [1791549890.723667134] [arm_controller]: Accepted new action goal
+[uvicorn-30] INFO:     127.0.0.1:50274 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:50280 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:50292 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:50308 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:50314 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:50318 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:50322 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:50336 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:50338 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:50340 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:50354 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:50356 - "GET /api/tasks HTTP/1.1" 200 OK
+[gzserver-1] [INFO] [1791549899.635872921] [arm_controller]: Goal reached, success!
+[pick_place_server-28] [INFO] [1791549899.681978312] [pick_place_server]: === PHA: TRAY ===
+[gzserver-1] [INFO] [1791549899.685251535] [arm_controller]: Received new action goal
+[gzserver-1] [INFO] [1791549899.685323977] [arm_controller]: Accepted new action goal
+[uvicorn-30] INFO:     127.0.0.1:50362 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:41466 - "GET /api/tasks HTTP/1.1" 200 OK
+[gzserver-1] [INFO] [1791549901.210215054] [arm_controller]: Goal reached, success!
+[uvicorn-30] INFO:     127.0.0.1:41474 - "GET /api/tasks HTTP/1.1" 200 OK
+[gripper_node.py-7] [INFO] [1791549901.454076167] [gripper_node]: Yêu cầu chuyển mạch tay kẹp: active=False
+[gzserver-1] [WARN] [1791549901.454467837] [gripper.parallel_gripper]: Gripper is already off
+[gripper_node.py-7] [INFO] [1791549901.454746044] [gripper_node]: Đã nhả hộp: box_26
+[gzserver-1] [INFO] [1791549901.767069411] [arm_controller]: Received new action goal
+[gzserver-1] [INFO] [1791549901.767131282] [arm_controller]: Accepted new action goal
+[uvicorn-30] INFO:     127.0.0.1:41476 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:41484 - "GET /api/tasks HTTP/1.1" 200 OK
+[gzserver-1] [INFO] [1791549903.281780534] [arm_controller]: Goal reached, success!
+[pick_place_server-28] [INFO] [1791549903.324911783] [pick_place_server]: === PHA: VERIFY ===
+[uvicorn-30] INFO:     127.0.0.1:41486 - "GET /api/tasks HTTP/1.1" 200 OK
+[pick_place_server-28] [INFO] [1791549903.832727810] [pick_place_server]: Hộp đã đặt vào lòng khay xe.
+[pick_place_server-28] [INFO] [1791549903.833435261] [pick_place_server]: === PHA: STOW ===
+[gzserver-1] [INFO] [1791549903.834619398] [arm_controller]: Received new action goal
+[gzserver-1] [INFO] [1791549903.834669777] [arm_controller]: Accepted new action goal
+[uvicorn-30] INFO:     127.0.0.1:41500 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:41502 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:41512 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:41520 - "GET /api/tasks HTTP/1.1" 200 OK
+[gzserver-1] [INFO] [1791549906.336657769] [arm_controller]: Goal reached, success!
+[task_manager_node-29] [INFO] [1791549906.584827425] [task_manager_node]: FSM State: IN_VERIFY_BOX
+[uvicorn-30] [INFO] [1791549906.597769389] [web_bridge_node]: FSM State thay đổi: IN_PICK_FROM_STATION -> IN_VERIFY_BOX
+[uvicorn-30] INFO:     127.0.0.1:41534 - "GET /api/tasks?limit=30 HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:41548 - "GET /api/tasks?limit=30 HTTP/1.1" 200 OK
+[task_manager_node-29] [INFO] [1791549906.685524183] [task_manager_node]: FSM State: IN_STOW_ARM
+[pick_place_server-28] [INFO] [1791549906.690820004] [pick_place_server]: Nhận yêu cầu PickPlace: mode=STOW, slot=0, box_tag=0, tier=1
+[uvicorn-30] [INFO] [1791549906.693201586] [web_bridge_node]: FSM State thay đổi: IN_VERIFY_BOX -> IN_STOW_ARM
+[pick_place_server-28] [INFO] [1791549906.693788811] [pick_place_server]: Bắt đầu thực thi nhiệm vụ: STOW (Tier 1, Slot 0)
+[pick_place_server-28] [INFO] [1791549906.695102413] [pick_place_server]: === PHA: STOW ===
+[gzserver-1] [INFO] [1791549906.696131386] [arm_controller]: Received new action goal
+[gzserver-1] [INFO] [1791549906.696186134] [arm_controller]: Accepted new action goal
+[uvicorn-30] INFO:     127.0.0.1:41548 - "GET /api/tasks?limit=30 HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:41534 - "GET /api/tasks?limit=30 HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:41560 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:41574 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:41582 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:41598 - "GET /api/tasks HTTP/1.1" 200 OK
+[gzserver-1] [INFO] [1791549909.714691456] [arm_controller]: Goal reached, success!
+[uvicorn-30] INFO:     127.0.0.1:41610 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] [INFO] [1791549909.911792694] [web_bridge_node]: FSM State thay đổi: IN_STOW_ARM -> IN_NAV_TO_SLOT
+[uvicorn-30] INFO:     127.0.0.1:41534 - "GET /api/tasks?limit=30 HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:41548 - "GET /api/tasks?limit=30 HTTP/1.1" 200 OK
+[task_manager_node-29] [INFO] [1791549909.952039312] [task_manager_node]: FSM State: IN_NAV_TO_SLOT
+[bt_navigator-16] [INFO] [1791549909.953166749] [bt_navigator]: Begin navigating from current location (-2.37, 0.43) to (0.75, -0.05)
+[controller_server-13] [INFO] [1791549909.974099851] [controller_server]: Received a goal, begin computing control effort.
+[uvicorn-30] INFO:     127.0.0.1:54168 - "GET /api/tasks HTTP/1.1" 200 OK
+[controller_server-13] [INFO] [1791549911.024434518] [controller_server]: Passing new path to controller.
+[uvicorn-30] INFO:     127.0.0.1:54172 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:54180 - "GET /api/tasks HTTP/1.1" 200 OK
+[controller_server-13] [INFO] [1791549912.074438827] [controller_server]: Passing new path to controller.
+[uvicorn-30] INFO:     127.0.0.1:54182 - "GET /api/tasks HTTP/1.1" 200 OK
+[controller_server-13] [INFO] [1791549913.074461881] [controller_server]: Passing new path to controller.
+[uvicorn-30] INFO:     127.0.0.1:54194 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:54208 - "GET /api/tasks HTTP/1.1" 200 OK
+[controller_server-13] [INFO] [1791549914.124438787] [controller_server]: Passing new path to controller.
+[uvicorn-30] INFO:     127.0.0.1:54224 - "GET /api/tasks HTTP/1.1" 200 OK
+[controller_server-13] [INFO] [1791549915.124453230] [controller_server]: Passing new path to controller.
+[uvicorn-30] INFO:     127.0.0.1:54232 - "GET /api/tasks HTTP/1.1" 200 OK
+[controller_server-13] [INFO] [1791549916.174438888] [controller_server]: Passing new path to controller.
+[uvicorn-30] INFO:     127.0.0.1:54246 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:54248 - "GET /api/tasks HTTP/1.1" 200 OK
+[controller_server-13] [INFO] [1791549917.174432292] [controller_server]: Passing new path to controller.
+[uvicorn-30] INFO:     127.0.0.1:54256 - "GET /api/tasks HTTP/1.1" 200 OK
+[controller_server-13] [INFO] [1791549918.224451878] [controller_server]: Passing new path to controller.
+[uvicorn-30] INFO:     127.0.0.1:54270 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:54278 - "GET /api/tasks HTTP/1.1" 200 OK
+[controller_server-13] [INFO] [1791549919.274446668] [controller_server]: Passing new path to controller.
+[uvicorn-30] INFO:     127.0.0.1:54280 - "GET /api/tasks HTTP/1.1" 200 OK
+[controller_server-13] [INFO] [1791549920.274433042] [controller_server]: Passing new path to controller.
+[uvicorn-30] INFO:     127.0.0.1:37734 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:37748 - "GET /api/tasks HTTP/1.1" 200 OK
+[controller_server-13] [INFO] [1791549921.324472145] [controller_server]: Passing new path to controller.
+[uvicorn-30] INFO:     127.0.0.1:37760 - "GET /api/tasks HTTP/1.1" 200 OK
+[controller_server-13] [INFO] [1791549922.324434866] [controller_server]: Passing new path to controller.
+[uvicorn-30] INFO:     127.0.0.1:37774 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:37788 - "GET /api/tasks HTTP/1.1" 200 OK
+[controller_server-13] [INFO] [1791549923.374445585] [controller_server]: Passing new path to controller.
+[uvicorn-30] INFO:     127.0.0.1:37796 - "GET /api/tasks HTTP/1.1" 200 OK
+[controller_server-13] [INFO] [1791549924.374443014] [controller_server]: Passing new path to controller.
+[controller_server-13] [WARN] [1791549924.525946967] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549924.583768180] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549924.639256542] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549924.700353031] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549924.757828564] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[uvicorn-30] INFO:     127.0.0.1:37808 - "GET /api/tasks HTTP/1.1" 200 OK
+[controller_server-13] [WARN] [1791549924.816099903] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549924.875110267] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549925.029419845] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549925.088097960] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549925.147142788] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549925.214218722] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549925.272543823] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549925.331345783] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [INFO] [1791549925.431441143] [controller_server]: Passing new path to controller.
+[uvicorn-30] INFO:     127.0.0.1:37812 - "GET /api/tasks HTTP/1.1" 200 OK
+[controller_server-13] [WARN] [1791549925.491412394] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549925.552062792] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549925.613878272] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549925.668363125] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549925.729453008] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549925.792267515] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549925.946723153] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549926.005274770] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549926.064539186] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549926.128246437] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549926.182126936] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[uvicorn-30] INFO:     127.0.0.1:37824 - "GET /api/tasks HTTP/1.1" 200 OK
+[controller_server-13] [WARN] [1791549926.242290862] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549926.400351121] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549926.453134311] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [INFO] [1791549926.453305317] [controller_server]: Passing new path to controller.
+[controller_server-13] [WARN] [1791549926.498734833] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549926.545298120] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[uvicorn-30] INFO:     127.0.0.1:37830 - "GET /api/tasks HTTP/1.1" 200 OK
+[controller_server-13] [WARN] [1791549927.000853358] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549927.054351731] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549927.109087850] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549927.159914063] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549927.217563787] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549927.271628755] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549927.324201475] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549927.374582131] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549927.424738315] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549927.476308973] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [INFO] [1791549927.476438619] [controller_server]: Passing new path to controller.
+[controller_server-13] [WARN] [1791549927.530009985] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549927.579169798] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[uvicorn-30] INFO:     127.0.0.1:37844 - "GET /api/tasks HTTP/1.1" 200 OK
+[controller_server-13] [WARN] [1791549927.625636029] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549927.679269728] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549927.735548924] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549927.783505880] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549927.838473474] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549927.891849366] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549927.942379205] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549928.093698732] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549928.147951595] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549928.197229716] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549928.251165015] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549928.299953742] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[uvicorn-30] INFO:     127.0.0.1:37850 - "GET /api/tasks HTTP/1.1" 200 OK
+[controller_server-13] [WARN] [1791549928.352915534] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549928.407764911] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549928.456693895] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549928.508424023] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [INFO] [1791549928.508496104] [controller_server]: Passing new path to controller.
+[controller_server-13] [WARN] [1791549928.563792502] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549928.611439402] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549928.661843138] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549928.714732478] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549928.765593865] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549928.820386862] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549928.870066433] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549928.921111922] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549928.971562571] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549929.023307580] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[uvicorn-30] INFO:     127.0.0.1:37854 - "GET /api/tasks HTTP/1.1" 200 OK
+[controller_server-13] [WARN] [1791549929.079734589] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549929.138052380] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549929.191745657] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549929.245594501] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549929.447037710] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549929.538506509] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [INFO] [1791549929.538579082] [controller_server]: Passing new path to controller.
+[controller_server-13] [WARN] [1791549929.578423498] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549929.615755968] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[controller_server-13] [WARN] [1791549929.652614255] [controller_server]: Control loop missed its desired rate of 20.0000Hz
+[uvicorn-30] INFO:     127.0.0.1:37864 - "GET /api/tasks HTTP/1.1" 200 OK
+[controller_server-13] [INFO] [1791549930.180949141] [controller_server]: Reached the goal!
+[bt_navigator-16] [INFO] [1791549930.213479682] [bt_navigator]: Goal succeeded
+[task_manager_node-29] [INFO] [1791549930.346939496] [task_manager_node]: FSM State: IN_DOCK_SLOT
+[dock_server-27] [INFO] [1791549930.349256037] [dock_server]: Nhận yêu cầu DockToSlot: slot_tag_id=9
+[dock_server-27] [INFO] [1791549930.351589039] [dock_server]: >>> Bắt đầu Visual Servoing vào ô tag ID=9: standoff=0.320m, tol_lat=5.0mm, tol_yaw=2.0deg
+[uvicorn-30] [INFO] [1791549930.354364223] [web_bridge_node]: FSM State thay đổi: IN_NAV_TO_SLOT -> IN_DOCK_SLOT
+[uvicorn-30] INFO:     127.0.0.1:43458 - "GET /api/tasks?limit=30 HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:43466 - "GET /api/tasks?limit=30 HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:43482 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:43490 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:43494 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:43504 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:43514 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:43516 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:43528 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:43540 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:43556 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:43572 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:43584 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:43600 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:43608 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:43610 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:43826 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:43830 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:43840 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:43846 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:43860 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:43862 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:43864 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:43874 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:43884 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:43890 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:43894 - "GET /api/mode HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:43908 - "GET /api/inventory HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:43918 - "GET /api/tasks?limit=30 HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:43934 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:43946 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:43960 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:43972 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:46424 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:46428 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:46438 - "GET /api/tasks HTTP/1.1" 200 OK
+[dock_server-27] [WARN] [1791549951.809384187] [dock_server]: Mất tag 9 > 2.0s! Hồi phục lần 1: lùi nhẹ...
+[uvicorn-30] INFO:     127.0.0.1:46442 - "GET /api/tasks HTTP/1.1" 200 OK
+[dock_server-27] [WARN] [1791549952.865293878] [dock_server]: Mất tag 9 > 2.0s! Hồi phục lần 2: lùi nhẹ...
+[uvicorn-30] INFO:     127.0.0.1:46446 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:46450 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:46454 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:46456 - "GET /api/tasks HTTP/1.1" 200 OK
+[dock_server-27] [ERROR] [1791549955.590835877] [dock_server]: TIMEOUT vượt quá 25.0s!
+[task_manager_node-29] [INFO] [1791549955.767416415] [task_manager_node]: FSM State: IN_DOCK_SLOT
+[dock_server-27] [INFO] [1791549955.769698112] [dock_server]: Nhận yêu cầu DockToSlot: slot_tag_id=9
+[dock_server-27] [INFO] [1791549955.772016270] [dock_server]: >>> Bắt đầu Visual Servoing vào ô tag ID=9: standoff=0.320m, tol_lat=5.0mm, tol_yaw=2.0deg
+[uvicorn-30] INFO:     127.0.0.1:46462 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:46470 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:46478 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:46492 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:46502 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:46508 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:37066 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:37074 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:37082 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:37096 - "GET /api/tasks HTTP/1.1" 200 OK
+[dock_server-27] [WARN] [1791549962.548580359] [dock_server]: Mất tag 9 > 2.0s! Hồi phục lần 1: lùi nhẹ...
+[uvicorn-30] INFO:     127.0.0.1:37106 - "GET /api/tasks HTTP/1.1" 200 OK
+[dock_server-27] [WARN] [1791549963.604852981] [dock_server]: Mất tag 9 > 2.0s! Hồi phục lần 2: lùi nhẹ...
+[uvicorn-30] INFO:     127.0.0.1:37120 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:37122 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:37130 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:37134 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:37144 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:37148 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:37154 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:37162 - "GET /api/tasks HTTP/1.1" 200 OK
+[dock_server-27] [WARN] [1791549968.764102073] [dock_server]: Mất tag 9 > 2.0s! Hồi phục lần 3: lùi nhẹ...
+[uvicorn-30] INFO:     127.0.0.1:37166 - "GET /api/tasks HTTP/1.1" 200 OK
+[dock_server-27] [ERROR] [1791549969.876428414] [dock_server]: TAG_LOST: Không tìm thấy tag sau số lần thử lại tối đa!
+[task_manager_node-29] [INFO] [1791549970.054748520] [task_manager_node]: FSM State: IN_DOCK_SLOT
+[dock_server-27] [INFO] [1791549970.058187553] [dock_server]: Nhận yêu cầu DockToSlot: slot_tag_id=9
+[dock_server-27] [INFO] [1791549970.059655818] [dock_server]: >>> Bắt đầu Visual Servoing vào ô tag ID=9: standoff=0.320m, tol_lat=5.0mm, tol_yaw=2.0deg
+[uvicorn-30] INFO:     127.0.0.1:36742 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:36750 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:36766 - "GET /api/tasks HTTP/1.1" 200 OK
+[dock_server-27] [WARN] [1791549972.167051636] [dock_server]: Mất tag 9 > 2.0s! Hồi phục lần 1: lùi nhẹ...
+[uvicorn-30] INFO:     127.0.0.1:36780 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:36788 - "GET /api/tasks HTTP/1.1" 200 OK
+[dock_server-27] [WARN] [1791549973.222728910] [dock_server]: Mất tag 9 > 2.0s! Hồi phục lần 2: lùi nhẹ...
+[uvicorn-30] INFO:     127.0.0.1:36794 - "GET /api/tasks HTTP/1.1" 200 OK
+[dock_server-27] [WARN] [1791549974.279819251] [dock_server]: Mất tag 9 > 2.0s! Hồi phục lần 3: lùi nhẹ...
+[uvicorn-30] INFO:     127.0.0.1:36804 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:36814 - "GET /api/tasks HTTP/1.1" 200 OK
+[dock_server-27] [ERROR] [1791549975.387874247] [dock_server]: TAG_LOST: Không tìm thấy tag sau số lần thử lại tối đa!
+[uvicorn-30] [INFO] [1791549975.471479826] [web_bridge_node]: FSM State thay đổi: IN_DOCK_SLOT -> ERROR_RECOVERY
+[uvicorn-30] INFO:     127.0.0.1:36826 - "GET /api/tasks?limit=30 HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:36840 - "GET /api/tasks?limit=30 HTTP/1.1" 200 OK
+[task_manager_node-29] [INFO] [1791549975.517700645] [task_manager_node]: FSM State: ERROR_RECOVERY
+[task_manager_node-29] [WARN] [1791549975.518236301] [task_manager_node]: === TIẾN HÀNH PHỤC HỒI LỖI (ERROR_RECOVERY) CHO NHIỆM VỤ #2 ===
+[pick_place_server-28] [INFO] [1791549975.522342371] [pick_place_server]: Nhận yêu cầu PickPlace: mode=STOW, slot=0, box_tag=0, tier=1
+[pick_place_server-28] [INFO] [1791549975.525211380] [pick_place_server]: Bắt đầu thực thi nhiệm vụ: STOW (Tier 1, Slot 0)
+[pick_place_server-28] [INFO] [1791549975.527103191] [pick_place_server]: === PHA: STOW ===
+[gzserver-1] [INFO] [1791549975.528790169] [arm_controller]: Received new action goal
+[gzserver-1] [INFO] [1791549975.528849165] [arm_controller]: Accepted new action goal
+[uvicorn-30] INFO:     127.0.0.1:36856 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:36870 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:36884 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:36888 - "GET /api/tasks HTTP/1.1" 200 OK
+[gzserver-1] [INFO] [1791549978.536330516] [arm_controller]: Goal reached, success!
+[uvicorn-30] INFO:     127.0.0.1:36890 - "GET /api/tasks HTTP/1.1" 200 OK
+[task_manager_node-29] [WARN] [1791549978.673687026] [task_manager_node]: Hộp đang trên khay xe (Inbound). Trả hộp lại bàn nhận IN...
+[pick_place_server-28] [INFO] [1791549978.675773532] [pick_place_server]: Nhận yêu cầu PickPlace: mode=PLACE_TO_STATION, slot=0, box_tag=20, tier=1
+[pick_place_server-28] [INFO] [1791549978.678576661] [pick_place_server]: Bắt đầu thực thi nhiệm vụ: PLACE_TO_STATION (Tier 1, Slot 0)
+[pick_place_server-28] [INFO] [1791549978.678995427] [pick_place_server]: Robot chưa đứng trước vị trí làm việc 31. Đang tự động định vị robot vào work_pose (x=-2.40, y=-0.88, yaw=-1.57)...
+[pick_place_server-28] [INFO] [1791549979.332485002] [pick_place_server]: === PHA: PICK_TRAY ===
+[gzserver-1] [INFO] [1791549979.334625555] [arm_controller]: Received new action goal
+[gzserver-1] [INFO] [1791549979.334710663] [arm_controller]: Accepted new action goal
+[uvicorn-30] INFO:     127.0.0.1:36894 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:49374 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:49378 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:49388 - "GET /api/tasks HTTP/1.1" 200 OK
+[gzserver-1] [INFO] [1791549981.950303622] [arm_controller]: Goal reached, success!
+[gzserver-1] [INFO] [1791549981.989723673] [arm_controller]: Received new action goal
+[gzserver-1] [INFO] [1791549981.989799342] [arm_controller]: Accepted new action goal
+[uvicorn-30] INFO:     127.0.0.1:49404 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:49410 - "GET /api/tasks HTTP/1.1" 200 OK
+[gzserver-1] [INFO] [1791549983.493062882] [arm_controller]: Goal reached, success!
+[gripper_node.py-7] [INFO] [1791549983.558131644] [gripper_node]: Yêu cầu chuyển mạch tay kẹp: active=True
+[gzserver-1] [WARN] [1791549983.558589216] [gripper.parallel_gripper]: Gripper is already on
+[uvicorn-30] INFO:     127.0.0.1:49414 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:49424 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:49432 - "GET /api/tasks HTTP/1.1" 200 OK
+[pick_place_server-28] [ERROR] [1791549985.097703137] [pick_place_server]: Không hút được hộp từ khay xe!
+[gripper_node.py-7] [INFO] [1791549985.098883145] [gripper_node]: Yêu cầu chuyển mạch tay kẹp: active=False
+[gzserver-1] [WARN] [1791549985.099148439] [gripper.parallel_gripper]: Gripper is already off
+[gzserver-1] [INFO] [1791549985.120105771] [arm_controller]: Received new action goal
+[gzserver-1] [INFO] [1791549985.120229084] [arm_controller]: Accepted new action goal
+[uvicorn-30] INFO:     127.0.0.1:49436 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:49452 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:49468 - "GET /api/tasks HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:49478 - "GET /api/tasks HTTP/1.1" 200 OK
+[gzserver-1] [INFO] [1791549988.139791683] [arm_controller]: Goal reached, success!
+[uvicorn-30] [INFO] [1791549988.317515342] [web_bridge_node]: FSM State thay đổi: ERROR_RECOVERY -> DONE
+[uvicorn-30] INFO:     127.0.0.1:49490 - "GET /api/tasks?limit=30 HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:49492 - "GET /api/tasks?limit=30 HTTP/1.1" 200 OK
+[task_manager_node-29] [INFO] [1791549988.382153565] [task_manager_node]: >>> Kết thúc nhiệm vụ #2: SUCCEEDED <<<
+[uvicorn-30] [INFO] [1791549988.437938247] [web_bridge_node]: FSM State thay đổi: DONE -> IDLE
+[uvicorn-30] INFO:     127.0.0.1:49492 - "GET /api/tasks?limit=30 HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:49490 - "GET /api/tasks?limit=30 HTTP/1.1" 200 OK
+[uvicorn-30] INFO:     127.0.0.1:49508 - "GET /api/tasks HTTP/1.1" 200 OK

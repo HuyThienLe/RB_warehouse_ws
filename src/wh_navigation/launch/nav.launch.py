@@ -55,8 +55,8 @@ def generate_launch_description():
     )
 
     # Điều kiện chế độ
-    is_nav_mode = IfCondition(PythonExpression(["'", mode, "' == 'navigation'"]))
-    is_mapping_mode = IfCondition(PythonExpression(["'", mode, "' == 'mapping'"]))
+    is_nav_mode = IfCondition(PythonExpression(["'", mode, "' in ('navigation', 'nav')"]))
+    is_mapping_mode = IfCondition(PythonExpression(["'", mode, "' in ('mapping', 'slam')"]))
 
     # Danh sách node vòng đời cho chế độ navigation
     nav_lifecycle_nodes = [
