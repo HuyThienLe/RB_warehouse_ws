@@ -5,3 +5,5 @@ logs/
 *.gv
 *.pdf
 .vscode/
+__pycache__/
+*.pyc
