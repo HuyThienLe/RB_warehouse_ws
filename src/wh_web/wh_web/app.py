@@ -94,6 +94,11 @@ MAP_METADATA: Dict[str, Any] = {
 }
 MAP_IMAGE_PATH: Optional[str] = None
 cached_map_png: Optional[bytes] = None
+MAP_NO_CACHE_HEADERS = {
+    "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+    "Pragma": "no-cache",
+    "Expires": "0",
+}
 
 
 def get_local_ip() -> str:
@@ -109,20 +114,28 @@ def get_local_ip() -> str:
 
 
 def init_map_image():
-    """Chuyển đổi file bản đồ PGM sang PNG để trình duyệt hiển thị."""
+    """Chuyển đổi file bản đồ PGM sang PNG để trình duyệt hiển thị.
+
+    PNG chỉ là cache: luôn dựng lại khi PGM nguồn mới hơn (hoặc PNG chưa có) để
+    bản đồ web không bao giờ lệch so với bản đồ Nav2 / Gazebo hiện tại.
+    """
     global cached_map_png, MAP_IMAGE_PATH
     map_dir = os.path.dirname(__file__)
     png_path = os.path.join(map_dir, "map.png")
     MAP_IMAGE_PATH = png_path
 
-    if os.path.exists(png_path):
-        with open(png_path, "rb") as f:
-            cached_map_png = f.read()
-        return
-
     # Tìm file warehouse_map.pgm
     pgm_path = find_config_path("wh_navigation/maps/warehouse_map.pgm")
-    if pgm_path and os.path.exists(pgm_path):
+    pgm_ok = bool(pgm_path and os.path.exists(pgm_path))
+
+    if os.path.exists(png_path):
+        png_fresh = (not pgm_ok) or (os.path.getmtime(png_path) >= os.path.getmtime(os.path.realpath(pgm_path)))
+        if png_fresh:
+            with open(png_path, "rb") as f:
+                cached_map_png = f.read()
+            return
+
+    if pgm_ok:
         try:
             im = Image.open(pgm_path)
             buf = io.BytesIO()
@@ -245,7 +258,30 @@ async def get_inventory():
     """Tồn kho theo ô + tổng theo mã hàng + cờ sắp hết."""
     inv = db.get_inventory()
     inv["slots_detail"] = db.get_all_slots()
+    inv["station_info"] = {
+        "inbound_capacity": 6,
+        "outbound_capacity": 6,
+    }
     return inv
+
+
+@app.post("/api/station/outbound/clear")
+async def api_clear_station_outbound():
+    """Dọn sạch bàn trả hàng trạm OUT."""
+    if not bridge:
+        raise HTTPException(status_code=503, detail="WebBridge chưa sẵn sàng")
+    ok, msg = bridge.clear_station_out()
+    return {"success": ok, "message": msg}
+
+
+@app.post("/api/station/inbound/replenish")
+async def api_replenish_station_inbound():
+    """Tiếp thêm phôi vào trạm IN."""
+    if not bridge:
+        raise HTTPException(status_code=503, detail="WebBridge chưa sẵn sàng")
+    ok, msg = bridge.replenish_station_in()
+    return {"success": ok, "message": msg}
+
 
 
 @app.get("/api/items")
@@ -433,11 +469,9 @@ async def get_map_metadata():
 @app.get("/api/map/image")
 async def get_map_image():
     """Trả về file ảnh bản đồ PNG phục vụ vẽ lên canvas."""
+    init_map_image()  # tự dựng lại nếu PGM nguồn mới hơn cache
     if cached_map_png:
-        return Response(content=cached_map_png, media_type="image/png")
-    init_map_image()
-    if cached_map_png:
-        return Response(content=cached_map_png, media_type="image/png")
+        return Response(content=cached_map_png, media_type="image/png", headers=MAP_NO_CACHE_HEADERS)
     raise HTTPException(status_code=404, detail="Không tìm thấy ảnh bản đồ")
 
 
@@ -449,13 +483,11 @@ async def get_live_map_image():
     if bridge:
         png_data = bridge.get_live_map_png()
         if png_data:
-            return Response(content=png_data, media_type="image/png")
+            return Response(content=png_data, media_type="image/png", headers=MAP_NO_CACHE_HEADERS)
     # Fallback bản đồ tĩnh
-    if cached_map_png:
-        return Response(content=cached_map_png, media_type="image/png")
     init_map_image()
     if cached_map_png:
-        return Response(content=cached_map_png, media_type="image/png")
+        return Response(content=cached_map_png, media_type="image/png", headers=MAP_NO_CACHE_HEADERS)
     raise HTTPException(status_code=404, detail="Chưa có dữ liệu bản đồ trực tiếp")
 
 
@@ -699,9 +731,31 @@ async def websocket_endpoint(ws: WebSocket):
 # ── Phục vụ Giao diện Tĩnh (Static Files - Mục 8.4) ──────────────────────────
 static_dir = os.path.join(os.path.dirname(__file__), "static")
 if os.path.exists(static_dir):
+    NO_CACHE_HEADERS = {
+        "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+        "Pragma": "no-cache",
+        "Expires": "0",
+    }
+
     @app.get("/", include_in_schema=False)
     async def serve_root():
-        return FileResponse(os.path.join(static_dir, "index.html"))
+        return FileResponse(os.path.join(static_dir, "index.html"), headers=NO_CACHE_HEADERS)
+
+    @app.get("/app.js", include_in_schema=False)
+    async def serve_app_js():
+        return FileResponse(
+            os.path.join(static_dir, "app.js"),
+            media_type="application/javascript",
+            headers=NO_CACHE_HEADERS,
+        )
+
+    @app.get("/style.css", include_in_schema=False)
+    async def serve_style_css():
+        return FileResponse(
+            os.path.join(static_dir, "style.css"),
+            media_type="text/css",
+            headers=NO_CACHE_HEADERS,
+        )
 
     app.mount("/", StaticFiles(directory=static_dir, html=True), name="static")
 

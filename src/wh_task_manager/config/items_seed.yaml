@@ -45,3 +45,19 @@ items:
     box_tag_id: 28
     low_stock_threshold: 1
 
+  - item_code: "ITEM_29"
+    name: "Nước ngọt có ga lon"
+    box_tag_id: 29
+    low_stock_threshold: 1
+
+  - item_code: "ITEM_32"
+    name: "Sữa chua uống tiệt trùng"
+    box_tag_id: 32
+    low_stock_threshold: 1
+
+  - item_code: "ITEM_33"
+    name: "Khăn giấy lụa cao cấp"
+    box_tag_id: 33
+    low_stock_threshold: 1
+
+

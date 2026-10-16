@@ -527,10 +527,32 @@ class PickPlaceServer(Node):
             ok, msg, tag_read = self.handle_pick_from_slot(goal_handle, slot_id, exp_box, tier, set_phase)
         elif mode == "PLACE_TO_SLOT":
             ok, msg, tag_read = self.handle_place_to_slot(goal_handle, slot_id, exp_box, tier, set_phase)
+        elif mode == "PLACE_SHELF":
+            # Đặt hộp lên kệ, KHÔNG gập tay: để xe lùi ra hành lang trước rồi mới STOW.
+            ok, msg, tag_read = self.handle_place_to_slot(
+                goal_handle, slot_id, exp_box, tier, set_phase, stow_at_end=False
+            )
+        elif mode == "PRE_REACH_CARRY":
+            ok, msg, tag_read = self.handle_pre_reach_carry(goal_handle, exp_box, tier, set_phase)
         elif mode in ("PICK_FROM_STATION", "PICK_STATION"):
             ok, msg, tag_read = self.handle_pick_from_station(goal_handle, slot_id, exp_box, set_phase)
         elif mode in ("PLACE_TO_STATION", "PLACE_STATION"):
             ok, msg, tag_read = self.handle_place_to_station(goal_handle, slot_id, exp_box, set_phase)
+        elif mode == "STORE_TO_TRAY":
+            ok, msg, tag_read = self.handle_store_to_tray(goal_handle, exp_box, tier, set_phase)
+        elif mode == "PRE_REACH":
+            set_phase("PRE_REACH")
+            # 1. Đưa tay lên PRE_SLOT_HOVER ngoài hành lang thông thoáng
+            ok = self.move_to_named_pose("PRE_SLOT_HOVER", tier=tier, goal_handle=goal_handle, total_time=2.0)
+            if ok:
+                # 2. Hạ Z thẳng đứng xuống cao độ làm việc PRE_SLOT_TIER_{tier} (tay duỗi thẳng hướng 0 rad, x=0.20m)
+                d_approach = float(self.poses[f"PRE_SLOT_TIER_{tier}"]["lift"])
+                q1_pre = float(self.poses[f"PRE_SLOT_TIER_{tier}"]["shoulder"])
+                q2_pre = float(self.poses[f"PRE_SLOT_TIER_{tier}"]["elbow"])
+                q3_pre = float(self.poses[f"PRE_SLOT_TIER_{tier}"]["wrist"])
+                ok = self.move_arm_safe(d_approach, q1_pre, q2_pre, q3_target=q3_pre, tier=tier, total_time=1.5)
+            msg = "PRE_REACH thành công" if ok else "PRE_REACH thất bại"
+            tag_read = self.current_box_id
         elif mode == "STOW":
             set_phase("STOW")
             ok = self.move_to_named_pose("STOW", tier=tier)
@@ -557,17 +579,31 @@ class PickPlaceServer(Node):
         self.ensure_robot_docked(slot_id)
 
         # 2. CHUẨN BỊ BÊN NGOÀI HÀNH LANG (PREPARE_OUTSIDE):
-        set_phase("PREPARE_OUTSIDE")
-        if not self.move_to_named_pose("PRE_SLOT_HOVER", tier=tier, goal_handle=goal_handle, total_time=2.0):
-            return False, "OUT_OF_REACH", 0
-
-        # Hạ Z thẳng đứng ngoài hành lang tới đúng cao độ tiếp cận của tầng
         d_approach = float(self.poses[f"PRE_SLOT_TIER_{tier}"]["lift"])
         q1_pre = float(self.poses[f"PRE_SLOT_TIER_{tier}"]["shoulder"])
         q2_pre = float(self.poses[f"PRE_SLOT_TIER_{tier}"]["elbow"])
         q3_pre = float(self.poses[f"PRE_SLOT_TIER_{tier}"]["wrist"])
-        if not self.move_arm_safe(d_approach, q1_pre, q2_pre, q3_target=q3_pre, tier=tier, total_time=1.5):
-            return False, "JOINT_LIMIT", 0
+
+        q1_curr = self.current_joints["shoulder_joint"]
+        q2_curr = self.current_joints["elbow_joint"]
+        d_curr = self.current_joints["lift_joint"]
+
+        already_pre_extended = (
+            abs(q1_curr - q1_pre) < 0.20 and
+            abs(q2_curr - q2_pre) < 0.20 and
+            abs(d_curr - d_approach) < 0.05
+        )
+
+        if already_pre_extended:
+            self.get_logger().info(
+                f"[PRE_REACH] Tay máy đã vươn thẳng sẵn ngoài hành lang. Bỏ qua vung tay PRE_SLOT_HOVER chống va quẹt kệ."
+            )
+        else:
+            set_phase("PREPARE_OUTSIDE")
+            if not self.move_to_named_pose("PRE_SLOT_HOVER", tier=tier, goal_handle=goal_handle, total_time=2.0):
+                return False, "OUT_OF_REACH", 0
+            if not self.move_arm_safe(d_approach, q1_pre, q2_pre, q3_target=q3_pre, tier=tier, total_time=1.5):
+                return False, "JOINT_LIMIT", 0
 
         # 3. LUỒN THẲNG NGANG VÀO Ô KỆ (INSERTION):
         set_phase("INSERT")
@@ -633,14 +669,19 @@ class PickPlaceServer(Node):
         self.get_logger().info(f"Rút thẳng ngang ra khỏi ô kệ: từ {p_box_lifted} -> {p_exit}")
         self.execute_cartesian_straight_line(p_box_lifted, p_exit, duration=2.5, tier=tier)
 
-        # 8. CHUYỂN VỀ KHAY XE NGOÀI HÀNH LANG (TRANSIT TO TRAY):
+        # 8. DỪNG TẠI ĐÂY: hộp đang được hút giữ ở điểm thoát (x=0.20m) ngoài ô kệ.
+        # Task Manager sẽ cho xe LÙI THẲNG ra hành lang, rồi mới gọi STORE_TO_TRAY để đưa hộp về khay.
+        set_phase("RETRACTED")
+        return True, "OK", exp_box
+
+    # ── Đưa hộp đang giữ về khay xe (gọi SAU KHI xe đã lùi ra hành lang) ─────
+    def handle_store_to_tray(self, goal_handle, exp_box, tier, set_phase):
         set_phase("TRAY")
         q1_out = self.current_joints["shoulder_joint"]
         q2_out = self.current_joints["elbow_joint"]
         q3_out = self.current_joints["wrist_joint"]
         self.move_arm_safe(0.160, q1_out, q2_out, q3_target=q3_out, tier=tier, total_time=1.5)
 
-        # Đưa vào khay xe
         self.move_to_named_pose("TRAY_HOVER", tier=tier, total_time=2.0)
         self.move_to_named_pose("TRAY_TOUCH", tier=tier, total_time=1.2)
         time.sleep(0.2)
@@ -649,7 +690,7 @@ class PickPlaceServer(Node):
         time.sleep(0.3)
         self.move_to_named_pose("TRAY_HOVER", tier=tier, total_time=1.2)
 
-        # 9. GẤP GỌN (STOW):
+        # GẤP GỌN (STOW)
         set_phase("STOW")
         self.move_to_named_pose("STOW", tier=tier, total_time=2.0)
         check_footprint(self.current_joints["shoulder_joint"], self.current_joints["elbow_joint"])
@@ -657,10 +698,8 @@ class PickPlaceServer(Node):
         return True, "OK", exp_box
 
     # ── Chi tiết chu trình PLACE_TO_SLOT ─────────────────────────────────────
-    def handle_place_to_slot(self, goal_handle, slot_id, exp_box, tier, set_phase):
-        self.ensure_robot_docked(slot_id)
-
-        # 1. Hút hộp từ khay xe
+    def _grab_box_from_tray(self, tier, set_phase) -> bool:
+        """Hút hộp từ khay xe. Trả False (và gập tay an toàn) nếu không hút được."""
         set_phase("PICK_TRAY")
         self.move_to_named_pose("TRAY_HOVER", tier=tier, total_time=1.5)
         self.move_to_named_pose("TRAY_TOUCH", tier=tier, total_time=1.2)
@@ -682,21 +721,54 @@ class PickPlaceServer(Node):
             self.holding_box = False
             self.move_to_named_pose("TRAY_HOVER", tier=tier, total_time=1.0)
             self.move_to_named_pose("STOW", tier=tier, total_time=1.5)
-            return False, "GRASP_FAIL", 0
+            return False
 
         self.holding_box = True
         self.move_to_named_pose("TRAY_HOVER", tier=tier, total_time=1.2)
+        return True
 
-        # 2. Đưa hộp ra vị trí chuẩn bị ngoài hành lang trước ngực xe
+    def _carry_to_pre_slot(self, tier, set_phase) -> float:
+        """Đưa hộp ra tư thế vươn thẳng ngoài hành lang, hạ Z tới cao độ mang hộp. Trả về d_carry."""
         set_phase("PREPARE_OUTSIDE")
         self.move_to_named_pose("PRE_SLOT_HOVER", tier=tier, total_time=2.0)
 
-        # Hạ Z thẳng đứng ngoài hành lang tới cao độ mang hộp
         d_carry = float(self.poses[f"PRE_SLOT_TIER_{tier}"]["lift"]) + 0.006
         q1_pre = float(self.poses[f"PRE_SLOT_TIER_{tier}"]["shoulder"])
         q2_pre = float(self.poses[f"PRE_SLOT_TIER_{tier}"]["elbow"])
         q3_pre = float(self.poses[f"PRE_SLOT_TIER_{tier}"]["wrist"])
         self.move_arm_safe(d_carry, q1_pre, q2_pre, q3_target=q3_pre, tier=tier, total_time=1.5)
+        return d_carry
+
+    def handle_pre_reach_carry(self, goal_handle, exp_box, tier, set_phase):
+        """Lấy hộp từ khay rồi vươn tay (đang mang hộp) ra trước ngay tại điểm chờ ngoài hành lang."""
+        if not self.holding_box or not self.is_grasping:
+            if not self._grab_box_from_tray(tier, set_phase):
+                return False, "GRASP_FAIL", 0
+        self._carry_to_pre_slot(tier, set_phase)
+        return True, "OK", exp_box
+
+    def handle_place_to_slot(self, goal_handle, slot_id, exp_box, tier, set_phase, stow_at_end=True):
+        self.ensure_robot_docked(slot_id)
+
+        # Nếu tay đã vươn sẵn ra trước (PRE_REACH_CARRY) và đang giữ hộp -> bỏ qua vung tay rộng
+        d_carry = float(self.poses[f"PRE_SLOT_TIER_{tier}"]["lift"]) + 0.006
+        q1_pre = float(self.poses[f"PRE_SLOT_TIER_{tier}"]["shoulder"])
+        q2_pre = float(self.poses[f"PRE_SLOT_TIER_{tier}"]["elbow"])
+        already_extended = (
+            self.holding_box and self.is_grasping
+            and abs(self.current_joints["shoulder_joint"] - q1_pre) < 0.20
+            and abs(self.current_joints["elbow_joint"] - q2_pre) < 0.20
+            and abs(self.current_joints["lift_joint"] - d_carry) < 0.05
+        )
+
+        if already_extended:
+            self.get_logger().info("[PRE_REACH_CARRY] Tay đã vươn sẵn mang hộp ngoài hành lang, bỏ qua bước vung tay.")
+        else:
+            # 1. Hút hộp từ khay xe
+            if not self._grab_box_from_tray(tier, set_phase):
+                return False, "GRASP_FAIL", 0
+            # 2. Đưa hộp ra vị trí chuẩn bị ngoài hành lang trước ngực xe
+            d_carry = self._carry_to_pre_slot(tier, set_phase)
 
         # 3. ĐẨY THẲNG NGANG HỘP VÀO Ô KỆ HOẶC TRẠM (INSERTION):
         set_phase("INSERT")
@@ -727,6 +799,11 @@ class PickPlaceServer(Node):
         set_phase("RETRACT")
         self.get_logger().info(f"Rút thẳng ngang tay kẹp ra khỏi ô kệ: từ {p_slot} -> {p_entry}")
         self.execute_cartesian_straight_line(p_slot, p_entry, duration=2.5, tier=tier)
+
+        if not stow_at_end:
+            # Giữ tay ở điểm thoát; Task Manager sẽ lùi xe ra hành lang rồi mới gọi STOW.
+            set_phase("RETRACTED")
+            return True, "OK", exp_box
 
         # 7. NÂNG Z VÀ GẤP GỌN (STOW):
         set_phase("STOW")

@@ -24,7 +24,9 @@ from rclpy.executors import MultiThreadedExecutor
 from action_msgs.msg import GoalStatus
 from geometry_msgs.msg import Twist, PoseStamped
 from std_msgs.msg import Bool, Empty
+from std_srvs.srv import Trigger
 from gazebo_msgs.msg import ModelStates
+from gazebo_msgs.srv import DeleteEntity
 
 from wh_interfaces.action import DockToSlot, PickPlace
 from wh_interfaces.msg import RobotStatus, Task as TaskMsg
@@ -59,18 +61,24 @@ def find_config_path(rel_path: str) -> str:
     return os.path.abspath(rel_path)
 
 
-# Tọa độ X danh định của các hộp hàng chờ tại trạm IN (bàn dài 0.70m, y=1.15m)
+# Tọa độ X danh định của 6 hộp hàng chờ tại trạm IN (bàn dài 0.85m, y=1.15m)
 STATION_IN_BOX_X: Dict[int, float] = {
-    26: -2.40,  # Hộp 26 ở giữa bàn trạm IN
-    27: -2.25,  # Hộp 27 ở bên phải trạm IN (x lớn hơn)
-    28: -2.55,  # Hộp 28 ở bên trái trạm IN (x nhỏ hơn)
+    26: -2.70,  # Hộp 26: vị trí 0
+    27: -2.58,  # Hộp 27: vị trí 1
+    28: -2.46,  # Hộp 28: vị trí 2
+    29: -2.34,  # Hộp 29: vị trí 3
+    32: -2.22,  # Hộp 32: vị trí 4
+    33: -2.10,  # Hộp 33: vị trí 5
 }
 
-# Các vị trí thả hàng trên bàn trạm OUT (bàn dài 0.70m x 0.40m) để các hộp không đè lên nhau
+# Các vị trí thả hàng trên bàn trạm OUT (bàn dài 0.85m x 0.40m, y=-1.15m) để các hộp không đè lên nhau (6 vị trí)
 STATION_OUT_DROP_X: List[float] = [
-    -2.40,  # Vị trí 0: Giữa bàn
-    -2.25,  # Vị trí 1: Bên phải bàn (+15 cm)
-    -2.55,  # Vị trí 2: Bên trái bàn (-15 cm)
+    -2.70,  # Vị trí 0 (bên trái)
+    -2.58,  # Vị trí 1
+    -2.46,  # Vị trí 2
+    -2.34,  # Vị trí 3
+    -2.22,  # Vị trí 4
+    -2.10,  # Vị trí 5 (bên phải)
 ]
 
 
@@ -127,6 +135,9 @@ class TaskManagerNode(Node):
         self.cli_dock = ActionClient(self, DockToSlot, "dock_to_slot", callback_group=self.cbg_action)
         self.cli_pick_place = ActionClient(self, PickPlace, "/arm/pick_place", callback_group=self.cbg_action)
 
+        self.cli_delete_entity = self.create_client(DeleteEntity, "/delete_entity", callback_group=self.cbg_reentrant)
+        self.latest_model_states: Optional[ModelStates] = None
+
         # 4. Publishers & Subscribers
         self.pub_status = self.create_publisher(RobotStatus, "/robot_status", 10)
         self.pub_cmd_vel = self.create_publisher(Twist, "/cmd_vel", 10)
@@ -139,6 +150,8 @@ class TaskManagerNode(Node):
         # 5. Services
         self.srv_submit = self.create_service(SubmitTask, "/wh/submit_task", self.handle_submit_task, callback_group=self.cbg_reentrant)
         self.srv_cancel = self.create_service(CancelTask, "/wh/cancel_task", self.handle_cancel_task, callback_group=self.cbg_reentrant)
+        self.srv_clear_out = self.create_service(Trigger, "/wh/clear_station_out", self.handle_clear_station_out, callback_group=self.cbg_reentrant)
+        self.srv_replenish_in = self.create_service(Trigger, "/wh/replenish_station_in", self.handle_replenish_station_in, callback_group=self.cbg_reentrant)
 
         # 6. Timers
         self.timer_status = self.create_timer(0.1, self.publish_robot_status, callback_group=self.cbg_timer)
@@ -171,6 +184,7 @@ class TaskManagerNode(Node):
             self.db.add_event("INFO", "E-stop reset.")
 
     def cb_model_states(self, msg: ModelStates):
+        self.latest_model_states = msg
         if "warehouse_robot" in msg.name:
             idx = msg.name.index("warehouse_robot")
             p = msg.pose[idx].position
@@ -255,6 +269,35 @@ class TaskManagerNode(Node):
         ok = self.db.cancel_task(tid)
         response.success = ok
         response.message = f"Đã hủy nhiệm vụ #{tid}" if ok else f"Không thể hủy nhiệm vụ #{tid}"
+        return response
+
+    def handle_clear_station_out(self, request, response):
+        """Dọn sạch bàn trả hàng trạm OUT và reset chỉ số vị trí thả về 0."""
+        with self.lock:
+            self.station_out_drop_idx = 0
+
+        cleared_count = 0
+        if self.cli_delete_entity.wait_for_service(timeout_sec=0.5) and self.latest_model_states:
+            for name, pose in zip(self.latest_model_states.name, self.latest_model_states.pose):
+                if name.startswith("box_") and pose.position.y < -0.8 and pose.position.x < -1.8:
+                    dreq = DeleteEntity.Request()
+                    dreq.name = name
+                    self.cli_delete_entity.call_async(dreq)
+                    cleared_count += 1
+                    self.get_logger().info(f"Đã dọn dẹp {name} khỏi bàn trạm OUT.")
+
+        self.get_logger().info("Trạm OUT: Đã reset vị trí và dọn sạch bàn trả hàng.")
+        self.db.add_event("INFO", f"Trạm OUT đã được dọn sạch ({cleared_count} hộp), sẵn sàng nhận hàng xuất kho mới.")
+        response.success = True
+        response.message = f"Đã dọn sạch 6 vị trí trả hàng trên bàn trạm OUT (đã dọn {cleared_count} hộp)."
+        return response
+
+    def handle_replenish_station_in(self, request, response):
+        """Kích hoạt bổ sung phôi mới vào bàn tiếp nhận trạm IN."""
+        self.get_logger().info("Trạm IN: Kích hoạt bổ sung phôi mới vào trạm IN.")
+        self.db.add_event("INFO", "Trạm IN đã được tiếp thêm phôi, sẵn sàng tiếp tục nhập kho.")
+        response.success = True
+        response.message = "Đã tiếp thêm phôi vào trạm IN thành công."
         return response
 
     # ── Xử lý Hàng đợi Nhiệm vụ ──────────────────────────────────────────────
@@ -613,47 +656,74 @@ class TaskManagerNode(Node):
 
         slot_key = ctx.slot_tag_id
         slot_data = self.slots_data.get(slot_key) or self.slots_data.get(str(slot_key))
-        target_standoff = 0.435  # Standoff chuẩn: 1 cánh tay duỗi thẳng SCARA (355mm tới hộp)
+        if not slot_data or "work_pose" not in slot_data:
+            self.get_logger().error(f"Không tìm thấy cấu hình slot {slot_key}!")
+            return Event.FAIL
 
-        # 1. Kích hoạt Closed-Loop Visual Servoing trực tiếp từ staging_pose
+        wp = slot_data["work_pose"]
+        tx = float(wp["x"])
+        ty = float(wp["y"])
+
+        stg = slot_data.get("staging_pose") or {}
+        stg_y = float(stg.get("y", ty - math.copysign(0.20, ty)))
+        approach_len = abs(ty - stg_y)
+
+        # Standoff chuẩn tại work_pose: 0.435 m (tay SCARA duỗi thẳng tới hộp).
+        work_standoff = 0.435
+        # Tại điểm chờ (lùi ra approach_len) tag xa hơn đúng bằng approach_len.
+        stage_standoff = work_standoff + approach_len
+
+        # 1. CĂN CHỈNH TINH BẰNG VISUAL SERVOING (dock camera) ngay tại điểm chờ ngoài hành lang,
+        #    khi tay máy còn gập gọn nên không che tag. Khử lệch ngang (X) + lệch góc (yaw).
         self.get_logger().info(
-            f"Docking vào ô {slot_key}: Kích hoạt Visual Servoing (standoff={target_standoff:.3f}m)..."
+            f"Docking ô {slot_key}: Visual Servoing tại điểm chờ (standoff={stage_standoff:.3f}m)..."
         )
-        dock_ok = self._call_dock(slot_key, standoff=target_standoff)
+        dock_ok = self._call_dock(slot_key, standoff=stage_standoff)
         if dock_ok:
-            self.get_logger().info(f"Visual Servoing thành công! Robot đỗ chuẩn xác trước ô {slot_key}.")
-            return Event.OK
+            self.get_logger().info("Visual Servoing tại điểm chờ thành công: đã khớp tâm ô kệ & góc vuông.")
+        else:
+            self.get_logger().warn("Visual Servoing tại điểm chờ chưa khóa, dùng dịch ngang theo odometry dự phòng.")
+            if abs(self.robot_x - tx) > 0.01:
+                self.strafe_to_world_x(tx)
 
-        # 2. Nếu Visual Servoing chưa hoàn tất (ví dụ tag bị lóa nhẹ), kiểm tra cự ly thực tế
-        if slot_data and "work_pose" in slot_data and self.robot_pose is not None:
-            wp = slot_data["work_pose"]
-            tx, ty, tyaw = float(wp["x"]), float(wp["y"]), float(wp["yaw"])
-            dist = math.hypot(self.robot_pose[0] - tx, self.robot_pose[1] - ty)
-            d_yaw = abs(math.atan2(math.sin(self.robot_pose[2] - tyaw), math.cos(self.robot_pose[2] - tyaw)))
+        # 2. Vươn tay ra trước ngoài hành lang thông thoáng để khuỷu tay không quẹt vách kệ.
+        if ctx.task_type == "OUTBOUND":
+            self.get_logger().info(
+                f"PRE_REACH (Tầng {ctx.tier}, Slot {slot_key}) tại y={self.robot_y:.3f}m..."
+            )
+            reach_ok, _ = self._call_pick_place("PRE_REACH", slot_key, ctx.expected_box_tag, ctx.tier)
+            if not reach_ok:
+                self.get_logger().warn("PRE_REACH không thành công, tiếp tục quy trình an toàn.")
+        elif ctx.task_type == "INBOUND":
+            # NHẬP HÀNG: lấy hộp từ khay rồi vươn tay MANG HỘP ra trước ngay tại điểm chờ
+            # (hành lang thông thoáng), sau đó mới tiến xe vào trả hàng.
+            self.get_logger().info(
+                f"PRE_REACH_CARRY: vươn tay mang hộp #{ctx.held_box_tag} ra vị trí đặt "
+                f"(Tầng {ctx.tier}, Slot {slot_key}) tại y={self.robot_y:.3f}m..."
+            )
+            reach_ok, _ = self._call_pick_place("PRE_REACH_CARRY", slot_key, ctx.held_box_tag, ctx.tier)
+            if not reach_ok:
+                self.get_logger().error("PRE_REACH_CARRY thất bại: không lấy/đưa được hộp ra vị trí đặt!")
+                ctx.last_error = "PRE_REACH_CARRY_FAIL"
+                return Event.FAIL
 
-            if dist <= 0.08 and d_yaw <= 0.20:
-                self.get_logger().info(f"Robot đã ở đúng vị trí work_pose (sai số {dist*1000:.1f}mm), sẵn sàng thao tác.")
-                return Event.OK
+        # 3. Tiến thẳng (không xoay, không dịch ngang) vào vị trí làm việc.
+        dist_to_work = abs(self.robot_y - ty)
+        if dist_to_work > 0.03:
+            self.get_logger().info(f"Tiến thẳng vào work_pose y={ty:.3f}m ({dist_to_work*1000:.1f}mm)...")
+            self.safe_straight_approach(ty, speed=0.06, max_distance=dist_to_work + 0.05)
 
-            # Nếu robot vẫn ở điểm chờ (staging, cách work_pose ~0.20m), tiến thẳng an toàn có giới hạn cự ly
-            if 0.08 < dist <= 0.25 and d_yaw <= 0.25:
-                self.get_logger().warn(f"Visual Servoing chưa khóa, tiến thẳng an toàn bù cự ly ({dist*1000:.1f}mm)...")
-                self.safe_straight_approach(ty, speed=0.08, max_distance=dist + 0.02)
-                # Thử kích hoạt Visual Servoing lại 1 lần nữa ở cự ly gần
-                dock_retry = self._call_dock(slot_key, standoff=target_standoff)
-                if dock_retry:
-                    self.get_logger().info("Visual Servoing thành công ở lần thử lại!")
-                    return Event.OK
+        # 4. Kiểm tra lệch ngang còn lại so với tâm cột; hiệu chỉnh nhẹ nếu > 8 mm.
+        lat_err = tx - self.robot_x
+        if abs(lat_err) > 0.008:
+            self.get_logger().info(f"Hiệu chỉnh ngang tinh {lat_err*1000:.1f}mm về tâm cột x={tx:.3f}m...")
+            self.strafe_to_world_x(tx)
 
-                # Kiểm tra lại cự ly sau khi tiến thẳng
-                dist_after = math.hypot(self.robot_pose[0] - tx, self.robot_pose[1] - ty)
-                if dist_after <= 0.08:
-                    self.get_logger().info(f"Đã cập bến work_pose an toàn (cự ly {dist_after*1000:.1f} mm).")
-                    return Event.OK
-
-        self.get_logger().error(f"Docking vào ô {slot_key} thất bại! Kích hoạt phục hồi lỗi an toàn.")
-        ctx.last_error = "DOCK_FAILED"
-        return Event.FAIL
+        final_dist = math.hypot(self.robot_pose[0] - tx, self.robot_pose[1] - ty) if self.robot_pose else 0.0
+        self.get_logger().info(
+            f"Cập bến ô {slot_key}: sai số so với work_pose {final_dist*1000:.1f}mm. Sẵn sàng gắp."
+        )
+        return Event.OK
 
     def handle_dock_station(self, ctx: FSMContext) -> Event:
         if self.mock_actions:
@@ -666,7 +736,7 @@ class TaskManagerNode(Node):
 
         # Căn chỉnh vị trí dịch ngang Mecanum chính xác theo từng hộp:
         if ctx.task_type == "INBOUND":
-            target_x = STATION_IN_BOX_X.get(ctx.expected_box_tag, -2.40)
+            target_x = STATION_IN_BOX_X.get(ctx.expected_box_tag, -2.46)
             self.get_logger().info(
                 f"Trạm IN: Hộp #{ctx.expected_box_tag} tại vị trí x={target_x:.3f}m (robot x={self.robot_x:.3f}m)"
             )
@@ -687,6 +757,15 @@ class TaskManagerNode(Node):
         self.get_logger().info(f"VERIFY_SLOT: Đã xác nhận ô {ctx.slot_id} (tag {ctx.slot_tag_id})")
         return Event.OK
 
+    def _retreat_then_store_to_tray(self, ctx: FSMContext, tier: int) -> bool:
+        """Gắp xong -> xe lùi thẳng ra hành lang -> MỚI đưa hộp về khay xe và gập tay."""
+        self.get_logger().info("Đã gắp xong: lùi thẳng xe ra hành lang trước khi đưa hộp về khay...")
+        self.straight_undock()
+        ok, _ = self._call_pick_place("STORE_TO_TRAY", 0, ctx.held_box_tag, tier)
+        if not ok:
+            self.get_logger().error("STORE_TO_TRAY thất bại: không đưa được hộp về khay xe!")
+        return ok
+
     def handle_out_pick(self, ctx: FSMContext) -> Event:
         ok, tag_read = self._call_pick_place("PICK_FROM_SLOT", ctx.slot_tag_id, ctx.expected_box_tag, ctx.tier)
         if ok and tag_read > 0:
@@ -694,6 +773,9 @@ class TaskManagerNode(Node):
             ctx.held_box_tag = tag_read
             self.holding_box = True
             self.held_box_tag = ctx.held_box_tag
+            if not self._retreat_then_store_to_tray(ctx, ctx.tier):
+                ctx.last_error = "TRAY_STORE_FAIL"
+                return Event.FAIL
             return Event.OK
         ctx.last_error = "GRASP_FAIL"
         return Event.FAIL
@@ -705,6 +787,9 @@ class TaskManagerNode(Node):
             ctx.held_box_tag = tag_read
             self.holding_box = True
             self.held_box_tag = ctx.held_box_tag
+            if not self._retreat_then_store_to_tray(ctx, 1):
+                ctx.last_error = "TRAY_STORE_FAIL"
+                return Event.FAIL
             return Event.OK
         ctx.last_error = "STATION_PICK_FAIL"
         return Event.FAIL
@@ -731,22 +816,28 @@ class TaskManagerNode(Node):
         return Event.OK
 
     def handle_stow_arm(self, ctx: FSMContext) -> Event:
+        # 1. Lùi thẳng an toàn ra ngoài hành lang staging (y=1.125 hoặc -1.125) TRƯỚC KHI gập tay
+        self.straight_undock()
+        # 2. Khi robot đã ra ngoài hành lang mở rộng rãi, mới gập tay an toàn về STOW
         ok, _ = self._call_pick_place("STOW", 0, 0, 1)
         if ok:
-            # Gập tay an toàn xong, lùi thẳng ra hành lang mở trước khi Nav2 rẽ/di chuyển
-            self.straight_undock()
             return Event.OK
         return Event.FAIL
 
     def handle_in_place(self, ctx: FSMContext) -> Event:
-        ok, _ = self._call_pick_place("PLACE_TO_SLOT", ctx.slot_tag_id, ctx.held_box_tag, ctx.tier)
+        # Đặt hộp vào ô kệ và rút tay ra khỏi ô (tay còn duỗi thẳng, CHƯA gập)
+        ok, _ = self._call_pick_place("PLACE_SHELF", ctx.slot_tag_id, ctx.held_box_tag, ctx.tier)
         if ok:
             ctx.holding_box = False
             ctx.held_box_tag = 0
             self.holding_box = False
             self.held_box_tag = 0
-            # Lùi thẳng ra hành lang mở trước khi rẽ về HOME
+            # 1. Lùi thẳng xe ra hành lang một chút
             self.straight_undock()
+            # 2. Ra khỏi vùng kệ rồi mới thu tay về (STOW)
+            stow_ok, _ = self._call_pick_place("STOW", 0, 0, 1)
+            if not stow_ok:
+                self.get_logger().warn("STOW sau khi trả hàng không thành công!")
             return Event.OK
         ctx.last_error = "PLACE_FAIL"
         return Event.FAIL
@@ -781,7 +872,7 @@ class TaskManagerNode(Node):
         if self.mock_actions:
             if mode == "PICK_FROM_STATION" and self.mock_box_tag is not None:
                 return True, self.mock_box_tag
-            if mode == "PLACE_TO_SLOT" and self.mock_place_fail:
+            if mode in ("PLACE_TO_SLOT", "PLACE_SHELF") and self.mock_place_fail:
                 return False, 0
             return True, exp_box
 

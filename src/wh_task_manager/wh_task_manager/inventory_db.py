@@ -36,6 +36,12 @@ def slot_tag_to_slot_id(rack: str, col: int, tier: int) -> str:
     return f"{rack_letter}-{col}-{tier}"
 
 
+def slot_location_code(rack: str, col: int, tier: int) -> str:
+    """Tạo mã vị trí dễ đọc: kệ + tầng bắt đầu từ 0 + cột bắt đầu từ 0."""
+    rack_letter = "B" if "rack_b" in rack.lower().strip() else "A"
+    return f"{rack_letter}{tier - 1}{col}"
+
+
 class InventoryDB:
     """Lớp giao tiếp CSDL SQLite cho kho hàng, hỗ trợ multi-threading và in-memory test."""
 
@@ -573,13 +579,19 @@ class InventoryDB:
         return {
             "items": items_summary,
             "slot_stats": slot_stats,
+            "slots_detail": self.get_all_slots(),
             "timestamp": now_iso(),
         }
 
     def get_all_slots(self) -> List[Dict[str, Any]]:
         cur = self.conn.cursor()
         cur.execute("SELECT * FROM slots ORDER BY rack, col, tier;")
-        return [dict(r) for r in cur.fetchall()]
+        slots = [dict(r) for r in cur.fetchall()]
+        for slot in slots:
+            slot["location_code"] = slot_location_code(
+                slot["rack"], slot["col"], slot["tier"]
+            )
+        return slots
 
     def get_slot(self, slot_id: str) -> Optional[Dict[str, Any]]:
         cur = self.conn.cursor()

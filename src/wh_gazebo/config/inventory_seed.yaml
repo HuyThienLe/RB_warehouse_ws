@@ -22,21 +22,40 @@ boxes:
   - box_id: 25
     slot_id: 10   # rack_b, col 1, tier 2
 
-  # 3 hộp ở trạm IN (hàng chờ nhập kho: ITEM_26, ITEM_27, ITEM_28)
+  # 6 hộp phôi ở trạm IN (hàng chờ nhập kho: ITEM_26, ITEM_27, ITEM_28, ITEM_29, ITEM_32, ITEM_33)
   - box_id: 26
     pose:
-      x: -2.40
+      x: -2.70
       y:  1.15
-      z:  0.17   # trên mặt bàn (table_h=0.15 + box_h/2=0.02)
+      z:  0.171
 
   - box_id: 27
     pose:
-      x: -2.25
+      x: -2.58
       y:  1.15
-      z:  0.17
+      z:  0.171
 
   - box_id: 28
     pose:
-      x: -2.55
+      x: -2.46
       y:  1.15
-      z:  0.17
+      z:  0.171
+
+  - box_id: 29
+    pose:
+      x: -2.34
+      y:  1.15
+      z:  0.171
+
+  - box_id: 32
+    pose:
+      x: -2.22
+      y:  1.15
+      z:  0.171
+
+  - box_id: 33
+    pose:
+      x: -2.10
+      y:  1.15
+      z:  0.171
+

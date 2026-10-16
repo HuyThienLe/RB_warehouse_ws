@@ -181,8 +181,8 @@ class DockServer(Node):
         goal = goal_handle.request
         slot_id = int(goal.slot_tag_id)
         target_standoff = float(goal.target_standoff) if goal.target_standoff > 0.0 else float(self.get_parameter("target_standoff").value)
-        tol_lat = max(0.02, float(goal.tol_lateral) if goal.tol_lateral > 0.0 else float(self.get_parameter("tol_lat").value))
-        tol_yaw = max(0.05, float(goal.tol_yaw) if goal.tol_yaw > 0.0 else float(self.get_parameter("tol_yaw").value))
+        tol_lat = max(0.010, float(goal.tol_lateral) if goal.tol_lateral > 0.0 else float(self.get_parameter("tol_lat").value))
+        tol_yaw = max(0.040, float(goal.tol_yaw) if goal.tol_yaw > 0.0 else float(self.get_parameter("tol_yaw").value))
         tol_dist = max(0.02, float(self.get_parameter("tol_dist").value))
 
         v_max = float(self.get_parameter("v_max").value)

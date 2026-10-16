@@ -157,7 +157,7 @@ function handleWsMessage(msg) {
     // Tải ảnh mới và CHỈ cập nhật metadata khi ảnh đã nạp xong (Bài 8b.2, 8b.6)
     if (data.version && data.version > mapMetadata.version) {
       const nextImg = new Image();
-      nextImg.src = `/api/map/live.png?v=${data.version}`;
+      nextImg.src = `/api/map/live.png?v=${data.version}&t=${Date.now()}`;
       nextImg.onload = () => {
         mapImg = nextImg;
         mapMetadata = {
@@ -339,7 +339,8 @@ function initMap() {
           origin_y: data.origin_y,
           origin: [data.origin_x, data.origin_y, 0.0],
         };
-        mapImg.src = data.image_url || `/api/map/live.png?v=${data.version}`;
+        // version đếm lại từ 1 mỗi lần chạy -> thêm timestamp để không bao giờ dùng lại ảnh cache cũ
+        mapImg.src = `/api/map/live.png?v=${data.version}&t=${Date.now()}`;
       } else {
         return fetch("/api/map").then((r) => r.json()).then((d) => {
           mapMetadata = {
@@ -351,7 +352,7 @@ function initMap() {
             origin_y: d.origin[1],
             origin: d.origin,
           };
-          mapImg.src = d.image_url || "/api/map/image";
+          mapImg.src = `/api/map/image?t=${Date.now()}`;
         });
       }
     })
@@ -501,10 +502,10 @@ function drawMap() {
 
   // 5. Lớp Ô kệ kho & Trạm dịch vụ (Racks & Stations)
   if (activeLayers.racks) {
-    drawPickupTable(ctx, -2.40, 1.20, "TRẠM IN #30", "#10b981");
-    drawPickupTable(ctx, -2.40, -1.20, "TRẠM OUT #31", "#f59e0b");
-    drawStation(ctx, -2.40, 0.88, "work IN", "#34d399");
-    drawStation(ctx, -2.40, -0.88, "work OUT", "#fbbf24");
+    drawPickupTable(ctx, -2.40, 1.25, "TRẠM IN #30", "#10b981", "in");
+    drawPickupTable(ctx, -2.40, -1.25, "TRẠM OUT #31", "#f59e0b", "out");
+    drawStation(ctx, -2.40, 0.45, "IN Staging", "#34d399");
+    drawStation(ctx, -2.40, -0.45, "OUT Staging", "#fbbf24");
     drawStation(ctx, -2.40, 0.00, "HOME", "#6366f1");
     drawRacksOnMap(ctx);
   }
@@ -517,21 +518,69 @@ function drawMap() {
   ctx.restore();
 }
 
-function drawPickupTable(ctx, x, y, label, color) {
-  const { px, py } = worldToCanvas(x, y);
+function drawPickupTable(ctx, cx, cy, label, color, type) {
+  const w = 0.85;
+  const d = 0.40;
+  const topLeft = worldToCanvas(cx - w / 2, cy + d / 2);
+  const botRight = worldToCanvas(cx + w / 2, cy - d / 2);
+
+  const rx = Math.min(topLeft.px, botRight.px);
+  const ry = Math.min(topLeft.py, botRight.py);
+  const rw = Math.abs(botRight.px - topLeft.px);
+  const rh = Math.abs(botRight.py - topLeft.py);
+
   ctx.save();
-  ctx.fillStyle = color + "55";
+  // Khung bàn công nghiệp
+  ctx.fillStyle = "rgba(15, 23, 42, 0.85)";
   ctx.strokeStyle = color;
   ctx.lineWidth = 1.2;
-  ctx.fillRect(px - 12, py - 7, 24, 14);
-  ctx.strokeRect(px - 12, py - 7, 24, 14);
-  // Hộp hàng trên bàn
-  ctx.fillStyle = color;
-  ctx.fillRect(px - 4, py - 4, 8, 8);
+  ctx.fillRect(rx, ry, rw, rh);
+  ctx.strokeRect(rx, ry, rw, rh);
+
+  // 6 vị trí đặt hộp phôi trên bàn: [-2.70, -2.58, -2.46, -2.34, -2.22, -2.10]
+  const boxXList = [-2.70, -2.58, -2.46, -2.34, -2.22, -2.10];
+  const boxY = cy > 0 ? 1.15 : -1.15;
+  const inTags = [26, 27, 28, 29, 32, 33];
+
+  boxXList.forEach((bx, idx) => {
+    const pt = worldToCanvas(bx, boxY);
+    const bW = 6.0;
+    const bH = 6.0;
+
+    if (type === "in") {
+      // Trạm IN: 6 phôi hàng chờ nhập kho
+      ctx.fillStyle = color;
+      ctx.fillRect(pt.px - bW / 2, pt.py - bH / 2, bW, bH);
+      ctx.strokeStyle = "#ffffff";
+      ctx.lineWidth = 0.5;
+      ctx.strokeRect(pt.px - bW / 2, pt.py - bH / 2, bW, bH);
+      
+      // Số tag mini
+      ctx.font = "bold 5px sans-serif";
+      ctx.fillStyle = "#ffffff";
+      ctx.textAlign = "center";
+      ctx.fillText(`${inTags[idx]}`, pt.px, pt.py + 2);
+    } else {
+      // Trạm OUT: 6 vị trí trả hàng riêng biệt chống đè
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 0.8;
+      ctx.strokeRect(pt.px - bW / 2, pt.py - bH / 2, bW, bH);
+      ctx.fillStyle = "rgba(245, 158, 11, 0.25)";
+      ctx.fillRect(pt.px - bW / 2, pt.py - bH / 2, bW, bH);
+
+      ctx.font = "bold 5px sans-serif";
+      ctx.fillStyle = "#fbbf24";
+      ctx.textAlign = "center";
+      ctx.fillText(`O${idx}`, pt.px, pt.py + 2);
+    }
+  });
+
+  // Tên trạm
   ctx.font = "bold 7px sans-serif";
-  ctx.fillStyle = "#fff";
+  ctx.fillStyle = "#ffffff";
   ctx.textAlign = "center";
-  ctx.fillText(label, px, py + (y > 0 ? -10 : 17));
+  const labelY = cy > 0 ? ry - 4 : ry + rh + 8;
+  ctx.fillText(label, rx + rw / 2, labelY);
   ctx.restore();
 }
 
@@ -540,39 +589,103 @@ function drawStation(ctx, x, y, label, color) {
   ctx.save();
   ctx.fillStyle = color;
   ctx.beginPath();
-  ctx.arc(px, py, 4, 0, Math.PI * 2);
+  ctx.arc(px, py, 3.5, 0, Math.PI * 2);
   ctx.fill();
 
-  ctx.font = "8px sans-serif";
-  ctx.fillStyle = "#fff";
+  ctx.font = "7.5px sans-serif";
+  ctx.fillStyle = "#cbd5e1";
   ctx.textAlign = "center";
-  ctx.fillText(label, px, py - 6);
+  ctx.fillText(label, px, py - 5);
   ctx.restore();
 }
 
 function drawRacksOnMap(ctx) {
   const cols = [0.75, 1.25, 1.75];
+  const allSlots = (inventoryData && inventoryData.slots_detail) ? inventoryData.slots_detail : [];
+
+  // Định nghĩa vị trí thật trong Gazebo:
+  // Kệ A: Mặt trước y=1.76, ván sàn y=1.87, bay đỗ xe y=1.325, điểm chờ staging y=1.125
+  // Kệ B: Mặt trước y=-1.76, ván sàn y=-1.87, bay đỗ xe y=-1.325, điểm chờ staging y=-1.125
   const racks = [
-    { name: "A", y: 0.60, color: "rgba(0, 210, 255, 0.4)" },
-    { name: "B", y: -0.60, color: "rgba(245, 158, 11, 0.4)" },
+    { name: "A", rackKey: "rack_a", shelfY: 1.87, bayY: 1.325, stagingY: 1.125, baseColor: "#00d2ff" },
+    { name: "B", rackKey: "rack_b", shelfY: -1.87, bayY: -1.325, stagingY: -1.125, baseColor: "#f59e0b" },
   ];
 
   ctx.save();
   racks.forEach((rack) => {
     cols.forEach((colX, colIdx) => {
-      const { px, py } = worldToCanvas(colX, rack.y);
-      ctx.fillStyle = rack.color;
-      ctx.strokeStyle = "#fff";
-      ctx.lineWidth = 0.5;
+      // 1. Điểm chờ an toàn ngoài hành lang (Staging Stand-off Point - y = 1.125 / -1.125)
+      const stgPt = worldToCanvas(colX, rack.stagingY);
+      ctx.strokeStyle = "rgba(52, 211, 153, 0.5)";
+      ctx.fillStyle = "rgba(52, 211, 153, 0.15)";
+      ctx.lineWidth = 0.7;
+      ctx.beginPath();
+      ctx.arc(stgPt.px, stgPt.py, 3.0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
 
-      // Vẽ hình chữ nhật ô kệ
-      ctx.fillRect(px - 6, py - 4, 12, 8);
-      ctx.strokeRect(px - 6, py - 4, 12, 8);
+      // 2. Ô vạch đỗ xe vàng (Docking Bay) trước kệ đúng thực tế Gazebo (y = 1.325 / -1.325)
+      const bayPt = worldToCanvas(colX, rack.bayY);
+      const bayW = 14;  // 0.36m / 0.025
+      const bayH = 19;  // 0.48m / 0.025
+      ctx.fillStyle = "rgba(234, 179, 8, 0.12)";
+      ctx.fillRect(bayPt.px - bayW / 2, bayPt.py - bayH / 2, bayW, bayH);
+      ctx.strokeStyle = "rgba(234, 179, 8, 0.75)";
+      ctx.lineWidth = 0.9;
+      ctx.setLineDash([3, 2]);
+      ctx.strokeRect(bayPt.px - bayW / 2, bayPt.py - bayH / 2, bayW, bayH);
+      ctx.setLineDash([]);
 
-      ctx.font = "7px sans-serif";
-      ctx.fillStyle = "#cbd5e1";
+      ctx.font = "bold 4.5px sans-serif";
+      ctx.fillStyle = "#eab308";
       ctx.textAlign = "center";
-      ctx.fillText(`${rack.name}${colIdx}`, px, py + 12);
+      ctx.fillText(`DOCK`, bayPt.px, bayPt.py + 1.5);
+
+      // 3. Thân ô kệ tại vị trí thực tế sát tường (y = 1.87 / -1.87)
+      const shelfPt = worldToCanvas(colX, rack.shelfY);
+      const sW = 16;
+      const sH = 11;
+      
+      // Lấy trạng thái của Tầng 1 và Tầng 2
+      const slotT1 = allSlots.find(s => (s.rack === rack.rackKey || (s.slot_id && s.slot_id.startsWith(rack.name))) && s.col === colIdx && s.tier === 1);
+      const slotT2 = allSlots.find(s => (s.rack === rack.rackKey || (s.slot_id && s.slot_id.startsWith(rack.name))) && s.col === colIdx && s.tier === 2);
+
+      // Khung cột kệ
+      ctx.fillStyle = "rgba(15, 23, 42, 0.92)";
+      ctx.strokeStyle = rack.baseColor;
+      ctx.lineWidth = 1.0;
+      ctx.fillRect(shelfPt.px - sW / 2, shelfPt.py - sH / 2, sW, sH);
+      ctx.strokeRect(shelfPt.px - sW / 2, shelfPt.py - sH / 2, sW, sH);
+
+      // Vẽ 2 tầng (T1 và T2) bên trong cột
+      const tW = 6;
+      const tH = 7;
+      const t1X = shelfPt.px - sW / 2 + 1.2;
+      const t2X = shelfPt.px + sW / 2 - tW - 1.2;
+      const tY = shelfPt.py - tH / 2;
+
+      // Màu Tầng 1
+      const isFullT1 = slotT1 && slotT1.state === "FULL";
+      ctx.fillStyle = isFullT1 ? rack.baseColor : "rgba(255, 255, 255, 0.08)";
+      ctx.fillRect(t1X, tY, tW, tH);
+      ctx.strokeStyle = isFullT1 ? "#fff" : "rgba(255, 255, 255, 0.25)";
+      ctx.lineWidth = 0.5;
+      ctx.strokeRect(t1X, tY, tW, tH);
+
+      // Màu Tầng 2
+      const isFullT2 = slotT2 && slotT2.state === "FULL";
+      ctx.fillStyle = isFullT2 ? rack.baseColor : "rgba(255, 255, 255, 0.08)";
+      ctx.fillRect(t2X, tY, tW, tH);
+      ctx.strokeStyle = isFullT2 ? "#fff" : "rgba(255, 255, 255, 0.25)";
+      ctx.lineWidth = 0.5;
+      ctx.strokeRect(t2X, tY, tW, tH);
+
+      // Nhãn mã cột (A0, A1, A2, B0, B1, B2)
+      ctx.font = "bold 6.5px sans-serif";
+      ctx.fillStyle = "#ffffff";
+      ctx.textAlign = "center";
+      const textY = rack.shelfY > 0 ? shelfPt.py - 8 : shelfPt.py + 14;
+      ctx.fillText(`${rack.name}${colIdx}`, shelfPt.px, textY);
     });
   });
   ctx.restore();
@@ -669,6 +782,9 @@ function renderInventoryView() {
 
   // 4. Cập nhật danh sách ô trống vào dropdown ô đích nhập hàng
   updateInboundSlotOptions(slots);
+
+  // 5. Cập nhật lại bản đồ kho 2D để phản ánh trạng thái mới của ô kệ
+  drawMap();
 }
 
 function updateInboundSlotOptions(slots) {
@@ -680,7 +796,8 @@ function updateInboundSlotOptions(slots) {
   let html = `<option value="">-- Tự động chọn ô tối ưu (gần trạm nhất) --</option>`;
   emptySlots.forEach((s) => {
     const rackName = (s.rack || "").toLowerCase().includes("a") ? "Kệ A" : "Kệ B";
-    html += `<option value="${s.slot_id}">${s.slot_id} (${rackName}, Cột ${s.col + 1}, Tầng ${s.tier})</option>`;
+    const locationCode = s.location_code || s.slot_id;
+    html += `<option value="${s.slot_id}">${locationCode} (${rackName}, Cột ${s.col + 1}, Tầng ${s.tier}, ID ${s.slot_id})</option>`;
   });
   slotSelect.innerHTML = html;
   if (currentVal && emptySlots.some((s) => s.slot_id === currentVal)) {
@@ -698,9 +815,9 @@ function renderSlotRow(containerId, slotList) {
     const stateClass = s.state.toLowerCase();
     const itemText = s.item_code ? `${s.item_code}` : "Trống";
     return `
-      <div class="slot-card ${stateClass}" onclick="showSlotDetail('${s.slot_id}', '${s.state}', '${s.item_code || ''}', ${s.quantity})">
-        <span class="slot-name">${s.slot_id}</span>
-        <span class="slot-tag">Tag #${s.slot_tag_id}</span>
+      <div class="slot-card ${stateClass}" onclick="showSlotDetail('${s.slot_id}', '${s.location_code || s.slot_id}', '${s.state}', '${s.item_code || ''}', ${s.quantity})">
+        <span class="slot-name">${s.location_code || s.slot_id}</span>
+        <span class="slot-tag">ID ${s.slot_id} • Tag #${s.slot_tag_id}</span>
         <span class="slot-item">${itemText}</span>
         <span class="slot-state-badge ${stateClass}">${s.state}</span>
       </div>
@@ -735,15 +852,15 @@ function renderItemsTable(items) {
   }).join("");
 }
 
-function showSlotDetail(slotId, state, itemCode, qty) {
+function showSlotDetail(slotId, locationCode, state, itemCode, qty) {
   if (state === "EMPTY") {
     const slotSelect = document.getElementById("order-slot-id");
     if (slotSelect) {
       slotSelect.value = slotId;
     }
-    showToast(`Đã chọn ô trống ${slotId} làm ô đích nhập hàng trong form tạo đơn!`, "info");
+    showToast(`Đã chọn ${locationCode} (${slotId}) làm ô đích nhập hàng!`, "info");
   } else {
-    showToast(`Ô ${slotId}: Trạng thái ${state}${itemCode ? ` (Chứa ${qty} hộp ${itemCode})` : ""}`, "info");
+    showToast(`Ô ${locationCode}: Trạng thái ${state}${itemCode ? ` (Chứa ${qty} hộp ${itemCode})` : ""}`, "info");
   }
 }
 
@@ -1556,3 +1673,34 @@ async function triggerWebPose(pose) {
     showToast("Không thể kết nối máy chủ để điều khiển tay máy!", "error");
   }
 }
+
+async function replenishInboundStation() {
+  try {
+    const res = await fetch("/api/station/inbound/replenish", { method: "POST" });
+    const data = await res.json();
+    if (res.ok && data.success) {
+      showToast(data.message || "Đã tiếp thêm phôi vào trạm IN!", "success");
+      fetchInventory();
+    } else {
+      showToast(data.message || "Không thể tiếp thêm phôi", "error");
+    }
+  } catch (err) {
+    showToast("Lỗi kết nối tới máy chủ: " + err, "error");
+  }
+}
+
+async function clearOutboundStation() {
+  try {
+    const res = await fetch("/api/station/outbound/clear", { method: "POST" });
+    const data = await res.json();
+    if (res.ok && data.success) {
+      showToast(data.message || "Đã dọn sạch 6 vị trí trạm OUT!", "success");
+      fetchInventory();
+    } else {
+      showToast(data.message || "Không thể dọn bàn trạm OUT", "error");
+    }
+  } catch (err) {
+    showToast("Lỗi kết nối tới máy chủ: " + err, "error");
+  }
+}
+

@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Kho Thông Minh – Điều Phối Robot</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=3.1">
 </head>
 <body>
   <!-- Header cố định -->
@@ -214,11 +214,22 @@
                   <span class="station-badge in">TRẠM IN (HÀNG VÀO)</span>
                   <span class="station-tag">Tag #30</span>
                 </div>
-                <div class="station-coords">Tọa độ bàn: <strong>(-2.40, 1.20)</strong></div>
-                <p class="station-desc">Nơi nhập hàng vào kho. Robot đến trạm IN gắp hộp và xếp lên kệ.</p>
+                <div class="station-coords">Tọa độ bàn: <strong>(-2.40, 1.25)</strong> • Dài: 0.85m</div>
+                <p class="station-desc">Nơi cấp phôi/hàng vào kho (6 vị trí phôi: ITEM_26..ITEM_33). Robot đến trạm IN gắp phôi và xếp lên các ô kệ trống.</p>
+                <div class="station-slots-mini" id="station-in-slots-view">
+                  <div class="mini-slot-chip in-ready"><span>#26</span><span class="chip-label">-2.70</span></div>
+                  <div class="mini-slot-chip in-ready"><span>#27</span><span class="chip-label">-2.58</span></div>
+                  <div class="mini-slot-chip in-ready"><span>#28</span><span class="chip-label">-2.46</span></div>
+                  <div class="mini-slot-chip in-ready"><span>#29</span><span class="chip-label">-2.34</span></div>
+                  <div class="mini-slot-chip in-ready"><span>#32</span><span class="chip-label">-2.22</span></div>
+                  <div class="mini-slot-chip in-ready"><span>#33</span><span class="chip-label">-2.10</span></div>
+                </div>
                 <div class="station-action-row">
-                  <button class="btn-sm btn-primary w-100" onclick="quickNavToInbound()">
-                    📥 Đến Lấy Hàng Bỏ Lên Kệ
+                  <button class="btn-sm btn-primary flex-1" onclick="quickNavToInbound()">
+                    📥 Nhập Kệ
+                  </button>
+                  <button class="btn-sm btn-secondary flex-1" onclick="replenishInboundStation()" title="Bổ sung thêm 6 phôi mới vào trạm IN">
+                    🔄 Tiếp Phôi
                   </button>
                 </div>
               </div>
@@ -229,11 +240,22 @@
                   <span class="station-badge out">TRẠM OUT (HÀNG RA)</span>
                   <span class="station-tag">Tag #31</span>
                 </div>
-                <div class="station-coords">Tọa độ bàn: <strong>(-2.40, -1.20)</strong></div>
-                <p class="station-desc">Nơi xuất hàng ra khỏi kho. Robot lấy thùng từ kệ và mang ra trạm OUT.</p>
+                <div class="station-coords">Tọa độ bàn: <strong>(-2.40, -1.25)</strong> • Dài: 0.85m</div>
+                <p class="station-desc">Nơi trả hàng xuất kho (6 vị trí trả hàng riêng biệt chống đè hộp). Khi đầy 6 hộp, bấm nút dọn bàn để tiếp tục xuất.</p>
+                <div class="station-slots-mini" id="station-out-slots-view">
+                  <div class="mini-slot-chip out-empty"><span>O-0</span><span class="chip-label">-2.70</span></div>
+                  <div class="mini-slot-chip out-empty"><span>O-1</span><span class="chip-label">-2.58</span></div>
+                  <div class="mini-slot-chip out-empty"><span>O-2</span><span class="chip-label">-2.46</span></div>
+                  <div class="mini-slot-chip out-empty"><span>O-3</span><span class="chip-label">-2.34</span></div>
+                  <div class="mini-slot-chip out-empty"><span>O-4</span><span class="chip-label">-2.22</span></div>
+                  <div class="mini-slot-chip out-empty"><span>O-5</span><span class="chip-label">-2.10</span></div>
+                </div>
                 <div class="station-action-row">
-                  <button class="btn-sm btn-secondary w-100" onclick="quickNavToOutbound()">
-                    📤 Đến Xuất Hàng Ra Trạm
+                  <button class="btn-sm btn-primary flex-1" onclick="quickNavToOutbound()">
+                    📤 Xuất Trạm
+                  </button>
+                  <button class="btn-sm btn-secondary flex-1" onclick="clearOutboundStation()" title="Dọn sạch hàng đã xuất trên bàn OUT">
+                    🧹 Dọn Bàn
                   </button>
                 </div>
               </div>
@@ -783,6 +805,6 @@
   <!-- Toast Notification Container -->
   <div class="toast-container" id="toast-container"></div>
 
-  <script src="app.js"></script>
+  <script src="app.js?v=3.1"></script>
 </body>
 </html>

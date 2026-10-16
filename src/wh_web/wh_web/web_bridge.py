@@ -25,7 +25,7 @@ from rclpy.node import Node
 from rclpy.callback_groups import ReentrantCallbackGroup
 from rclpy.qos import QoSProfile, DurabilityPolicy, ReliabilityPolicy
 from std_msgs.msg import Bool, Empty, String
-from std_srvs.srv import SetBool
+from std_srvs.srv import SetBool, Trigger
 from geometry_msgs.msg import Twist
 from nav_msgs.msg import OccupancyGrid, Path
 from sensor_msgs.msg import LaserScan, Image
@@ -254,6 +254,16 @@ class WebBridge(Node):
         self.cli_gripper = self.create_client(
             SetBool,
             "/gripper/switch",
+            callback_group=self.cbg,
+        )
+        self.cli_clear_out = self.create_client(
+            Trigger,
+            "/wh/clear_station_out",
+            callback_group=self.cbg,
+        )
+        self.cli_replenish_in = self.create_client(
+            Trigger,
+            "/wh/replenish_station_in",
             callback_group=self.cbg,
         )
 
@@ -823,3 +833,31 @@ class WebBridge(Node):
         traj.points.append(p)
         self.pub_arm_traj.publish(traj)
         return True, f"Đã gửi lệnh tay máy về tư thế {p_upper}"
+
+    def clear_station_out(self) -> Tuple[bool, str]:
+        """Gọi service /wh/clear_station_out để dọn sạch bàn xuất hàng."""
+        if not self.cli_clear_out.wait_for_service(timeout_sec=1.5):
+            return False, "Dịch vụ /wh/clear_station_out không sẵn sàng"
+        req = Trigger.Request()
+        fut = self.cli_clear_out.call_async(req)
+        # Vì gọi từ async route FastAPI trong thread pool, ta có thể đợi một chút
+        t0 = time.time()
+        while not fut.done() and (time.time() - t0 < 3.0):
+            time.sleep(0.05)
+        if fut.done() and fut.result():
+            return fut.result().success, fut.result().message
+        return False, "Timeout khi chờ dịch vụ dọn bàn trạm OUT"
+
+    def replenish_station_in(self) -> Tuple[bool, str]:
+        """Gọi service /wh/replenish_station_in để tiếp thêm phôi vào trạm IN."""
+        if not self.cli_replenish_in.wait_for_service(timeout_sec=1.5):
+            return False, "Dịch vụ /wh/replenish_station_in không sẵn sàng"
+        req = Trigger.Request()
+        fut = self.cli_replenish_in.call_async(req)
+        t0 = time.time()
+        while not fut.done() and (time.time() - t0 < 3.0):
+            time.sleep(0.05)
+        if fut.done() and fut.result():
+            return fut.result().success, fut.result().message
+        return False, "Timeout khi chờ dịch vụ tiếp thêm phôi trạm IN"
+

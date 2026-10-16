@@ -2,8 +2,8 @@
 """gen_map.py – Rasterize world_params.yaml thành bản đồ 2D (PGM + YAML) cho Nav2.
 
 Độ phân giải: 0.025 m/pixel.
-Mặt trước 2 giá kệ: y = +0.60 và y = -0.60 (sai số 0 mm).
-Lối đi giữa 2 giá kệ: 1.20 m (y in [-0.60, +0.60]).
+Mặt trước 2 giá kệ: y = +1.76 và y = -1.76 (áp sát tường Bắc/Nam).
+Lối đi giữa 2 giá kệ: 3.52 m (y in [-1.76, +1.76]).
 """
 
 import os
@@ -62,11 +62,11 @@ def main():
     # 4. Giá kệ B (x in [0.49, 2.01], y in [-2.00, -1.76]) -> áp sát tường Nam (mặt trước tại y = -1.76)
     fill_box(0.49, 2.01, -2.00, -1.76, 0)
 
-    # 5. Bàn trạm IN (-2.4, 1.25), kích thước 0.70x0.40 (x in [-2.75, -2.05], y in [1.05, 1.45])
-    fill_box(-2.75, -2.05, 1.05, 1.45, 0)
+    # 5. Bàn trạm IN (-2.4, 1.25), kích thước 0.85x0.40 (x in [-2.825, -1.975], y in [1.05, 1.45])
+    fill_box(-2.825, -1.975, 1.05, 1.45, 0)
 
-    # 6. Bàn trạm OUT (-2.4, -1.25), kích thước 0.70x0.40 (x in [-2.75, -2.05], y in [-1.45, -1.05])
-    fill_box(-2.75, -2.05, -1.45, -1.05, 0)
+    # 6. Bàn trạm OUT (-2.4, -1.25), kích thước 0.85x0.40 (x in [-2.825, -1.975], y in [-1.45, -1.05])
+    fill_box(-2.825, -1.975, -1.45, -1.05, 0)
 
     # Không gian di chuyển tự do hoàn toàn trong kho (không có vật cản tĩnh hardcode trên map)
 

@@ -1272,6 +1272,11 @@ body {
   font-size: 0.85rem;
 }
 
+.mapping-mode-warning.hidden,
+.hidden {
+  display: none !important;
+}
+
 .mapping-mode-warning svg {
   stroke: #f59e0b;
   flex-shrink: 0;
@@ -1376,6 +1381,58 @@ body {
 
 .station-action-row {
   margin-top: 6px;
+  display: flex;
+  gap: 8px;
+}
+
+.station-slots-mini {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 5px;
+  margin: 6px 0;
+  background: rgba(0, 0, 0, 0.35);
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  border: 1px dashed rgba(255, 255, 255, 0.15);
+}
+
+.mini-slot-chip {
+  text-align: center;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 4px 2px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #94a3b8;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.2s;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.mini-slot-chip .chip-label {
+  font-size: 0.62rem;
+  color: var(--text-muted);
+}
+
+.mini-slot-chip.in-ready {
+  background: rgba(16, 185, 129, 0.22);
+  color: #6ee7b7;
+  border-color: rgba(16, 185, 129, 0.5);
+}
+
+.mini-slot-chip.out-empty {
+  background: rgba(245, 158, 11, 0.08);
+  color: #fcd34d;
+  border-color: rgba(245, 158, 11, 0.25);
+}
+
+.mini-slot-chip.out-occupied {
+  background: rgba(245, 158, 11, 0.35);
+  color: #fef08a;
+  border-color: rgba(245, 158, 11, 0.7);
+  box-shadow: 0 0 6px rgba(245, 158, 11, 0.3);
 }
 
 /* ── VISION & CAMERA FEEDS STYLING ────────────────────────────────────────── */

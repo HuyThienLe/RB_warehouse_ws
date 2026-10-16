@@ -451,8 +451,8 @@ def _build_station(name: str, cfg: dict) -> str:
     tag_id = cfg["tag_id"]
     sdf = []
 
-    # Bàn công nghiệp rộng rãi (0.70m x 0.40m, cao 0.15m) chống rơi hàng 100%
-    table_w = 0.70
+    # Bàn công nghiệp rộng rãi (0.85m x 0.40m, cao 0.15m) chứa thoải mái 6 phôi/hộp chống rơi 100%
+    table_w = 0.85
     table_d = 0.40
     table_h = 0.15
     sdf.append(_static_box(
@@ -462,12 +462,12 @@ def _build_station(name: str, cfg: dict) -> str:
         color="0.80 0.80 0.85 1.0", cast_shadow="false", mu=0.9
     ))
 
-    # Khay tiếp nhận hàng cỡ lớn trên mặt bàn trạm IN/OUT (0.62m x 0.32m)
+    # Khay tiếp nhận hàng cỡ lớn trên mặt bàn trạm IN/OUT (0.76m x 0.32m cho 6 phôi)
     facing_dir = "-y" if cy > 0 else "+y"
     sdf.append(_build_shelf_tray(
         f"station_tray_{name}",
         cx, cy, table_h,
-        tray_w=0.62, tray_d=0.32, tray_h=0.025,
+        tray_w=0.76, tray_d=0.32, tray_h=0.025,
         facing=facing_dir
     ))
 

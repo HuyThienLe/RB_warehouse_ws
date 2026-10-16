@@ -140,3 +140,13 @@ def test_inventory_summary(db):
     assert "slot_stats" in inv
     assert inv["slot_stats"]["full_count"] == 2
     assert inv["slot_stats"]["empty_count"] == 3
+
+
+def test_slot_location_codes_preserve_internal_ids(db):
+    """Human-readable grid codes map to the existing technical slot IDs."""
+    slots_by_id = {slot["slot_id"]: slot for slot in db.get_all_slots()}
+
+    assert slots_by_id["A-0-1"]["location_code"] == "A00"
+    assert slots_by_id["A-1-1"]["location_code"] == "A01"
+    assert slots_by_id["A-0-2"]["location_code"] == "A10"
+    assert slots_by_id["B-0-1"]["location_code"] == "B00"
