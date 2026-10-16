@@ -18,6 +18,7 @@ install(PROGRAMS
 install(PROGRAMS
   scripts/gen_world.py
   scripts/gen_tags.py
+  scripts/dynamic_obstacle_node.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

@@ -491,6 +491,97 @@ def _build_station(name: str, cfg: dict) -> str:
     return "\n".join(sdf)
 
 
+# ── Dynamic Obstacle (Vật cản động ô vuông nhỏ tuần tra) ─────────────────────
+def _build_dynamic_obstacle(name="dynamic_obstacle", x=-0.40, y=0.0, size_xy=0.20, height_z=0.22) -> str:
+    """Sinh SDF cho vật cản động hình ô vuông bé tuần tra qua lại trong lối đi."""
+    half_z = height_z / 2.0
+    return f"""    <!-- ── Vật cản động ô vuông bé tuần tra (Small Dynamic Moving Box) ── -->
+    <model name="{name}">
+      <pose>{x:.4f} {y:.4f} {half_z:.4f} 0 0 0</pose>
+      <link name="obstacle_link">
+        <gravity>false</gravity>
+        <inertial>
+          <mass>5.0</mass>
+          <inertia>
+            <ixx>0.05</ixx><ixy>0</ixy><ixz>0</ixz>
+            <iyy>0.05</iyy><iyz>0</iyz>
+            <izz>0.05</izz>
+          </inertia>
+        </inertial>
+        <collision name="col">
+          <geometry>
+            <box>
+              <size>{size_xy:.4f} {size_xy:.4f} {height_z:.4f}</size>
+            </box>
+          </geometry>
+          <surface>
+            <friction>
+              <ode>
+                <mu>0.0</mu>
+                <mu2>0.0</mu2>
+              </ode>
+            </friction>
+          </surface>
+        </collision>
+        <!-- Thân hộp vuông màu cam an toàn nổi bật -->
+        <visual name="vis_box">
+          <cast_shadows>false</cast_shadows>
+          <geometry>
+            <box>
+              <size>{size_xy:.4f} {size_xy:.4f} {height_z:.4f}</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.98 0.45 0.05 1</ambient>
+            <diffuse>0.98 0.45 0.05 1</diffuse>
+            <specular>0.3 0.3 0.3 1</specular>
+          </material>
+        </visual>
+        <!-- Nắp trên màu xám đen tương phản viền -->
+        <visual name="vis_lid">
+          <cast_shadows>false</cast_shadows>
+          <pose>0 0 {half_z - 0.005:.4f} 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>{size_xy + 0.004:.4f} {size_xy + 0.004:.4f} 0.015</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.15 0.15 0.18 1</ambient>
+            <diffuse>0.15 0.15 0.18 1</diffuse>
+          </material>
+        </visual>
+        <!-- Vạch sọc nhận diện ở giữa hộp -->
+        <visual name="vis_stripe">
+          <cast_shadows>false</cast_shadows>
+          <pose>0 0 0 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>{size_xy + 0.002:.4f} {size_xy + 0.002:.4f} 0.06</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.1 0.1 0.1 1</ambient>
+            <diffuse>0.1 0.1 0.1 1</diffuse>
+          </material>
+        </visual>
+      </link>
+      <plugin name="dynamic_obstacle_planar_move" filename="libgazebo_ros_planar_move.so">
+        <ros>
+          <namespace>/dynamic_obstacle</namespace>
+          <remapping>cmd_vel:=cmd_vel</remapping>
+          <remapping>odom:=odom</remapping>
+        </ros>
+        <update_rate>50</update_rate>
+        <publish_rate>20</publish_rate>
+        <publish_odom>true</publish_odom>
+        <publish_odom_tf>false</publish_odom_tf>
+        <odometry_frame>odom_obstacle</odometry_frame>
+        <robot_base_frame>obstacle_link</robot_base_frame>
+      </plugin>
+    </model>"""
+
+
 # ── World template ────────────────────────────────────────────────────────────
 def build_world(slots: dict) -> str:
     wh_dim = WH["dimensions"]
@@ -539,7 +630,8 @@ def build_world(slots: dict) -> str:
         parts.append(_docking_bay_box(f"docking_bay_rack_a_col_{col_idx}", cx, 1.325, length_x=0.36, width_y=0.48))
     for col_idx, cx in enumerate(SHELVES["rack_b"]["columns_x"]):
         parts.append(_docking_bay_box(f"docking_bay_rack_b_col_{col_idx}", cx, -1.325, length_x=0.36, width_y=0.48))
-
+    # ── Vật cản động (Dynamic Moving Obstacle - Ô vuông nhỏ) trong hành lang ──
+    parts.append(_build_dynamic_obstacle("dynamic_obstacle", x=-0.40, y=0.0, size_xy=0.20, height_z=0.22))
 
     # ── Vật cản tĩnh: để trống, vật cản được sinh động qua /wh/spawn_obstacle ───
     obstacles = []

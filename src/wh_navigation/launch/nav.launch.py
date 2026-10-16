@@ -30,6 +30,7 @@ def generate_launch_description():
     default_slam_params = os.path.join(pkg_wh_nav, "config", "slam_toolbox_params.yaml")
     default_twist_mux_params = os.path.join(pkg_wh_nav, "config", "twist_mux.yaml")
     default_collision_monitor_params = os.path.join(pkg_wh_nav, "config", "collision_monitor_params.yaml")
+    dwb_controller_params = os.path.join(pkg_wh_nav, "config", "nav2_dwb_controller.yaml")
 
     # Tham số launch
     use_sim_time = LaunchConfiguration("use_sim_time")
@@ -37,6 +38,7 @@ def generate_launch_description():
     map_yaml_file = LaunchConfiguration("map")
     params_file = LaunchConfiguration("params_file")
     autostart = LaunchConfiguration("autostart")
+    controller = LaunchConfiguration("controller")
 
     declare_use_sim_time_cmd = DeclareLaunchArgument(
         "use_sim_time", default_value="true", description="Use simulation clock"
@@ -53,10 +55,21 @@ def generate_launch_description():
     declare_autostart_cmd = DeclareLaunchArgument(
         "autostart", default_value="true", description="Automatically startup lifecycle nodes"
     )
+    declare_controller_cmd = DeclareLaunchArgument(
+        "controller",
+        default_value="mppi",
+        description="Local controller: mppi (MPC, mặc định) | dwb (bộ điều khiển cũ)",
+    )
 
     # Điều kiện chế độ
     is_nav_mode = IfCondition(PythonExpression(["'", mode, "' in ('navigation', 'nav')"]))
     is_mapping_mode = IfCondition(PythonExpression(["'", mode, "' in ('mapping', 'slam')"]))
+    is_nav_mppi = IfCondition(
+        PythonExpression(["'", mode, "' in ('navigation', 'nav') and '", controller, "' == 'mppi'"])
+    )
+    is_nav_dwb = IfCondition(
+        PythonExpression(["'", mode, "' in ('navigation', 'nav') and '", controller, "' == 'dwb'"])
+    )
 
     # Danh sách node vòng đời cho chế độ navigation
     nav_lifecycle_nodes = [
@@ -91,13 +104,24 @@ def generate_launch_description():
         remappings=[("/tf", "tf"), ("/tf_static", "tf_static")],
     )
 
+    # Bộ điều khiển cục bộ: MPPI (MPC) mặc định, hoặc DWB khi controller:=dwb
     start_controller_server = Node(
         package="nav2_controller",
         executable="controller_server",
         name="controller_server",
         output="screen",
-        condition=is_nav_mode,
+        condition=is_nav_mppi,
         parameters=[default_nav2_params],
+        remappings=[("cmd_vel", "/cmd_vel_nav")],
+    )
+
+    start_controller_server_dwb = Node(
+        package="nav2_controller",
+        executable="controller_server",
+        name="controller_server",
+        output="screen",
+        condition=is_nav_dwb,
+        parameters=[default_nav2_params, dwb_controller_params],
         remappings=[("cmd_vel", "/cmd_vel_nav")],
     )
 
@@ -239,11 +263,13 @@ def generate_launch_description():
     ld.add_action(declare_map_cmd)
     ld.add_action(declare_params_file_cmd)
     ld.add_action(declare_autostart_cmd)
+    ld.add_action(declare_controller_cmd)
 
     # Navigation nodes
     ld.add_action(start_map_server)
     ld.add_action(start_amcl)
     ld.add_action(start_controller_server)
+    ld.add_action(start_controller_server_dwb)
     ld.add_action(start_planner_server)
     ld.add_action(start_behavior_server)
     ld.add_action(start_bt_navigator)

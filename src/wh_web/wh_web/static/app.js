@@ -48,6 +48,7 @@ let activeLayers = {
 let scanPoints = [];
 let trailPoints = [];
 let pathPoints = [];
+let currentObstacle = null;
 
 // Pan & Zoom View Transform (Bài 8b.6)
 let viewTransform = {
@@ -196,6 +197,9 @@ function handleWsMessage(msg) {
   } else if (type === "notification") {
     addNotification(data.level, data.text);
     showToast(data.text, data.level);
+  } else if (type === "dynamic_obstacle") {
+    currentObstacle = data;
+    requestAnimationFrame(drawMap);
   }
 }
 
@@ -515,6 +519,37 @@ function drawMap() {
     drawRobotOnMap(ctx);
   }
 
+  // 7. Lớp Vật cản động (Dynamic Obstacle - Ô vuông nhỏ tuần tra)
+  if (currentObstacle && currentObstacle.x !== undefined) {
+    drawDynamicObstacleOnMap(ctx, currentObstacle.x, currentObstacle.y, currentObstacle.size || 0.20);
+  }
+
+  ctx.restore();
+}
+
+function drawDynamicObstacleOnMap(ctx, ox, oy, size) {
+  const half = size / 2;
+  const p1 = worldToCanvas(ox - half, oy + half);
+  const p2 = worldToCanvas(ox + half, oy - half);
+  const w = Math.abs(p2.x - p1.x);
+  const h = Math.abs(p2.y - p1.y);
+
+  ctx.save();
+  ctx.shadowColor = "#f97316";
+  ctx.shadowBlur = 8;
+  ctx.fillStyle = "#ea580c";
+  ctx.fillRect(p1.x, p1.y, w, h);
+
+  ctx.shadowBlur = 0;
+  ctx.strokeStyle = "#1c1917";
+  ctx.lineWidth = Math.max(1, 1.5 / viewTransform.scale);
+  ctx.strokeRect(p1.x, p1.y, w, h);
+
+  ctx.fillStyle = "#ffffff";
+  ctx.font = `bold ${Math.max(8, 10 / viewTransform.scale)}px sans-serif`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "bottom";
+  ctx.fillText("VẬT CẢN", p1.x + w / 2, p1.y - 3);
   ctx.restore();
 }
 

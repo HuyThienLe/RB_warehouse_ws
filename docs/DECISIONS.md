@@ -343,3 +343,9 @@ Log: `[Err] [Material.cc] Ogre could not find material: Aruco/Tag0`.
   4. **Tích hợp Cảm biến Áp suất Chân không:** Lắp đặt cảm biến áp suất số (ví dụ SMC ZSE30) để phát hiện trạng thái hút hộp thực tế (ngưỡng áp suất âm < -60 kPa) thay vì chỉ dựa vào khoảng cách hình học.
   5. **Dựng môi trường kho thực tế:** In dán mã ArUco độ nét cao trên vật liệu mờ không lóa, dán vạch sàn phản quang và thiết lập ranh giới an toàn.
   6. **Kiểm thử An toàn Phần cứng:** Tích hợp nút dừng khẩn cấp vật lý cắt nguồn động lực (Hardware E-Stop relay) và cảm biến cản va chạm chạm trước sườn xe (bumper switch).
+
+## D-10-01: Thay DWB bằng MPPI (MPC) cho tránh vật cản cục bộ
+- **Quyết định:** Nav2 `controller_server` dùng `nav2_mppi_controller::MPPIController` (Model Predictive Path Integral – MPC lấy mẫu) với mô hình `Omni` cho đế mecanum, thay cho `dwb_core::DWBLocalPlanner`.
+- **Cơ chế:** Mỗi chu kỳ 20 Hz, tối ưu `batch_size=1500` quỹ đạo trong tầm nhìn `time_steps * model_dt = 50 * 0.05 = 2.5 s`; `ObstaclesCritic` chấm điểm va chạm theo costmap cục bộ + footprint chữ nhật, các critic còn lại lo bám đường đi/hướng đích. `collision_monitor` vẫn là lớp an toàn cuối.
+- **Cấu hình:** `config/nav2_params.yaml` (khối `FollowPath`); inflation costmap cục bộ nâng lên `0.35 m` / `cost_scaling_factor 4.0` để có gradient đẩy ra khỏi vật cản.
+- **Hoàn tác / so sánh:** `ros2 launch wh_bringup full_system.launch.py controller:=dwb` nạp lại cấu hình DWB cũ từ `config/nav2_dwb_controller.yaml`.

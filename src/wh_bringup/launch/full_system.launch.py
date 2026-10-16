@@ -68,6 +68,7 @@ def generate_launch_description():
 
     # ── Launch Arguments ─────────────────────────────────────────────────────
     mode = LaunchConfiguration("mode")
+    controller = LaunchConfiguration("controller")
     headless = LaunchConfiguration("headless")
     rviz = LaunchConfiguration("rviz")
     enable_slip = LaunchConfiguration("enable_slip")
@@ -77,6 +78,9 @@ def generate_launch_description():
 
     declare_mode = DeclareLaunchArgument(
         "mode", default_value="navigation", description="Operational mode: navigation | mapping"
+    )
+    declare_controller = DeclareLaunchArgument(
+        "controller", default_value="mppi", description="Local controller: mppi (MPC) | dwb"
     )
     declare_headless = DeclareLaunchArgument(
         "headless", default_value="false", description="Run Gazebo headless without GUI"
@@ -96,6 +100,9 @@ def generate_launch_description():
     declare_use_sim_time = DeclareLaunchArgument(
         "use_sim_time", default_value="true", description="Use simulation clock"
     )
+    declare_dynamic_obstacle = DeclareLaunchArgument(
+        "dynamic_obstacle", default_value="true", description="Enable moving dynamic obstacle in warehouse corridor"
+    )
 
     is_nav_mode = IfCondition(PythonExpression(["'", mode, "' in ('navigation', 'nav')"]))
 
@@ -109,6 +116,7 @@ def generate_launch_description():
             "world": world,
             "spawn_robot": "true",
             "spawn_seed": "true",
+            "dynamic_obstacle": LaunchConfiguration("dynamic_obstacle"),
         }.items(),
     )
 
@@ -122,6 +130,7 @@ def generate_launch_description():
                 ),
                 launch_arguments={
                     "mode": mode,
+                    "controller": controller,
                     "use_sim_time": use_sim_time,
                     "autostart": "true",
                 }.items(),
@@ -204,12 +213,14 @@ def generate_launch_description():
 
     ld = LaunchDescription()
     ld.add_action(declare_mode)
+    ld.add_action(declare_controller)
     ld.add_action(declare_headless)
     ld.add_action(declare_rviz)
     ld.add_action(declare_enable_slip)
     ld.add_action(declare_seed_file)
     ld.add_action(declare_world)
     ld.add_action(declare_use_sim_time)
+    ld.add_action(declare_dynamic_obstacle)
 
     ld.add_action(warehouse_sim)
     ld.add_action(nav_or_mapping_system)

@@ -85,6 +85,10 @@ def generate_launch_description():
         "spawn_robot", default_value="true",
         description="Spawn AMR robot into the warehouse world"
     )
+    dynamic_obstacle_arg = DeclareLaunchArgument(
+        "dynamic_obstacle", default_value="true",
+        description="Enable moving dynamic obstacle in warehouse corridor"
+    )
 
     # ── Env vars ──────────────────────────────────────────────────────────────
     current_resource_path = os.environ.get("GAZEBO_RESOURCE_PATH", "")
@@ -238,11 +242,35 @@ def generate_launch_description():
         ],
     )
 
+    # 4. Node điều khiển vật cản động tuần tra qua lại hành lang (chờ 4.0s để Gazebo sẵn sàng)
+    dynamic_obstacle_system = TimerAction(
+        period=4.0,
+        actions=[
+            Node(
+                package="wh_gazebo",
+                executable="dynamic_obstacle_node.py",
+                name="dynamic_obstacle_controller",
+                output="screen",
+                parameters=[{
+                    "use_sim_time": True,
+                    "center_x": -0.40,
+                    "patrol_min_y": -0.85,
+                    "patrol_max_y": 0.85,
+                    "speed": 0.22,
+                    "pause_time": 0.8,
+                    "height_z": 0.11,
+                }],
+                condition=IfCondition(LaunchConfiguration("dynamic_obstacle")),
+            )
+        ],
+    )
+
     return LaunchDescription([
         headless_arg,
         world_arg,
         spawn_seed_arg,
         spawn_robot_arg,
+        dynamic_obstacle_arg,
         # Environment
         set_resource_path,
         set_model_path,
@@ -259,6 +287,7 @@ def generate_launch_description():
         slip_odom_node,
         ekf_node,
         gripper_node,
-        # Box Manager
+        # Box Manager & Dynamic Obstacle
         box_manager_node,
+        dynamic_obstacle_system,
     ])

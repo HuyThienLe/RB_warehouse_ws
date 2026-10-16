@@ -26,7 +26,7 @@ from rclpy.callback_groups import ReentrantCallbackGroup
 from rclpy.qos import QoSProfile, DurabilityPolicy, ReliabilityPolicy
 from std_msgs.msg import Bool, Empty, String
 from std_srvs.srv import SetBool, Trigger
-from geometry_msgs.msg import Twist
+from geometry_msgs.msg import Twist, PoseStamped
 from nav_msgs.msg import OccupancyGrid, Path
 from sensor_msgs.msg import LaserScan, Image
 from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
@@ -213,6 +213,9 @@ class WebBridge(Node):
         self.sub_vision_tags = self.create_subscription(
             TagArray, "/vision/tags", self.cb_vision_tags, 10, callback_group=self.cbg
         )
+        self.sub_obstacle = self.create_subscription(
+            PoseStamped, "/dynamic_obstacle/pose", self.cb_obstacle_pose, 10, callback_group=self.cbg
+        )
 
         # ── 2. Publishers ────────────────────────────────────────────────────
         self.pub_estop = self.create_publisher(Bool, "/estop", 10)
@@ -395,6 +398,14 @@ class WebBridge(Node):
                 self.push("trail", {"points": self.trail})
         except Exception:
             pass
+
+    def cb_obstacle_pose(self, msg: PoseStamped):
+        """Đẩy vị trí vật cản động thời gian thực tới Web UI."""
+        self.push("dynamic_obstacle", {
+            "x": round(float(msg.pose.position.x), 3),
+            "y": round(float(msg.pose.position.y), 3),
+            "size": 0.20
+        })
 
     def cb_robot_status(self, msg: RobotStatus):
         now = time.time()
