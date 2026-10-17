@@ -20,11 +20,24 @@ def main():
     os.makedirs(MAP_DIR, exist_ok=True)
     res = 0.025  # 25 mm/pixel
 
-    # Giới hạn bản đồ có biên an toàn xung quanh
-    x_min, x_max = -3.5, 3.5  # 7.0m
-    y_min, y_max = -2.5, 2.5  # 5.0m
+    with open(WORLD_FILE) as f:
+        P = yaml.safe_load(f)
 
-    width = int(round((x_max - x_min) / res))   # 280 pixels
+    wh_dim = P["warehouse"]["dimensions"]
+    x_min_wh = float(wh_dim.get("x_min", -wh_dim["length_x"] / 2.0))
+    x_max_wh = float(wh_dim.get("x_max", wh_dim["length_x"] / 2.0))
+    y_min_wh = float(wh_dim.get("y_min", -wh_dim["width_y"] / 2.0))
+    y_max_wh = float(wh_dim.get("y_max", wh_dim["width_y"] / 2.0))
+    wall_t = float(P["warehouse"]["walls"]["thickness"])
+
+    # Giới hạn bản đồ có biên an toàn 0.5m ngoài tường kho
+    margin = 0.5
+    x_min = x_min_wh - margin  # -3.8 - 0.5 = -4.3m
+    x_max = x_max_wh + margin  #  3.0 + 0.5 =  3.5m
+    y_min = y_min_wh - margin  # -2.0 - 0.5 = -2.5m
+    y_max = y_max_wh + margin  #  2.0 + 0.5 =  2.5m
+
+    width = int(round((x_max - x_min) / res))   # 312 pixels
     height = int(round((y_max - y_min) / res))  # 200 pixels
 
     # Giá trị quy chuẩn ROS:
@@ -47,14 +60,14 @@ def main():
         c_end = min(width, max(c1, c2) + 1)
         grid[r_start:r_end, c_start:c_end] = val
 
-    # 1. Không gian mở trong lòng kho (-3.0 <= x <= 3.0, -2.0 <= y <= 2.0)
-    fill_box(-3.0, 3.0, -2.0, 2.0, 254)
+    # 1. Không gian mở trong lòng kho (-3.8 <= x <= 3.0, -2.0 <= y <= 2.0)
+    fill_box(x_min_wh, x_max_wh, y_min_wh, y_max_wh, 254)
 
     # 2. Tường bao (dày 0.1m)
-    fill_box(-3.1, 3.1, 2.0, 2.1, 0)    # Bắc
-    fill_box(-3.1, 3.1, -2.1, -2.0, 0)  # Nam
-    fill_box(3.0, 3.1, -2.0, 2.0, 0)    # Đông
-    fill_box(-3.1, -3.0, -2.0, 2.0, 0)  # Tây
+    fill_box(x_min_wh - wall_t, x_max_wh + wall_t, y_max_wh, y_max_wh + wall_t, 0)    # Bắc
+    fill_box(x_min_wh - wall_t, x_max_wh + wall_t, y_min_wh - wall_t, y_min_wh, 0)  # Nam
+    fill_box(x_max_wh, x_max_wh + wall_t, y_min_wh, y_max_wh, 0)                    # Đông
+    fill_box(x_min_wh - wall_t, x_min_wh, y_min_wh, y_max_wh, 0)                    # Tây
 
     # 3. Giá kệ A (x in [0.49, 2.01], y in [1.76, 2.00]) -> áp sát tường Bắc (mặt trước tại y = +1.76)
     fill_box(0.49, 2.01, 1.76, 2.00, 0)
@@ -82,7 +95,7 @@ def main():
     map_meta = {
         "image": "warehouse_map.pgm",
         "resolution": res,
-        "origin": [x_min, y_min, 0.0],
+        "origin": [round(x_min, 4), round(y_min, 4), 0.0],
         "negate": 0,
         "occupied_thresh": 0.65,
         "free_thresh": 0.25,
@@ -94,6 +107,7 @@ def main():
     print(f"  - PGM : {pgm_path} ({width}x{height} pixels)")
     print(f"  - YAML: {yaml_path}")
     print(f"  - Resolution: {res} m/pixel | Origin: [{x_min}, {y_min}, 0.0]")
+    print(f"  - Khoảng mở: x in [{x_min_wh}, {x_max_wh}], y in [{y_min_wh}, {y_max_wh}]")
     print(f"  - Mặt trước Kệ A: y = +1.760m | Mặt trước Kệ B: y = -1.760m (Lối đi: 3.520m)")
 
 

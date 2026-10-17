@@ -28,10 +28,10 @@ let itemsList = [];
 let mapMetadata = {
   version: 0,
   resolution: 0.025,
-  origin: [-3.5, -2.5, 0.0],
-  origin_x: -3.5,
+  origin: [-4.3, -2.5, 0.0],
+  origin_x: -4.3,
   origin_y: -2.5,
-  width: 280,
+  width: 312,
   height: 200,
 };
 let mapImg = new Image();
@@ -63,6 +63,8 @@ let hasDragged = false;
 // Teleop Timer & Command (Bài 8b.5)
 let teleopTimer = null;
 let activeTeleopCmd = { vx: 0.0, vy: 0.0, wz: 0.0 };
+let isTeleopPressed = false;
+let isRobotEnabled = false; // Công tắc kích hoạt di chuyển robot (Enable switch)
 let isAutoMapperRunning = false;
 let pendingNavGoal = null;
 
@@ -95,20 +97,29 @@ document.addEventListener("DOMContentLoaded", () => {
   initMap();
   initCanvasInteractions();
   initTeleopControls();
+  updateRobotEnableUI(false);
   fetchMode();
   connectWebSocket();
   fetchInventory();
   fetchItems();
   fetchTasks();
+  fetchOrderHistory();
   fetchTransactions();
+  fetchEvents();
   setInterval(pollVisionStatus, 1000);
 
-  // Polling dự phòng nhẹ (mỗi 10s làm mới bảng nếu websocket có độ trễ)
+  // Polling dự phòng tự động làm mới dữ liệu
   setInterval(() => {
     fetchMode();
     fetchInventory();
     fetchTasks();
-  }, 10000);
+    fetchItems();
+    const activeTab = document.querySelector(".tab-pane.active");
+    if (activeTab && activeTab.id === "tab-logs") {
+      fetchOrderHistory();
+      fetchTransactions();
+    }
+  }, 3000);
 });
 
 // ── 1. WEBSOCKET CLIENT (Tự Động Kết Nối Lại) ────────────────────────────────
@@ -186,14 +197,37 @@ function handleWsMessage(msg) {
     requestAnimationFrame(drawMap);
   } else if (type === "robot") {
     currentRobot = { ...currentRobot, ...data };
+    if (data.is_enabled !== undefined) {
+      updateRobotEnableUI(data.is_enabled);
+    }
     updateRobotUI();
     drawMap();
+  } else if (type === "robot_enable") {
+    if (data && data.enabled !== undefined) {
+      updateRobotEnableUI(data.enabled);
+    }
+  } else if (type === "history_reset") {
+    fetchOrderHistory();
+    fetchTransactions();
+    fetchEvents();
+    fetchTasks();
+    fetchInventory();
+    fetchItems();
+    trailPoints = [];
+    pathPoints = [];
+    requestAnimationFrame(drawMap);
   } else if (type === "inventory") {
     inventoryData = data;
     renderInventoryView();
+    fetchOrderHistory();
+    fetchTransactions();
+    fetchItems();
   } else if (type === "task") {
     updateActiveTaskView(data);
     fetchTasks();
+    fetchOrderHistory();
+    fetchTransactions();
+    fetchItems();
   } else if (type === "notification") {
     addNotification(data.level, data.text);
     showToast(data.text, data.level);
@@ -207,15 +241,29 @@ function handleWsMessage(msg) {
 function updateRobotUI() {
   // Trạng thái Robot
   const stateBadge = document.getElementById("robot-state-badge");
-  stateBadge.textContent = currentRobot.state || "IDLE";
+  const st = currentRobot.state || "IDLE";
+  stateBadge.textContent = st === "NAV_HOME" ? "VỀ HOME" : st;
   stateBadge.className = "status-pill " + (
-    currentRobot.state === "ESTOP" ? "estop" :
-    currentRobot.state === "IDLE" ? "idle" : "running"
+    st === "ESTOP" ? "estop" :
+    st === "NAV_HOME" ? "nav-home" :
+    st === "IDLE" ? "idle" : "running"
   );
 
   document.getElementById("robot-task-id").textContent = currentRobot.task_id > 0 ? `#${currentRobot.task_id}` : "--";
   document.getElementById("robot-slot-id").textContent = currentRobot.slot_id || "--";
-  document.getElementById("robot-holding-box").textContent = currentRobot.holding_box ? `Hộp tag #${currentRobot.held_box_tag}` : "Không";
+  document.getElementById("robot-holding-box").textContent = currentRobot.holding_box ? `Đang kẹp hộp #${currentRobot.held_box_tag}` : "Không";
+
+  // Cập nhật trạng thái tay kẹp servo ở tab Vision và tab Nhập/Xuất
+  const graspStatus = document.getElementById("cam-grasp-status");
+  if (graspStatus) {
+    graspStatus.textContent = currentRobot.holding_box ? `Đang kẹp chặt hộp (Tag #${currentRobot.held_box_tag})` : "Đang mở (Chưa kẹp)";
+    graspStatus.style.color = currentRobot.holding_box ? "var(--color-success)" : "";
+  }
+  const manualGripperBadge = document.getElementById("manual-gripper-badge");
+  if (manualGripperBadge) {
+    manualGripperBadge.textContent = currentRobot.holding_box ? "Tay kẹp Servo: ĐÓNG (KẸP CHẶT)" : "Tay kẹp Servo: MỞ";
+    manualGripperBadge.className = "status-pill " + (currentRobot.holding_box ? "running" : "idle");
+  }
 
   // Góc quay yaw sang độ
   const deg = (currentRobot.yaw * 180 / Math.PI).toFixed(1);
@@ -271,8 +319,19 @@ function applyModeUI(mode) {
   const badge = document.getElementById("mode-badge");
   const mapModeLabel = document.getElementById("map-mode-label");
   const warnBanner = document.getElementById("mapping-order-warning");
-  const orderForm = document.getElementById("order-form");
+  const inboundForm = document.getElementById("inbound-form");
+  const outboundForm = document.getElementById("outbound-form");
   const slamBadge = document.getElementById("slam-status-badge");
+
+  const setFormsDisabled = (disabled) => {
+    [inboundForm, outboundForm].forEach((f) => {
+      if (f) {
+        f.querySelectorAll("button, select, input").forEach((el) => {
+          el.disabled = disabled;
+        });
+      }
+    });
+  };
 
   if (mode === "mapping") {
     if (badge) {
@@ -286,11 +345,7 @@ function applyModeUI(mode) {
       mapModeLabel.style.color = "#000";
     }
     if (warnBanner) warnBanner.classList.remove("hidden");
-    if (orderForm) {
-      orderForm.querySelectorAll("button, select, input").forEach((el) => {
-        el.disabled = true;
-      });
-    }
+    setFormsDisabled(true);
     if (slamBadge) {
       slamBadge.textContent = "Đang dựng SLAM";
       slamBadge.style.background = "#10b981";
@@ -307,11 +362,9 @@ function applyModeUI(mode) {
       mapModeLabel.style.color = "#fff";
     }
     if (warnBanner) warnBanner.classList.add("hidden");
-    if (orderForm) {
-      orderForm.querySelectorAll("button, select, input").forEach((el) => {
-        el.disabled = false;
-      });
-    }
+    setFormsDisabled(false);
+    if (typeof updateInboundPreview === "function") updateInboundPreview();
+    if (typeof updateOutboundPreview === "function") updateOutboundPreview();
     if (slamBadge) {
       slamBadge.textContent = "Navigation";
       slamBadge.style.background = "rgba(255,255,255,0.1)";
@@ -740,6 +793,8 @@ function drawRobotOnMap(ctx) {
   ctx.arc(0, 0, 9, 0, Math.PI * 2);
   ctx.fillStyle = currentRobot.state === "ESTOP"
     ? "rgba(239, 68, 68, 0.3)"
+    : currentRobot.state === "NAV_HOME"
+    ? "rgba(99, 102, 241, 0.4)"
     : "rgba(0, 210, 255, 0.25)";
   ctx.fill();
 
@@ -751,7 +806,7 @@ function drawRobotOnMap(ctx) {
   ctx.lineTo(-6, 5);      // Góc sau phải
   ctx.closePath();
 
-  ctx.fillStyle = currentRobot.state === "ESTOP" ? "#ef4444" : "#00f0ff";
+  ctx.fillStyle = currentRobot.state === "ESTOP" ? "#ef4444" : (currentRobot.state === "NAV_HOME" ? "#818cf8" : "#00f0ff");
   ctx.fill();
   ctx.strokeStyle = "#ffffff";
   ctx.lineWidth = 1;
@@ -815,20 +870,33 @@ function renderInventoryView() {
   // 3. Render bảng mặt hàng
   renderItemsTable(inventoryData.items || []);
 
-  // 4. Cập nhật danh sách ô trống vào dropdown ô đích nhập hàng
+  // 4. Đồng bộ danh mục tồn kho tab Nhập/Xuất ngay lập tức
+  // 4. Đồng bộ danh mục tồn kho tab Nhập/Xuất ngay lập tức
+  if (inventoryData.items && itemsList && itemsList.length > 0) {
+    inventoryData.items.forEach((invIt) => {
+      const match = itemsList.find((it) => it.item_code === invIt.item_code);
+      if (match) {
+        match.current_stock = (invIt.in_stock !== undefined ? invIt.in_stock : invIt.current_stock) || 0;
+        match.is_low_stock = Boolean(invIt.is_low_stock);
+      }
+    });
+    populateItemDropdowns();
+  }
+
+  // 5. Cập nhật danh sách ô trống vào dropdown ô đích nhập hàng
   updateInboundSlotOptions(slots);
 
-  // 5. Cập nhật lại bản đồ kho 2D để phản ánh trạng thái mới của ô kệ
+  // 6. Cập nhật lại bản đồ kho 2D để phản ánh trạng thái mới của ô kệ
   drawMap();
 }
 
 function updateInboundSlotOptions(slots) {
-  const slotSelect = document.getElementById("order-slot-id");
+  const slotSelect = document.getElementById("inbound-slot-id");
   if (!slotSelect) return;
   const currentVal = slotSelect.value;
   const emptySlots = (slots || []).filter((s) => s.state === "EMPTY");
   
-  let html = `<option value="">-- Tự động chọn ô tối ưu (gần trạm nhất) --</option>`;
+  let html = `<option value="">-- Tự động chọn ô tối ưu (chi phí thấp nhất) --</option>`;
   emptySlots.forEach((s) => {
     const rackName = (s.rack || "").toLowerCase().includes("a") ? "Kệ A" : "Kệ B";
     const locationCode = s.location_code || s.slot_id;
@@ -889,55 +957,228 @@ function renderItemsTable(items) {
 
 function showSlotDetail(slotId, locationCode, state, itemCode, qty) {
   if (state === "EMPTY") {
-    const slotSelect = document.getElementById("order-slot-id");
+    const slotSelect = document.getElementById("inbound-slot-id");
     if (slotSelect) {
       slotSelect.value = slotId;
     }
-    showToast(`Đã chọn ${locationCode} (${slotId}) làm ô đích nhập hàng!`, "info");
+    showToast(`Đã chọn ${locationCode} (${slotId}) làm ô đích cho Trục Nhập Kho!`, "info");
   } else {
-    showToast(`Ô ${locationCode}: Trạng thái ${state}${itemCode ? ` (Chứa ${qty} hộp ${itemCode})` : ""}`, "info");
+    if (itemCode) {
+      const outSelect = document.getElementById("outbound-item-code");
+      if (outSelect) {
+        outSelect.value = itemCode;
+        updateOutboundPreview();
+      }
+    }
+    showToast(`Ô ${locationCode}: Trạng thái ${state}${itemCode ? ` (Chứa ${qty} hộp ${itemCode} - Đã chọn sang Trục Xuất Kho)` : ""}`, "info");
   }
 }
 
-// ── 5. FORM NHẬP / XUẤT HÀNG (Mục 8.4 Tab 3) ───────────────────────────────
+// ── 5. FORM ĐIỀU PHỐI 2 TRỤC: NHẬP KHO & XUẤT KHO (Tab 3) ──────────────────
 async function fetchItems() {
   try {
     const res = await fetch("/api/items");
     if (!res.ok) return;
     itemsList = await res.json();
-    const select = document.getElementById("order-item-code");
-    if (!select) return;
-
-    select.innerHTML = itemsList.map((it) =>
-      `<option value="${it.item_code}">${it.item_code} – ${it.name} (Tồn: ${it.current_stock})</option>`
-    ).join("");
-
-    updateItemPreview();
+    populateItemDropdowns();
   } catch (err) {
     console.warn("Không thể tải danh mục mặt hàng:", err);
   }
 }
 
-function updateItemPreview() {
-  const select = document.getElementById("order-item-code");
-  const itemCode = select ? select.value : "";
-  const found = itemsList.find((it) => it.item_code === itemCode);
+function populateItemDropdowns() {
+  if (!itemsList || itemsList.length === 0) return;
 
-  document.getElementById("preview-stock").textContent = found ? `${found.current_stock} hộp` : "0";
+  const inSelect = document.getElementById("inbound-item-code");
+  const outSelect = document.getElementById("outbound-item-code");
 
-  const freeSlots = inventoryData?.slot_stats?.empty_count ?? 0;
-  document.getElementById("preview-free-slots").textContent = `${freeSlots} ô`;
+  // 1. Trục Nhập Kho: Ưu tiên các mặt hàng chưa có hàng (current_stock === 0)
+  if (inSelect) {
+    const prevInVal = inSelect.value;
+    const sortedForInbound = [...itemsList].sort((a, b) => {
+      const stockA = a.current_stock || 0;
+      const stockB = b.current_stock || 0;
+      if (stockA === 0 && stockB > 0) return -1;
+      if (stockA > 0 && stockB === 0) return 1;
+      return a.item_code.localeCompare(b.item_code);
+    });
+
+    inSelect.innerHTML = sortedForInbound.map((it) => {
+      const stock = it.current_stock || 0;
+      const badge = stock === 0
+        ? `[✓ Sẵn sàng nhập: 0 hộp]`
+        : `[⚠️ Đã có ${stock} hộp - Đầy kho]`;
+      return `<option value="${it.item_code}">${it.item_code} – ${it.name} ${badge}</option>`;
+    }).join("");
+
+    if (prevInVal && itemsList.some((it) => it.item_code === prevInVal)) {
+      inSelect.value = prevInVal;
+    } else {
+      const firstEligible = sortedForInbound.find((it) => (it.current_stock || 0) === 0);
+      if (firstEligible) inSelect.value = firstEligible.item_code;
+    }
+    updateInboundPreview();
+  }
+
+  // 2. Trục Xuất Kho: Ưu tiên các mặt hàng đã có hàng trên kệ (current_stock > 0)
+  if (outSelect) {
+    const prevOutVal = outSelect.value;
+    const sortedForOutbound = [...itemsList].sort((a, b) => {
+      const stockA = a.current_stock || 0;
+      const stockB = b.current_stock || 0;
+      if (stockA > 0 && stockB === 0) return -1;
+      if (stockA === 0 && stockB > 0) return 1;
+      return a.item_code.localeCompare(b.item_code);
+    });
+
+    outSelect.innerHTML = sortedForOutbound.map((it) => {
+      const stock = it.current_stock || 0;
+      const badge = stock > 0
+        ? `[✓ Có sẵn: ${stock} hộp]`
+        : `[Hết hàng: 0 hộp]`;
+      return `<option value="${it.item_code}">${it.item_code} – ${it.name} ${badge}</option>`;
+    }).join("");
+
+    if (prevOutVal && itemsList.some((it) => it.item_code === prevOutVal)) {
+      outSelect.value = prevOutVal;
+    } else {
+      const firstEligible = sortedForOutbound.find((it) => (it.current_stock || 0) > 0);
+      if (firstEligible) outSelect.value = firstEligible.item_code;
+    }
+    updateOutboundPreview();
+  }
 }
 
-function changeQty(delta) {
-  const input = document.getElementById("order-quantity");
+function updateInboundPreview() {
+  const select = document.getElementById("inbound-item-code");
+  const itemCode = select ? select.value : "";
+  const found = itemsList.find((it) => it.item_code === itemCode);
+  const stock = found ? (found.current_stock || 0) : 0;
+
+  const stockEl = document.getElementById("inbound-preview-stock");
+  if (stockEl) stockEl.textContent = `${stock} hộp`;
+
+  const freeSlots = inventoryData?.slot_stats?.empty_count ?? 0;
+  const freeSlotsEl = document.getElementById("inbound-free-slots");
+  if (freeSlotsEl) freeSlotsEl.textContent = `${freeSlots} ô`;
+
+  const banner = document.getElementById("inbound-eligibility-banner");
+  const btnInbound = document.getElementById("btn-submit-inbound");
+
+  if (banner) {
+    if (!itemCode) {
+      banner.innerHTML = "";
+      banner.style.display = "none";
+      if (btnInbound) {
+        btnInbound.disabled = true;
+        btnInbound.style.opacity = "0.5";
+      }
+    } else if (stock > 0) {
+      banner.innerHTML = `<span>⚠️ Mặt hàng <strong>${itemCode}</strong> hiện <strong>ĐÃ CÓ HÀNG (${stock} hộp)</strong> trong kho → <strong>KHÔNG ĐƯỢC NHẬP THÊM</strong> theo quy tắc WMS!</span>`;
+      banner.className = "eligibility-banner banner-in-stock";
+      banner.style.display = "block";
+      if (btnInbound) {
+        btnInbound.disabled = true;
+        btnInbound.style.opacity = "0.45";
+        btnInbound.title = "Mặt hàng này đã có hàng trên kệ! Chỉ mặt hàng chưa có hàng mới được nhập.";
+      }
+    } else {
+      banner.innerHTML = `<span>✅ Mặt hàng <strong>${itemCode}</strong> hiện <strong>CHƯA CÓ TRÊN KỆ (0 hộp)</strong> → <strong>HỢP LỆ ĐỂ NHẬP KHO</strong> từ trạm IN lên kệ.</span>`;
+      banner.className = "eligibility-banner banner-no-stock";
+      banner.style.display = "block";
+      if (btnInbound) {
+        btnInbound.disabled = false;
+        btnInbound.style.opacity = "1.0";
+        btnInbound.title = "Nhấn để tạo nhiệm vụ nhập hàng";
+      }
+    }
+  }
+}
+
+function updateOutboundPreview() {
+  const select = document.getElementById("outbound-item-code");
+  const itemCode = select ? select.value : "";
+  const found = itemsList.find((it) => it.item_code === itemCode);
+  const stock = found ? (found.current_stock || 0) : 0;
+
+  const stockEl = document.getElementById("outbound-preview-stock");
+  if (stockEl) stockEl.textContent = `${stock} hộp`;
+
+  // Tìm ô kệ đang chứa mặt hàng này
+  const occupiedSlot = (inventoryData?.slots || []).find(
+    (s) => s.item_code === itemCode && s.state === "OCCUPIED"
+  );
+  const slotEl = document.getElementById("outbound-preview-slot");
+  if (slotEl) {
+    if (occupiedSlot) {
+      const rackName = (occupiedSlot.rack || "").toLowerCase().includes("a") ? "Kệ A" : "Kệ B";
+      const loc = occupiedSlot.location_code || occupiedSlot.slot_id;
+      slotEl.textContent = `${loc} (${rackName}, T${occupiedSlot.tier})`;
+    } else {
+      slotEl.textContent = stock > 0 ? "Chưa xác định ô" : "Không có trên kệ";
+    }
+  }
+
+  const banner = document.getElementById("outbound-eligibility-banner");
+  const btnOutbound = document.getElementById("btn-submit-outbound");
+
+  if (banner) {
+    if (!itemCode) {
+      banner.innerHTML = "";
+      banner.style.display = "none";
+      if (btnOutbound) {
+        btnOutbound.disabled = true;
+        btnOutbound.style.opacity = "0.5";
+      }
+    } else if (stock <= 0) {
+      banner.innerHTML = `<span>⚠️ Mặt hàng <strong>${itemCode}</strong> hiện <strong>HẾT HÀNG (0 hộp)</strong> trên kệ → <strong>KHÔNG THỂ XUẤT KHO</strong>!</span>`;
+      banner.className = "eligibility-banner banner-in-stock";
+      banner.style.display = "block";
+      if (btnOutbound) {
+        btnOutbound.disabled = true;
+        btnOutbound.style.opacity = "0.45";
+        btnOutbound.title = "Mặt hàng này không có tồn kho để xuất!";
+      }
+    } else {
+      const locStr = occupiedSlot ? (occupiedSlot.location_code || occupiedSlot.slot_id) : "kệ";
+      banner.innerHTML = `<span>✅ Mặt hàng <strong>${itemCode}</strong> hiện <strong>CÓ SẴN (${stock} hộp)</strong> tại ô <strong>${locStr}</strong> → <strong>SẴN SÀNG XUẤT KHO</strong> ra trạm OUT.</span>`;
+      banner.className = "eligibility-banner banner-no-stock";
+      banner.style.display = "block";
+      if (btnOutbound) {
+        btnOutbound.disabled = false;
+        btnOutbound.style.opacity = "1.0";
+        btnOutbound.title = "Nhấn để tạo nhiệm vụ xuất hàng";
+      }
+    }
+  }
+}
+
+function changeInboundQty(delta) {
+  const input = document.getElementById("inbound-quantity");
+  if (!input) return;
   let val = parseInt(input.value, 10) + delta;
   val = Math.max(1, Math.min(10, val));
   input.value = val;
 }
 
-function getSelectedPriority() {
-  const radios = document.getElementsByName("order-priority");
+function changeOutboundQty(delta) {
+  const input = document.getElementById("outbound-quantity");
+  if (!input) return;
+  let val = parseInt(input.value, 10) + delta;
+  val = Math.max(1, Math.min(10, val));
+  input.value = val;
+}
+
+function getInboundPriority() {
+  const radios = document.getElementsByName("inbound-priority");
+  for (let r of radios) {
+    if (r.checked) return parseInt(r.value, 10);
+  }
+  return 1;
+}
+
+function getOutboundPriority() {
+  const radios = document.getElementsByName("outbound-priority");
   for (let r of radios) {
     if (r.checked) return parseInt(r.value, 10);
   }
@@ -945,17 +1186,31 @@ function getSelectedPriority() {
 }
 
 async function submitInboundOrder() {
-  const itemCode = document.getElementById("order-item-code").value;
-  const quantity = parseInt(document.getElementById("order-quantity").value, 10);
-  const slotSelect = document.getElementById("order-slot-id");
-  const slotId = slotSelect && slotSelect.value ? slotSelect.value : null;
-
-  if (!itemCode) {
-    showToast("Vui lòng chọn mặt hàng nhập!", "warn");
+  if (!isRobotEnabled) {
+    showToast("⚠️ Hệ thống đang KHÓA. Vui lòng bật công tắc ENABLE để lập lệnh Nhập kho!", "warning");
     return;
   }
 
-  const payload = { item_code: itemCode, quantity: quantity };
+  const itemSelect = document.getElementById("inbound-item-code");
+  const itemCode = itemSelect ? itemSelect.value : "";
+  const qtyInput = document.getElementById("inbound-quantity");
+  const quantity = qtyInput ? (parseInt(qtyInput.value, 10) || 1) : 1;
+  const slotSelect = document.getElementById("inbound-slot-id");
+  const slotId = slotSelect && slotSelect.value ? slotSelect.value : null;
+  const priority = getInboundPriority();
+
+  if (!itemCode) {
+    showToast("Vui lòng chọn mặt hàng cần nhập!", "warn");
+    return;
+  }
+
+  const found = itemsList.find((it) => it.item_code === itemCode);
+  if (found && found.current_stock > 0) {
+    showToast(`Mặt hàng '${itemCode}' đã có ${found.current_stock} hộp trong kho! Theo quy định, chỉ mặt hàng chưa có trong kho mới được nhập.`, "warn");
+    return;
+  }
+
+  const payload = { item_code: itemCode, quantity: quantity, priority: priority };
   if (slotId) {
     payload.slot_id = slotId;
   }
@@ -968,11 +1223,11 @@ async function submitInboundOrder() {
     });
     const data = await res.json();
     if (res.ok) {
-      showToast(`Đã tạo đơn nhập thành công: ${data.message}`, "info");
+      showToast(`Đã tạo lệnh nhập kho thành công: ${data.message}`, "info");
       fetchInventory();
       fetchItems();
       fetchTasks();
-      switchTabById("tab-tasks");
+      switchPage("page-robot");
     } else {
       showToast(`Lỗi ${res.status}: ${data.detail || data.message}`, "error");
     }
@@ -982,10 +1237,25 @@ async function submitInboundOrder() {
 }
 
 async function submitOutboundOrder() {
-  const itemCode = document.getElementById("order-item-code").value;
-  const quantity = parseInt(document.getElementById("order-quantity").value, 10);
+  if (!isRobotEnabled) {
+    showToast("⚠️ Hệ thống đang KHÓA. Vui lòng bật công tắc ENABLE để lập lệnh Xuất kho!", "warning");
+    return;
+  }
+
+  const itemSelect = document.getElementById("outbound-item-code");
+  const itemCode = itemSelect ? itemSelect.value : "";
+  const qtyInput = document.getElementById("outbound-quantity");
+  const quantity = qtyInput ? (parseInt(qtyInput.value, 10) || 1) : 1;
+  const priority = getOutboundPriority();
+
   if (!itemCode) {
-    showToast("Vui lòng chọn mặt hàng xuất!", "warn");
+    showToast("Vui lòng chọn mặt hàng cần xuất!", "warn");
+    return;
+  }
+
+  const found = itemsList.find((it) => it.item_code === itemCode);
+  if (found && found.current_stock <= 0) {
+    showToast(`Mặt hàng '${itemCode}' chưa có hàng trên kệ (Tồn: 0)! Không thể xuất kho.`, "warn");
     return;
   }
 
@@ -993,21 +1263,31 @@ async function submitOutboundOrder() {
     const res = await fetch("/api/tasks/outbound", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ item_code: itemCode, quantity: quantity }),
+      body: JSON.stringify({ item_code: itemCode, quantity: quantity, priority: priority }),
     });
     const data = await res.json();
     if (res.ok) {
-      showToast(`Đã tạo đơn xuất thành công: ${data.message}`, "info");
+      showToast(`Đã tạo lệnh xuất kho thành công: ${data.message}`, "info");
       fetchInventory();
       fetchItems();
       fetchTasks();
-      switchTabById("tab-tasks");
+      switchPage("page-robot");
     } else {
       showToast(`Lỗi ${res.status}: ${data.detail || data.message}`, "error");
     }
   } catch (err) {
     showToast("Không thể kết nối máy chủ để xuất hàng!", "error");
   }
+}
+
+// Fallback hàm tương thích ngược
+function updateItemPreview() {
+  updateInboundPreview();
+  updateOutboundPreview();
+}
+function changeQty(delta) {
+  changeInboundQty(delta);
+  changeOutboundQty(delta);
 }
 
 // ── 6. TIẾN ĐỘ FSM & HÀNG ĐỢI NHIỆM VỤ (Mục 8.4 Tab 4) ──────────────────────
@@ -1127,29 +1407,115 @@ async function cancelTask(taskId) {
   }
 }
 
-// ── 7. LỊCH SỬ GIAO DỊCH & THÔNG BÁO (Mục 8.4 Tab 5) ────────────────────────
+// ── 7. LỊCH SỬ ĐƠN HÀNG, GIAO DỊCH & THÔNG BÁO (Mục 8.4 Tab 5) ──────────────
+let currentHistoryTab = "orders";
+
+function switchHistoryTab(tabName) {
+  currentHistoryTab = tabName;
+  const btnOrders = document.getElementById("btn-tab-orders-history");
+  const btnTx = document.getElementById("btn-tab-tx-history");
+  const ordersContainer = document.getElementById("order-history-table-container");
+  const txContainer = document.getElementById("tx-table-container");
+
+  if (tabName === "orders") {
+    if (btnOrders) btnOrders.classList.add("active");
+    if (btnTx) btnTx.classList.remove("active");
+    if (ordersContainer) ordersContainer.classList.remove("hidden");
+    if (txContainer) txContainer.classList.add("hidden");
+    fetchOrderHistory();
+  } else {
+    if (btnOrders) btnOrders.classList.remove("active");
+    if (btnTx) btnTx.classList.add("active");
+    if (ordersContainer) ordersContainer.classList.add("hidden");
+    if (txContainer) txContainer.classList.remove("hidden");
+    fetchTransactions();
+  }
+}
+
+function refreshHistoryData() {
+  fetchOrderHistory();
+  fetchTransactions();
+  fetchEvents();
+}
+
+async function fetchOrderHistory() {
+  try {
+    const res = await fetch("/api/tasks?limit=50");
+    if (!res.ok) return;
+    const tasks = await res.json();
+    const tbody = document.getElementById("order-history-body");
+    if (!tbody) return;
+
+    if (tasks.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="6" class="text-center">Chưa có đơn hàng nào trong hệ thống.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = tasks.map((t) => {
+      const isOutbound = t.type === "OUTBOUND";
+      const typeClass = isOutbound ? "outbound" : "inbound";
+      const typeLabel = isOutbound ? "XUẤT" : "NHẬP";
+
+      let statusBadge = "";
+      const s = (t.status || "QUEUED").toUpperCase();
+      if (s === "SUCCEEDED") {
+        statusBadge = `<span class="status-badge succeeded">✓ Hoàn thành</span>`;
+      } else if (s === "RUNNING") {
+        statusBadge = `<span class="status-badge running">⚙ Đang chạy</span>`;
+      } else if (s === "QUEUED") {
+        statusBadge = `<span class="status-badge queued">⏳ Chờ xử lý</span>`;
+      } else if (s === "FAILED") {
+        statusBadge = `<span class="status-badge failed" title="${t.error || ''}">✖ Thất bại</span>`;
+      } else if (s === "CANCELLED") {
+        statusBadge = `<span class="status-badge cancelled">🚫 Đã hủy</span>`;
+      } else {
+        statusBadge = `<span class="status-badge">${s}</span>`;
+      }
+
+      const timeStr = t.finished_at ? t.finished_at.slice(11, 19) : (t.started_at ? t.started_at.slice(11, 19) : (t.created_at || "").slice(11, 19));
+      const itemName = t.item_name || t.item_code;
+
+      return `
+        <tr>
+          <td><strong>#${t.task_id}</strong></td>
+          <td><span class="type-pill ${typeClass}">${typeLabel}</span></td>
+          <td><strong>${itemName}</strong> <small style="color:var(--text-muted)">(${t.item_code})</small></td>
+          <td><code>${t.slot_id || "--"}</code></td>
+          <td>${statusBadge}</td>
+          <td>${timeStr}</td>
+        </tr>
+      `;
+    }).join("");
+  } catch (err) {
+    console.warn("Không thể tải lịch sử đơn hàng:", err);
+  }
+}
+
 async function fetchTransactions() {
   try {
-    const res = await fetch("/api/transactions?limit=30");
+    const res = await fetch("/api/transactions?limit=50");
     if (!res.ok) return;
     const txs = await res.json();
     const tbody = document.getElementById("tx-table-body");
     if (!tbody) return;
 
     if (txs.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="6" class="text-center">Chưa có giao dịch kho.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="6" class="text-center">Chưa có giao dịch biến động kho.</td></tr>`;
       return;
     }
 
     tbody.innerHTML = txs.map((tx) => {
       const isAdd = tx.delta > 0;
       const deltaClass = isAdd ? "text-success" : "text-danger";
+      const typeClass = tx.type === "INBOUND" ? "inbound" : "outbound";
+      const typeLabel = tx.type === "INBOUND" ? "NHẬP" : "XUẤT";
+      const itemName = tx.item_name || tx.item_code;
       return `
         <tr>
           <td>#${tx.task_id}</td>
-          <td>${tx.type}</td>
-          <td><strong>${tx.item_code}</strong></td>
-          <td>${tx.slot_id}</td>
+          <td><span class="type-pill ${typeClass}">${typeLabel}</span></td>
+          <td><strong>${itemName}</strong> <small style="color:var(--text-muted)">(${tx.item_code})</small></td>
+          <td><code>${tx.slot_id || "--"}</code></td>
           <td class="${deltaClass}"><strong>${isAdd ? "+" : ""}${tx.delta}</strong></td>
           <td>${(tx.ts || "").slice(11, 19)}</td>
         </tr>
@@ -1157,6 +1523,29 @@ async function fetchTransactions() {
     }).join("");
   } catch (err) {
     console.warn("Không thể tải lịch sử giao dịch:", err);
+  }
+}
+
+async function fetchEvents() {
+  try {
+    const res = await fetch("/api/events?limit=30");
+    if (!res.ok) return;
+    const events = await res.json();
+    const feed = document.getElementById("notifications-feed");
+    if (!feed || events.length === 0) return;
+
+    feed.innerHTML = events.map((ev) => {
+      const timeStr = (ev.ts || "").slice(11, 19) || new Date().toLocaleTimeString();
+      const lvl = (ev.level || "info").toLowerCase();
+      return `
+        <div class="notif-item ${lvl}">
+          <div>${ev.message}</div>
+          <div class="notif-time">${timeStr}</div>
+        </div>
+      `;
+    }).join("");
+  } catch (err) {
+    console.warn("Không thể tải lịch sử sự kiện:", err);
   }
 }
 
@@ -1226,9 +1615,11 @@ async function executeResetEStop() {
     const res = await fetch("/api/estop/reset", { method: "POST" });
     if (res.ok) {
       closeResetModal();
-      showToast("Khôi phục thành công! Robot sẵn sàng.", "info");
-      currentRobot.state = "IDLE";
+      showToast("Đã giải phóng E-Stop! Robot đang tự động di chuyển về trạm HOME...", "info");
+      currentRobot.state = "NAV_HOME";
+      currentRobot.is_navigating_home = true;
       updateRobotUI();
+      updateRobotEnableUI(isRobotEnabled);
       drawMap();
     } else {
       showToast("Lỗi khi khôi phục E-Stop!", "error");
@@ -1238,31 +1629,46 @@ async function executeResetEStop() {
   }
 }
 
-// ── 9. TIỆN ÍCH CHUYỂN TAB & TOAST ──────────────────────────────────────────
-function switchTabById(tabId) {
-  const btn = document.querySelector(`.nav-item[onclick*="'${tabId}'"]`);
-  switchTab(tabId, btn);
-}
-
-function switchTab(tabId, navBtn) {
+// ── 9. TIỆN ÍCH CHUYỂN 2 TRANG & TOAST ──────────────────────────────────────
+function switchPage(pageId, navBtn) {
   // Ẩn tất cả panes
   document.querySelectorAll(".tab-pane").forEach((pane) => {
     pane.classList.remove("active");
   });
-  // Hiện pane được chọn
-  const activePane = document.getElementById(tabId);
+  // Hiện trang được chọn
+  const activePane = document.getElementById(pageId);
   if (activePane) activePane.classList.add("active");
 
-  // Đổi active nav button
-  document.querySelectorAll(".nav-item").forEach((btn) => {
-    btn.classList.remove("active");
+  // Đồng bộ trạng thái active cho cả Header Tabs và Bottom Nav
+  document.querySelectorAll(".header-tab-btn, .nav-item").forEach((btn) => {
+    if (btn.getAttribute("onclick")?.includes(pageId)) {
+      btn.classList.add("active");
+    } else {
+      btn.classList.remove("active");
+    }
   });
-  if (navBtn) navBtn.classList.add("active");
 
-  // Nếu chuyển về tab Overview thì vẽ lại canvas cho chuẩn kích thước
-  if (tabId === "tab-overview") {
+  // Kích hoạt render lại các thành phần tương ứng
+  if (pageId === "page-robot") {
     setTimeout(drawMap, 50);
+    fetchTasks();
+  } else if (pageId === "page-warehouse") {
+    fetchInventory();
+    fetchItems();
+    refreshHistoryData();
   }
+}
+
+function switchTabById(tabId) {
+  if (tabId === "tab-orders" || tabId === "tab-inventory" || tabId === "page-warehouse") {
+    switchPage("page-warehouse");
+  } else {
+    switchPage("page-robot");
+  }
+}
+
+function switchTab(tabId, navBtn) {
+  switchTabById(tabId);
 }
 
 function showToast(message, type = "info") {
@@ -1394,16 +1800,26 @@ function initTeleopControls() {
 }
 
 function startTeleop(vx, vy, wz) {
+  if (!isRobotEnabled) {
+    showToast("⚠️ Robot đang bị KHÓA! Vui lòng bật công tắc Enable để di chuyển.", "warning");
+    return;
+  }
   stopTeleop();
+  isTeleopPressed = true;
   activeTeleopCmd = { vx, vy, wz };
   sendTeleop(vx, vy, wz);
   // Gửi lặp lại 10 Hz (mỗi 100ms) để nuôi Watchdog phía server (Bài 8b.5)
   teleopTimer = setInterval(() => {
+    if (!isRobotEnabled) {
+      stopTeleop();
+      return;
+    }
     sendTeleop(activeTeleopCmd.vx, activeTeleopCmd.vy, activeTeleopCmd.wz);
   }, 100);
 }
 
 function stopTeleop() {
+  isTeleopPressed = false;
   if (teleopTimer) {
     clearInterval(teleopTimer);
     teleopTimer = null;
@@ -1422,6 +1838,152 @@ async function sendTeleop(vx, vy, wz) {
   } catch (err) {
     // Không làm gián đoạn UI nếu có lỗi mạng
   }
+}
+
+// Kiểm tra xem robot có đang di chuyển / bận hoạt động hay không
+function isRobotRunning() {
+  const lin = Math.abs(currentRobot.linear_speed || 0);
+  const ang = Math.abs(currentRobot.angular_speed || 0);
+  const st = (currentRobot.state || "IDLE").toUpperCase();
+  const isBusyState = st !== "IDLE" && st !== "OFFLINE" && st !== "ESTOP";
+  return lin > 0.01 || ang > 0.01 || isBusyState || isTeleopPressed || Boolean(currentRobot.is_navigating_home);
+}
+
+// ── CÔNG TẮC KÍCH HOẠT ROBOT (ROBOT MOTION ENABLE) ─────────────────────────
+async function toggleRobotEnable(enabled) {
+  const willEnable = Boolean(enabled);
+
+  // RÀNG BUỘC AN TOÀN: Không được phép tắt Enable khi robot đang chạy!
+  if (!willEnable && isRobotRunning()) {
+    // Hoàn tác lại trạng thái switch về ON ngay lập tức
+    const cardSwitch = document.getElementById("robot-enable-switch");
+    if (cardSwitch) cardSwitch.checked = true;
+    const headerSwitch = document.getElementById("header-robot-enable");
+    if (headerSwitch) headerSwitch.checked = true;
+
+    // Rung lắc cảnh báo
+    [cardSwitch, headerSwitch].forEach((sw) => {
+      const parent = sw?.closest(".switch") || sw?.parentElement;
+      if (parent) {
+        parent.classList.add("shake-locked");
+        setTimeout(() => parent.classList.remove("shake-locked"), 500);
+      }
+    });
+
+    const stateDesc = currentRobot.state === "NAV_HOME" ? "đang tự động di chuyển về trạm HOME" :
+                      currentRobot.state ? `đang ở trạng thái ${currentRobot.state}` : "đang di chuyển";
+    showToast(`⚠️ Không được phép tắt ENABLE khi robot đang hoạt động (${stateDesc})!`, "warning");
+    return;
+  }
+
+  try {
+    const res = await fetch("/api/robot/enable", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ enabled: willEnable }),
+    });
+    const data = await res.json();
+    if (res.ok && data.success) {
+      updateRobotEnableUI(data.is_enabled);
+      if (data.is_enabled) {
+        showToast("⚡ Công tắc Enable ĐÃ BẬT. Robot sẵn sàng di chuyển!", "success");
+      } else {
+        stopTeleop();
+        showToast("🔒 Công tắc Enable ĐÃ TẮT. Đã khóa di chuyển robot.", "warning");
+      }
+    } else {
+      // Revert lại trạng thái cũ nếu server từ chối
+      updateRobotEnableUI(isRobotEnabled);
+      showToast(data.detail || "Không thể chuyển trạng thái Enable!", "error");
+    }
+  } catch (err) {
+    console.error("[Enable] Lỗi gửi lệnh toggle enable:", err);
+    updateRobotEnableUI(isRobotEnabled);
+    showToast("Không thể gửi lệnh chuyển trạng thái Enable!", "error");
+  }
+}
+
+function updateRobotEnableUI(enabled) {
+  isRobotEnabled = Boolean(enabled);
+
+  // 0. Khóa / Mở Khóa Toàn Bộ Hệ Thống trên Body
+  document.body.classList.toggle("robot-disabled", !isRobotEnabled);
+  document.body.classList.toggle("robot-enabled", isRobotEnabled);
+
+  // 1. Đồng bộ Switch ở Card SLAM & D-Pad
+  const cardSwitch = document.getElementById("robot-enable-switch");
+  if (cardSwitch && cardSwitch.checked !== isRobotEnabled) {
+    cardSwitch.checked = isRobotEnabled;
+  }
+
+  // 2. Đồng bộ Switch ở Header
+  const headerSwitch = document.getElementById("header-robot-enable");
+  if (headerSwitch && headerSwitch.checked !== isRobotEnabled) {
+    headerSwitch.checked = isRobotEnabled;
+  }
+
+  // 3. Khóa trạng thái công tắc khi robot đang chạy (không cho phép tắt)
+  const running = isRobotRunning();
+  [cardSwitch, headerSwitch].forEach((sw) => {
+    const parent = sw?.closest(".switch") || sw?.parentElement;
+    if (parent) {
+      if (isRobotEnabled && running) {
+        parent.classList.add("switch-running-lock");
+        parent.setAttribute("title", "Robot đang hoạt động / di chuyển - Không được phép tắt ENABLE!");
+      } else {
+        parent.classList.remove("switch-running-lock");
+        parent.setAttribute("title", "Bật/Tắt công tắc kích hoạt robot");
+      }
+    }
+  });
+
+  // 4. Header Wrap Class
+  const headerWrap = document.getElementById("header-enable-wrap");
+  if (headerWrap) {
+    headerWrap.classList.toggle("active", isRobotEnabled);
+  }
+
+  // 5. Card Box Class
+  const cardBox = document.getElementById("robot-enable-card-box");
+  if (cardBox) {
+    cardBox.classList.toggle("active", isRobotEnabled);
+  }
+
+  // 6. Card Badge
+  const badge = document.getElementById("robot-enable-badge");
+  if (badge) {
+    if (isRobotEnabled) {
+      badge.textContent = running ? "⚡ ĐANG CHẠY (KHÓA TẮT)" : "⚡ ĐÃ BẬT (ON)";
+      badge.className = "badge enable-status-badge enabled" + (running ? " running-active" : "");
+    } else {
+      badge.textContent = "🔒 ĐÃ KHÓA (OFF)";
+      badge.className = "badge enable-status-badge disabled";
+    }
+  }
+
+  // 7. Hint text
+  const hint = document.getElementById("enable-hint-text");
+  if (hint) {
+    if (isRobotEnabled) {
+      hint.textContent = running
+        ? "⚡ Robot đang hoạt động / di chuyển. Công tắc Enable được giữ cố định an toàn!"
+        : "✅ Động cơ đã kích hoạt. Sẵn sàng nhận lệnh di chuyển!";
+      hint.classList.add("active");
+    } else {
+      hint.textContent = "⚠️ Động cơ đang khóa. Bật công tắc Enable để cho phép robot di chuyển.";
+      hint.classList.remove("active");
+    }
+  }
+
+  // 8. Teleop D-Pad Container Lock
+  const teleopSection = document.getElementById("teleop-section");
+  if (teleopSection) {
+    teleopSection.classList.toggle("locked", !isRobotEnabled);
+  }
+}
+
+function onTeleopLockClicked() {
+  showToast("⚠️ Robot đang khóa di chuyển! Vui lòng gạt công tắc Enable phía trên sang BẬT để mở khóa.", "warning");
 }
 
 // ── 12. QUẢN LÝ VÀ ĐIỀU KHIỂN SLAM (Bài 8b.5) ────────────────────────────────
@@ -1557,6 +2119,10 @@ async function toggleAutoMapper() {
 
 // ── 13. ĐIỀU HƯỚNG TỚI ĐIỂM CHỌN TRÊN BẢN ĐỒ (NAV2 GOAL) ────────────────────
 function openNavGoalModal(x, y) {
+  if (!isRobotEnabled) {
+    showToast("⚠️ Bản đồ đang KHÓA. Vui lòng bật công tắc ENABLE để gửi mục tiêu điều hướng!", "warning");
+    return;
+  }
   pendingNavGoal = { x, y };
   const modal = document.getElementById("nav-goal-modal");
   const text = document.getElementById("nav-goal-text");
@@ -1579,12 +2145,107 @@ async function confirmNavGoal() {
   showToast(`Mục tiêu (x: ${x.toFixed(2)}, y: ${y.toFixed(2)}) đã được ghi nhận.`, "info");
 }
 
-// ── 14. THỊ GIÁC (CAMERA STREAMS) & TRẠM IN/OUT & TAY MÁY THỦ CÔNG ───────────
+// ── 14. THỊ GIÁC (CAMERA TRỰC TIẾP TRÊN CÙNG KHUNG HÌNH) ────────────────────
 const TAG_TYPE_LABEL = { shelf: "Ô kệ", station: "Trạm IN/OUT", box: "Hộp hàng" };
+let currentFrameViewMode = "pip"; // 'pip' | 'split' | 'map' | 'cam'
+let currentPipSource = "dock";     // 'dock' | 'hand'
+let currentActiveCamFeed = "dock"; // 'dock' | 'hand'
+
+function setFrameViewMode(mode) {
+  currentFrameViewMode = mode;
+  const viewport = document.getElementById("dual-frame-viewport");
+  if (viewport) {
+    viewport.className = `dual-frame-viewport mode-${mode}`;
+  }
+
+  // Cập nhật trạng thái nút bấm
+  document.querySelectorAll(".view-mode-btn").forEach((btn) => {
+    btn.classList.remove("active");
+  });
+  const activeBtn = document.getElementById(`btn-mode-${mode}`);
+  if (activeBtn) activeBtn.classList.add("active");
+
+  const pip = document.getElementById("map-pip-camera");
+  if (pip) {
+    if (mode === "pip") {
+      pip.classList.remove("hidden");
+    } else {
+      pip.classList.add("hidden");
+    }
+  }
+
+  // Vẽ lại canvas map để fit kích thước mới
+  setTimeout(drawMap, 60);
+
+  const modeNames = {
+    pip: "Camera PiP (Nổi góc bản đồ)",
+    split: "Chia đôi song song (Bản đồ & Camera)",
+    map: "Toàn màn hình Bản đồ",
+    cam: "Toàn màn hình Camera",
+  };
+  showToast(`Chế độ hiển thị: ${modeNames[mode] || mode}`, "info");
+}
+
+function togglePipCamSource() {
+  currentPipSource = currentPipSource === "dock" ? "hand" : "dock";
+  const pipImg = document.getElementById("pip-stream-img");
+  const pipTitle = document.getElementById("pip-cam-title");
+  if (pipImg) {
+    pipImg.src = `/api/vision/${currentPipSource}/stream?t=${Date.now()}`;
+  }
+  if (pipTitle) {
+    pipTitle.textContent = currentPipSource === "dock" ? "● LIVE DOCK CAM" : "● LIVE HAND CAM";
+  }
+  showToast(`Camera PiP: Đã đổi sang ${currentPipSource === 'dock' ? 'Camera Gầm (Dock)' : 'Camera Tay Gắp (Hand)'}`, "info");
+}
+
+function togglePipSize() {
+  const pip = document.getElementById("map-pip-camera");
+  if (!pip) return;
+  pip.classList.toggle("pip-enlarged");
+}
+
+function togglePipVisibility() {
+  const pip = document.getElementById("map-pip-camera");
+  if (!pip) return;
+  pip.classList.toggle("hidden");
+}
+
+function switchCameraFeed(which) {
+  currentActiveCamFeed = which;
+  const feedDock = document.getElementById("feed-dock-box");
+  const feedHand = document.getElementById("feed-hand-box");
+  const btnDock = document.getElementById("btn-cam-dock");
+  const btnHand = document.getElementById("btn-cam-hand");
+  const badge = document.getElementById("camera-current-badge");
+  const fpsDock = document.getElementById("dock-cam-fps");
+  const fpsHand = document.getElementById("hand-cam-fps");
+
+  if (which === "dock") {
+    if (feedDock) feedDock.classList.remove("hidden");
+    if (feedHand) feedHand.classList.add("hidden");
+    if (btnDock) btnDock.classList.add("active");
+    if (btnHand) btnHand.classList.remove("active");
+    if (badge) badge.textContent = "DOCK CAMERA (GẦM XE)";
+    if (fpsDock) fpsDock.classList.remove("hidden");
+    if (fpsHand) fpsHand.classList.add("hidden");
+  } else {
+    if (feedDock) feedDock.classList.add("hidden");
+    if (feedHand) feedHand.classList.remove("hidden");
+    if (btnDock) btnDock.classList.remove("active");
+    if (btnHand) btnHand.classList.add("active");
+    if (badge) badge.textContent = "HAND CAMERA (TAY GẮP SCARA)";
+    if (fpsDock) fpsDock.classList.add("hidden");
+    if (fpsHand) fpsHand.classList.remove("hidden");
+  }
+}
+
+function snapshotCurrentCam() {
+  snapshotCamera(currentActiveCamFeed);
+}
 
 async function pollVisionStatus() {
-  // Chỉ gọi API khi đang mở tab Thị giác để tiết kiệm băng thông
-  const pane = document.getElementById("tab-vision");
+  const pane = document.getElementById("page-robot") || document.getElementById("tab-vision");
   if (!pane || !pane.classList.contains("active")) return;
   try {
     const res = await fetch("/api/vision/status");
@@ -1610,6 +2271,14 @@ function renderVisionStatus(v) {
     ? tagHudText(v.hand_tags, "Không thấy tag nào")
     : "Chưa có ảnh từ Hand Camera";
 
+  const pipTagBadge = document.getElementById("pip-tag-badge");
+  if (pipTagBadge) {
+    const activeTags = currentPipSource === "dock" ? v.dock_tags : v.hand_tags;
+    pipTagBadge.textContent = activeTags && activeTags.length > 0
+      ? activeTags.map((t) => `#${t.id}`).join(", ")
+      : "Quét ArUco...";
+  }
+
   const grasp = document.getElementById("cam-grasp-status");
   if (grasp) grasp.textContent = currentRobot.holding_box ? `Đang giữ hộp #${currentRobot.held_box_tag}` : "Chưa gắp";
 
@@ -1623,7 +2292,7 @@ function renderVisionStatus(v) {
   const tbody = document.getElementById("vision-tags-table-body");
   if (!tbody) return;
   if (rows.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="5" class="text-center">Chưa phát hiện mã ArUco nào trong tầm nhìn hiện tại.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="5" class="text-center">Chưa phát hiện mã ArUco.</td></tr>`;
     return;
   }
   const now = new Date().toLocaleTimeString("vi-VN");
@@ -1633,7 +2302,7 @@ function renderVisionStatus(v) {
       <td>${TAG_TYPE_LABEL[t.type] || t.type}</td>
       <td>${t.cam}</td>
       <td>${t.dist.toFixed(3)} m</td>
-      <td>${t.reproj_error} px • ${now}</td>
+      <td>${now}</td>
     </tr>`).join("");
 }
 
@@ -1641,13 +2310,14 @@ function refreshVisionStreams() {
   const ts = Date.now();
   const dock = document.getElementById("dock-stream-img");
   const hand = document.getElementById("hand-stream-img");
+  const pip = document.getElementById("pip-stream-img");
   if (dock) dock.src = `/api/vision/dock/stream?t=${ts}`;
   if (hand) hand.src = `/api/vision/hand/stream?t=${ts}`;
-  showToast("Đã làm mới luồng camera", "info");
+  if (pip) pip.src = `/api/vision/${currentPipSource}/stream?t=${ts}`;
+  showToast("Đã làm mới các luồng camera", "info");
 }
 
 function onStreamError(img, which) {
-  // Thử nối lại luồng MJPEG sau 3 giây
   setTimeout(() => {
     img.src = `/api/vision/${which}/stream?t=${Date.now()}`;
   }, 3000);
@@ -1657,15 +2327,23 @@ function snapshotCamera(which) {
   window.open(`/api/vision/${which}/live.jpg?t=${Date.now()}`, "_blank");
 }
 
-// Mở nhanh tab tạo lệnh Nhập / Xuất từ thẻ Trạm IN / OUT
+// Mở nhanh Trang 2 tạo lệnh Nhập / Xuất từ thẻ Trạm IN / OUT
 function quickNavToInbound() {
-  switchTabById("tab-orders");
-  showToast("Chọn mặt hàng rồi bấm 'LẤY HÀNG TRẠM IN BỎ LÊN KỆ'", "info");
+  if (!isRobotEnabled) {
+    showToast("⚠️ Hệ thống đang KHÓA. Vui lòng bật công tắc ENABLE để thao tác trạm!", "warning");
+    return;
+  }
+  switchPage("page-warehouse");
+  showToast("Đã chuyển sang Trang 2: Chọn mặt hàng và bấm 'XÁC NHẬN NHẬP KHO'", "info");
 }
 
 function quickNavToOutbound() {
-  switchTabById("tab-orders");
-  showToast("Chọn mặt hàng rồi bấm 'LẤY HÀNG TỪ KỆ XUẤT RA TRẠM OUT'", "info");
+  if (!isRobotEnabled) {
+    showToast("⚠️ Hệ thống đang KHÓA. Vui lòng bật công tắc ENABLE để thao tác trạm!", "warning");
+    return;
+  }
+  switchPage("page-warehouse");
+  showToast("Đã chuyển sang Trang 2: Chọn mặt hàng và bấm 'XÁC NHẬN XUẤT KHO'", "info");
 }
 
 async function triggerWebGripper(state) {
@@ -1679,15 +2357,15 @@ async function triggerWebGripper(state) {
     const badge = document.getElementById("manual-gripper-badge");
     if (res.ok && data.success) {
       if (badge) {
-        badge.textContent = state ? "Tay gắp: ON" : "Tay gắp: OFF";
+        badge.textContent = state ? "Tay kẹp Servo: ĐÓNG (KẸP CHẶT)" : "Tay kẹp Servo: MỞ";
         badge.className = "status-pill " + (state ? "running" : "idle");
       }
-      showToast(data.message, "info");
+      showToast(state ? "Động cơ servo đã đóng kẹp chặt hộp!" : "Động cơ servo đã mở má kẹp nhả hàng!", "info");
     } else {
-      showToast(data.message || data.detail || "Lỗi điều khiển tay gắp", "error");
+      showToast(data.message || data.detail || "Lỗi điều khiển tay kẹp", "error");
     }
   } catch (err) {
-    showToast("Không thể kết nối máy chủ để điều khiển tay gắp!", "error");
+    showToast("Không thể kết nối máy chủ để điều khiển tay kẹp!", "error");
   }
 }
 
@@ -1710,6 +2388,10 @@ async function triggerWebPose(pose) {
 }
 
 async function replenishInboundStation() {
+  if (!isRobotEnabled) {
+    showToast("⚠️ Hệ thống đang KHÓA. Vui lòng bật công tắc ENABLE để tiếp phôi!", "warning");
+    return;
+  }
   try {
     const res = await fetch("/api/station/inbound/replenish", { method: "POST" });
     const data = await res.json();
@@ -1725,6 +2407,10 @@ async function replenishInboundStation() {
 }
 
 async function clearOutboundStation() {
+  if (!isRobotEnabled) {
+    showToast("⚠️ Hệ thống đang KHÓA. Vui lòng bật công tắc ENABLE để dọn bàn!", "warning");
+    return;
+  }
   try {
     const res = await fetch("/api/station/outbound/clear", { method: "POST" });
     const data = await res.json();

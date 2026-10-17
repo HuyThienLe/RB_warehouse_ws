@@ -109,6 +109,14 @@ def test_inbound_no_free_slots_returns_409(client):
     assert "NO_FREE_SLOT" in res.json()["detail"]
 
 
+def test_inbound_already_in_stock_returns_409(client):
+    """Mặt hàng đã có trong kho không được phép nhập thêm -> 409."""
+    # ITEM_20 đã có 2 hộp trong kho
+    res = client.post("/api/tasks/inbound", json={"item_code": "ITEM_20", "quantity": 1})
+    assert res.status_code == 409
+    assert "ALREADY_IN_STOCK" in res.json()["detail"]
+
+
 def test_outbound_out_of_stock_returns_409(client):
     """Xuất khi hết hàng -> 409 kèm lý do rõ ràng."""
     # ITEM_21 hiện có 0 hộp trong kho
@@ -174,7 +182,7 @@ def test_map_endpoints(client):
     meta = res_meta.json()
     assert "resolution" in meta
     assert "origin" in meta
-    assert meta["width"] == 280
+    assert meta["width"] == 312
     assert meta["height"] == 200
 
     res_img = client.get("/api/map/image")

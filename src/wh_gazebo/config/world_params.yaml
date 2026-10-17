@@ -1,9 +1,9 @@
 # world_params.yaml - Nguon tham so moi truong kho duy nhat
 warehouse:
   dimensions:
-    length_x: 6.0      # m (x in [-3.0, 3.0])
+    length_x: 6.8      # m (x in [-3.8, 3.0])
     width_y: 4.0       # m (y in [-2.0, 2.0])
-    x_min: -3.0
+    x_min: -3.8
     x_max: 3.0
     y_min: -2.0
     y_max: 2.0

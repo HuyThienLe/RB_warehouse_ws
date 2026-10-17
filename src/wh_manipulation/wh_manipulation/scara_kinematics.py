@@ -18,8 +18,8 @@ from typing import Optional, Tuple, List, Dict, Any
 
 DEFAULT_L1 = 0.18
 DEFAULT_L2 = 0.14
-DEFAULT_L3 = 0.04
-DEFAULT_TOOL_DROP = 0.06
+DEFAULT_L3 = 0.058
+DEFAULT_TOOL_DROP = 0.07
 
 DEFAULT_LIMITS = {
     "q1": (-math.radians(95.0), math.radians(95.0)),

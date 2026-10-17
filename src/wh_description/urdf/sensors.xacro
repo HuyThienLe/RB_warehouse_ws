@@ -218,37 +218,37 @@
 
   <!-- ======================================================== -->
   <!-- ======================================================== -->
-  <!-- HAND CAMERA (Gắn trên đế tay kẹp bẻ ngang, nhìn về phía trước) -->
+  <!-- HAND CAMERA (Gắn trên sống lưng cụm tay kẹp, nhìn xuống hộp) -->
   <!-- ======================================================== -->
   <joint name="hand_camera_joint" type="fixed">
     <parent link="tool_link"/>
     <child link="hand_camera_link"/>
-    <!-- Gắn trên sống lưng khớp bẻ ngang, nhìn theo phương +X và chúi nhẹ 12.6 độ xuống hộp -->
-    <origin xyz="0.006 0.0 -0.038" rpy="0 0.22 0"/>
+    <!-- Gắn chuẩn trên sống lưng mặt bích kẹp (x=0.016m, z=-0.020m), hướng thẳng tâm và chúc 50 độ (0.87 rad) xuống tâm hộp giữa 2 má kẹp -->
+    <origin xyz="0.016 0.0 -0.020" rpy="0 0.87 0"/>
   </joint>
 
   <link name="hand_camera_link">
-    <!-- Ngàm đỡ bắt bulông vào mặt sau đế tay kẹp (nằm phía sau sensor) -->
+    <!-- Ngàm đỡ bắt bulông vào mặt trên đế kẹp (bracket) -->
     <visual>
-      <origin xyz="-0.015 0 0" rpy="0 0 0"/>
+      <origin xyz="-0.008 0 0" rpy="0 0 0"/>
       <geometry>
-        <box size="0.016 0.032 0.016"/>
+        <box size="0.012 0.026 0.012"/>
       </geometry>
       <material name="cam_bracket"/>
     </visual>
-    <!-- Thân vỏ camera (nằm phía sau sensor) -->
+    <!-- Thân vỏ camera gọn gàng (housing) -->
     <visual>
-      <origin xyz="-0.005 0 0" rpy="0 0 0"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <box size="0.020 0.036 0.020"/>
+        <box size="0.016 0.028 0.018"/>
       </geometry>
       <material name="cam_body"/>
     </visual>
-    <!-- Ống kính nhìn thẳng theo trục quang học -->
+    <!-- Ống kính nhìn thẳng theo trục quang học hướng vào tâm kẹp -->
     <visual>
-      <origin xyz="0.005 0 0" rpy="0 1.57079632679 0"/>
+      <origin xyz="0.009 0 0" rpy="0 1.57079632679 0"/>
       <geometry>
-        <cylinder radius="0.007" length="0.006"/>
+        <cylinder radius="0.006" length="0.006"/>
       </geometry>
       <material name="cam_lens"/>
     </visual>

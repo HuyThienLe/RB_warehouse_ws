@@ -17,6 +17,11 @@ import asyncio
 import threading
 import subprocess
 from typing import Optional, Set, List, Dict, Any
+import yaml
+
+# Đảm bảo cấu hình DDS và ROS_DOMAIN_ID đồng bộ tuyệt đối với full_system
+os.environ.setdefault("ROS_DOMAIN_ID", "42")
+os.environ.setdefault("RMW_IMPLEMENTATION", "rmw_cyclonedds_cpp")
 
 from PIL import Image
 from pydantic import BaseModel, field_validator
@@ -50,6 +55,10 @@ class TeleopIn(BaseModel):
     vx: float = 0.0
     vy: float = 0.0
     wz: float = 0.0
+
+
+class RobotEnableIn(BaseModel):
+    enabled: bool
 
 
 class SlamSaveIn(BaseModel):
@@ -87,8 +96,8 @@ auto_mapper_proc: Optional[subprocess.Popen] = None
 # Thông số bản đồ tĩnh (warehouse_map)
 MAP_METADATA: Dict[str, Any] = {
     "resolution": 0.025,
-    "origin": [-3.5, -2.5, 0.0],
-    "width": 280,
+    "origin": [-4.3, -2.5, 0.0],
+    "width": 312,
     "height": 200,
     "image_url": "/api/map/image",
 }
@@ -119,14 +128,35 @@ def init_map_image():
     PNG chỉ là cache: luôn dựng lại khi PGM nguồn mới hơn (hoặc PNG chưa có) để
     bản đồ web không bao giờ lệch so với bản đồ Nav2 / Gazebo hiện tại.
     """
-    global cached_map_png, MAP_IMAGE_PATH
+    global cached_map_png, MAP_IMAGE_PATH, MAP_METADATA
     map_dir = os.path.dirname(__file__)
     png_path = os.path.join(map_dir, "map.png")
     MAP_IMAGE_PATH = png_path
 
+    # Đọc thông số bản đồ từ warehouse_map.yaml nếu có
+    yaml_path = find_config_path("wh_navigation/maps/warehouse_map.yaml")
+    if yaml_path and os.path.exists(yaml_path):
+        try:
+            with open(yaml_path, "r", encoding="utf-8") as yf:
+                ydata = yaml.safe_load(yf)
+            if ydata:
+                MAP_METADATA["resolution"] = float(ydata.get("resolution", 0.025))
+                orig = ydata.get("origin", [-4.3, -2.5, 0.0])
+                MAP_METADATA["origin"] = [float(orig[0]), float(orig[1]), float(orig[2])]
+        except Exception as e:
+            print(f"Lỗi đọc warehouse_map.yaml: {e}")
+
     # Tìm file warehouse_map.pgm
     pgm_path = find_config_path("wh_navigation/maps/warehouse_map.pgm")
     pgm_ok = bool(pgm_path and os.path.exists(pgm_path))
+
+    if pgm_ok:
+        try:
+            im = Image.open(pgm_path)
+            MAP_METADATA["width"] = im.width
+            MAP_METADATA["height"] = im.height
+        except Exception:
+            pass
 
     if os.path.exists(png_path):
         png_fresh = (not pgm_ok) or (os.path.getmtime(png_path) >= os.path.getmtime(os.path.realpath(pgm_path)))
@@ -138,6 +168,8 @@ def init_map_image():
     if pgm_ok:
         try:
             im = Image.open(pgm_path)
+            MAP_METADATA["width"] = im.width
+            MAP_METADATA["height"] = im.height
             buf = io.BytesIO()
             im.save(buf, format="PNG")
             cached_map_png = buf.getvalue()
@@ -187,7 +219,7 @@ def run_ros_bridge():
 # ── Vòng đời FastAPI (Startup / Shutdown) ───────────────────────────────────
 @app.on_event("startup")
 async def on_startup():
-    global loop, db, ros_thread_handle
+    global loop, db, ros_thread_handle, bridge
     loop = asyncio.get_running_loop()
 
     # 1. Khởi tạo CSDL SQLite chung với task_manager (nếu chưa được cấu hình trước bởi test)
@@ -205,12 +237,20 @@ async def on_startup():
             seed_inv_file = find_config_path("wh_gazebo/config/inventory_seed.yaml")
             db.load_seed_data(slots_file, items_file, seed_inv_file)
 
+        # Dọn dẹp các task bị treo từ phiên chạy cũ và reset các ô RESERVED treo
+        with db.lock:
+            with db.conn:
+                db.conn.execute("UPDATE tasks SET status = 'CANCELLED' WHERE status IN ('QUEUED', 'RUNNING');")
+                db.conn.execute("UPDATE slots SET state = 'EMPTY', item_code = NULL, quantity = 0, reserved_by_task = NULL WHERE state = 'RESERVED';")
+
     # 2. Cache ảnh bản đồ PNG
     init_map_image()
 
-    # 3. Khởi chạy luồng ROS 2
-    ros_thread_handle = threading.Thread(target=run_ros_bridge, daemon=True)
-    ros_thread_handle.start()
+    # 3. Khởi chạy luồng ROS 2 (chỉ chạy duy nhất 1 luồng)
+    if ros_thread_handle is None or not ros_thread_handle.is_alive():
+        bridge = None
+        ros_thread_handle = threading.Thread(target=run_ros_bridge, daemon=True)
+        ros_thread_handle.start()
 
     # Chờ bridge khởi tạo xong (tối đa 2.0s)
     for _ in range(40):
@@ -270,6 +310,8 @@ async def api_clear_station_outbound():
     """Dọn sạch bàn trả hàng trạm OUT."""
     if not bridge:
         raise HTTPException(status_code=503, detail="WebBridge chưa sẵn sàng")
+    if not bridge.is_robot_enabled:
+        raise HTTPException(status_code=403, detail="Hệ thống đang ở trạng thái KHÓA (Enable OFF). Vui lòng bật Enable!")
     ok, msg = bridge.clear_station_out()
     return {"success": ok, "message": msg}
 
@@ -279,6 +321,8 @@ async def api_replenish_station_inbound():
     """Tiếp thêm phôi vào trạm IN."""
     if not bridge:
         raise HTTPException(status_code=503, detail="WebBridge chưa sẵn sàng")
+    if not bridge.is_robot_enabled:
+        raise HTTPException(status_code=403, detail="Hệ thống đang ở trạng thái KHÓA (Enable OFF). Vui lòng bật Enable!")
     ok, msg = bridge.replenish_station_in()
     return {"success": ok, "message": msg}
 
@@ -297,6 +341,12 @@ async def get_items():
 @app.post("/api/tasks/inbound")
 async def create_inbound_task(order: OrderIn):
     """Tạo nhiệm vụ nhập hàng (Inbound)."""
+    if bridge and not bridge.is_robot_enabled:
+        raise HTTPException(
+            status_code=403,
+            detail="Hệ thống đang ở trạng thái KHÓA (Enable OFF). Vui lòng bật Enable để điều phối!",
+        )
+
     if bridge and bridge.current_mode == "mapping":
         raise HTTPException(
             status_code=400,
@@ -308,6 +358,14 @@ async def create_inbound_task(order: OrderIn):
         raise HTTPException(
             status_code=404,
             detail=f"Mã hàng '{order.item_code}' không tồn tại trong danh mục!",
+        )
+
+    # Quy tắc: Hàng nào có hàng rồi thì không được nhập nữa, chưa có hàng mới được nhập
+    current_stock = db.get_item_stock(order.item_code)
+    if current_stock > 0:
+        raise HTTPException(
+            status_code=409,
+            detail=f"Mặt hàng '{order.item_code}' đã có {current_stock} hộp trong kho (ALREADY_IN_STOCK)! Hệ thống chỉ cho phép nhập mặt hàng chưa có hàng (tồn kho = 0).",
         )
 
     free_slots = db.get_free_slots_count()
@@ -338,6 +396,7 @@ async def create_inbound_task(order: OrderIn):
 
     # Broadcast cập nhật ngay
     await broadcast({"type": "inventory", "data": db.get_inventory()})
+    await broadcast({"type": "task", "data": {"task_id": task_id, "action": "created"}})
     slot_notice = f" vào ô {order.slot_id}" if order.slot_id else ""
     await broadcast({
         "type": "notification",
@@ -352,6 +411,12 @@ async def create_inbound_task(order: OrderIn):
 @app.post("/api/tasks/outbound")
 async def create_outbound_task(order: OrderIn):
     """Tạo nhiệm vụ xuất hàng (Outbound)."""
+    if bridge and not bridge.is_robot_enabled:
+        raise HTTPException(
+            status_code=403,
+            detail="Hệ thống đang ở trạng thái KHÓA (Enable OFF). Vui lòng bật Enable để điều phối!",
+        )
+
     if bridge and bridge.current_mode == "mapping":
         raise HTTPException(
             status_code=400,
@@ -383,6 +448,7 @@ async def create_outbound_task(order: OrderIn):
 
     # Broadcast cập nhật ngay
     await broadcast({"type": "inventory", "data": db.get_inventory()})
+    await broadcast({"type": "task", "data": {"task_id": task_id, "action": "created"}})
     await broadcast({
         "type": "notification",
         "data": {
@@ -414,6 +480,7 @@ async def cancel_task(task_id: int):
 
     if ok:
         await broadcast({"type": "inventory", "data": db.get_inventory()})
+        await broadcast({"type": "task", "data": {"task_id": task_id, "action": "cancelled"}})
         await broadcast({
             "type": "notification",
             "data": {"level": "warn", "text": f"Đã hủy nhiệm vụ #{task_id}"},
@@ -422,6 +489,7 @@ async def cancel_task(task_id: int):
 
 
 @app.get("/api/robot")
+@app.get("/api/robot/status")
 async def get_robot():
     """Trạng thái robot hiện tại (pose, state, task_id, battery)."""
     if bridge is not None:
@@ -444,6 +512,12 @@ async def get_transactions(limit: int = 50):
     return db.get_transactions(limit=limit)
 
 
+@app.get("/api/events")
+async def get_events(limit: int = 50):
+    """Lịch sử thông báo và sự kiện kho thời gian thực."""
+    return db.get_events(limit=limit)
+
+
 @app.post("/api/estop")
 async def trigger_estop():
     """Kích hoạt Dừng khẩn cấp robot."""
@@ -454,10 +528,10 @@ async def trigger_estop():
 
 @app.post("/api/estop/reset")
 async def reset_estop():
-    """Khôi phục sau dừng khẩn cấp."""
+    """Khôi phục sau dừng khẩn cấp: giải phóng E-Stop và tự động điều hướng robot về trạm HOME rồi mới hoạt động tiếp."""
     if bridge is not None:
         bridge.reset_estop()
-    return {"status": "ESTOP_RESET", "message": "Đã khôi phục trạng thái hoạt động"}
+    return {"status": "ESTOP_RESET", "message": "Đã giải phóng E-Stop. Robot đang tự động di chuyển về trạm HOME để sẵn sàng hoạt động tiếp."}
 
 
 @app.get("/api/map")
@@ -512,12 +586,95 @@ async def get_live_map_metadata():
     }
 
 
+def reset_warehouse_history_and_inventory():
+    """Reset toàn bộ lịch sử kho hàng (tasks, transactions, events) về 0 theo yêu cầu người dùng."""
+    global db, bridge
+    if db is None:
+        return
+    try:
+        with db.lock:
+            with db.conn:
+                db.conn.execute("DELETE FROM transactions;")
+                db.conn.execute("DELETE FROM tasks;")
+                db.conn.execute("DELETE FROM events;")
+                try:
+                    db.conn.execute("DELETE FROM sqlite_sequence WHERE name IN ('tasks', 'transactions', 'events');")
+                except Exception:
+                    pass
+                db.conn.execute("UPDATE slots SET state = 'EMPTY', quantity = 0, item_code = NULL, stored_at = NULL, reserved_by_task = NULL WHERE state = 'RESERVED';")
+                
+                # Nạp lại seed data
+                slots_file = find_config_path("wh_navigation/config/slots.yaml")
+                items_file = find_config_path("wh_task_manager/config/items_seed.yaml")
+                seed_inv_file = find_config_path("wh_gazebo/config/inventory_seed.yaml")
+                db.load_seed_data(slots_file, items_file, seed_inv_file)
+    except Exception as e:
+        print(f"[Reset] Lỗi khi reset lịch sử kho hàng: {e}")
+
+    if bridge:
+        bridge.active_task_id = 0
+        with bridge.lock:
+            bridge.latest_status["task_id"] = 0
+            bridge.latest_status["slot_id"] = ""
+            bridge.latest_status["holding_box"] = False
+            bridge.latest_status["held_box_tag"] = 0
+            bridge.latest_status["last_error"] = ""
+            bridge.trail = []
+            bridge.path_points = []
+
+
+@app.post("/api/robot/enable")
+async def robot_enable_endpoint(data: RobotEnableIn):
+    """Bật/tắt công tắc kích hoạt di chuyển của robot (Enable switch)."""
+    if not bridge:
+        raise HTTPException(status_code=503, detail="WebBridge chưa sẵn sàng")
+    
+    # RÀNG BUỘC AN TOÀN: Không được phép tắt Enable khi robot đang chạy hoặc đang về HOME
+    if not data.enabled and bridge.is_robot_enabled:
+        is_running, reason = bridge.is_robot_running()
+        if is_running:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Không được phép tắt ENABLE khi robot đang hoạt động! ({reason}). Vui lòng chờ robot dừng hẳn hoặc về trạm HOME an toàn."
+            )
+
+    was_enabled = bridge.is_robot_enabled
+    try:
+        enabled = bridge.set_robot_enabled(data.enabled)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    # Nếu bật lên từ OFF sang ON: reset toàn bộ lịch sử kho hàng về 0 (Bài 8b/Yêu cầu)
+    if enabled and not was_enabled:
+        reset_warehouse_history_and_inventory()
+        await broadcast({"type": "history_reset", "data": {}})
+        await broadcast({"type": "inventory", "data": db.get_inventory()})
+        await broadcast({"type": "task", "data": {"action": "reset"}})
+        await broadcast({
+            "type": "notification",
+            "data": {
+                "level": "success",
+                "text": "⚡ ĐÃ BẬT ENABLE: Mở khóa toàn diện hệ thống & reset lịch sử kho hàng về 0!",
+            },
+        })
+
+    await broadcast({
+        "type": "robot_enable",
+        "data": {"enabled": enabled}
+    })
+    return {"success": True, "is_enabled": enabled}
+
+
 @app.post("/api/teleop")
 async def teleop_command(cmd: TeleopIn):
     """Điều khiển robot thủ công (Bài 8b.5)."""
     if not bridge:
         raise HTTPException(status_code=503, detail="WebBridge chưa sẵn sàng")
-    bridge.send_teleop(cmd.vx, cmd.vy, cmd.wz)
+    if not bridge.is_robot_enabled and (abs(cmd.vx) > 0.001 or abs(cmd.vy) > 0.001 or abs(cmd.wz) > 0.001):
+        raise HTTPException(status_code=403, detail="Robot chưa được bật công tắc Enable. Vui lòng bật Enable để di chuyển!")
+    ok = bridge.send_teleop(cmd.vx, cmd.vy, cmd.wz)
+    if not ok and (abs(cmd.vx) > 0.001 or abs(cmd.vy) > 0.001 or abs(cmd.wz) > 0.001):
+        raise HTTPException(status_code=403, detail="Robot đang dừng khẩn cấp (E-STOP) hoặc chưa bật công tắc Enable!")
     return {"success": True, "vx": cmd.vx, "vy": cmd.vy, "wz": cmd.wz}
 
 
@@ -729,7 +886,11 @@ async def websocket_endpoint(ws: WebSocket):
 
 
 # ── Phục vụ Giao diện Tĩnh (Static Files - Mục 8.4) ──────────────────────────
-static_dir = os.path.join(os.path.dirname(__file__), "static")
+src_static_candidate = "/home/lehuythien/RB_warehouse_ws/src/wh_web/wh_web/static"
+if os.path.exists(src_static_candidate):
+    static_dir = src_static_candidate
+else:
+    static_dir = os.path.join(os.path.dirname(__file__), "static")
 if os.path.exists(static_dir):
     NO_CACHE_HEADERS = {
         "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",

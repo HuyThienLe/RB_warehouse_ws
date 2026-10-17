@@ -20,6 +20,10 @@ from typing import Optional, Callable, Dict, Any, Tuple, List
 import numpy as np
 import cv2
 
+# Đảm bảo cấu hình DDS và ROS_DOMAIN_ID đồng bộ tuyệt đối với full_system
+os.environ.setdefault("ROS_DOMAIN_ID", "42")
+os.environ.setdefault("RMW_IMPLEMENTATION", "rmw_cyclonedds_cpp")
+
 import rclpy
 from rclpy.node import Node
 from rclpy.callback_groups import ReentrantCallbackGroup
@@ -100,11 +104,15 @@ class WebBridge(Node):
             "linear_speed": 0.0,
             "angular_speed": 0.0,
             "is_estopped": False,
+            "is_enabled": False,
         }
         self.prev_state = "IDLE"
         self.prev_last_error = ""
+        self.active_task_id = 0
         self.last_push_time = 0.0
         self.is_estopped = False
+        self.is_robot_enabled = False
+        self.is_navigating_home = False
         self.lock = threading.Lock()
 
         # Chế độ vận hành: "navigation" | "mapping"
@@ -220,6 +228,7 @@ class WebBridge(Node):
         # ── 2. Publishers ────────────────────────────────────────────────────
         self.pub_estop = self.create_publisher(Bool, "/estop", 10)
         self.pub_estop_reset = self.create_publisher(Empty, "/estop_reset", 10)
+        self.pub_goal_pose = self.create_publisher(PoseStamped, "/goal_pose", 10)
         self.pub_teleop = self.create_publisher(Twist, "/cmd_vel_teleop", 10)
         self.pub_arm_traj = self.create_publisher(JointTrajectory, "/arm_controller/joint_trajectory", 10)
 
@@ -227,6 +236,17 @@ class WebBridge(Node):
         self.timer_watchdog = self.create_timer(0.1, self.teleop_watchdog)
         self.has_tf_pose = False
         self.timer_tf_pose = self.create_timer(0.05, self.update_tf_pose, callback_group=self.cbg)
+
+        # Tự động theo dõi thay đổi tồn kho (giao dịch nhập/xuất kho)
+        self.last_tx_id = 0
+        try:
+            cur = self.db.conn.cursor()
+            cur.execute("SELECT max(id) FROM transactions;")
+            row = cur.fetchone()
+            self.last_tx_id = row[0] if (row and row[0] is not None) else 0
+        except Exception:
+            self.last_tx_id = 0
+        self.timer_inventory = self.create_timer(1.0, self._check_inventory_update, callback_group=self.cbg)
 
         # ── 4. Service Clients ───────────────────────────────────────────────
         self.cli_submit = self.create_client(
@@ -450,39 +470,56 @@ class WebBridge(Node):
                     self.trail.pop(0)
                 self.push("trail", {"points": self.trail})
 
+        # Theo dõi task_id đang chạy thực tế
+        if curr_task_id > 0:
+            self.active_task_id = curr_task_id
+
         # 1. Phát hiện sự kiện chuyển trạng thái nhiệm vụ (FSM Step)
         if curr_state != self.prev_state:
             self.get_logger().info(f"FSM State thay đổi: {self.prev_state} -> {curr_state}")
             self.push("task", {
-                "task_id": curr_task_id,
+                "task_id": curr_task_id or self.active_task_id,
                 "state": curr_state,
                 "slot_id": curr_slot_id,
                 "last_error": curr_error,
             })
 
+            # Khi hoàn tất thao tác đặt/lấy hàng hoặc kết thúc nhiệm vụ
+            if curr_state in ("IN_COMMIT", "IN_NAV_HOME", "OUT_COMMIT", "OUT_NAV_HOME", "DONE", "IDLE"):
+                self.push("inventory", self.db.get_inventory())
+
             # Khi kết thúc nhiệm vụ (chuyển sang DONE hoặc IDLE)
             if curr_state in ("DONE", "IDLE") and self.prev_state not in ("DONE", "IDLE"):
-                self.push("inventory", self.db.get_inventory())
-                task_info = self.db.get_task(curr_task_id) if curr_task_id > 0 else None
-                task_status = task_info.get("status") if task_info else ("FAILED" if curr_error else "SUCCEEDED")
-                task_err = task_info.get("error") if task_info else curr_error
+                target_tid = self.active_task_id if self.active_task_id > 0 else curr_task_id
+                if target_tid <= 0:
+                    recent = self.db.get_tasks(limit=1)
+                    if recent:
+                        target_tid = recent[0]["task_id"]
 
-                if task_status == "SUCCEEDED" and not task_err:
-                    self.push("notification", {
-                        "level": "info",
-                        "text": f"Nhiệm vụ #{curr_task_id} đã hoàn tất thành công!",
-                    })
-                elif task_status == "CANCELLED":
-                    self.push("notification", {
-                        "level": "warn",
-                        "text": f"Nhiệm vụ #{curr_task_id} đã bị hủy bỏ.",
-                    })
-                else:
-                    self.push("notification", {
-                        "level": "error",
-                        "text": f"Nhiệm vụ #{curr_task_id} THẤT BẠI: {task_err or 'Lỗi thực thi'}",
-                    })
-                self._check_low_stock()
+                if target_tid > 0:
+                    task_info = self.db.get_task(target_tid)
+                    if task_info:
+                        st = task_info.get("status")
+                        t_type = "Nhập kho" if task_info.get("type") == "INBOUND" else "Xuất kho"
+                        p_name = task_info.get("item_name") or task_info.get("item_code") or ""
+                        p_desc = f" ({p_name})" if p_name else ""
+
+                        if st == "SUCCEEDED":
+                            self.push("notification", {
+                                "level": "info",
+                                "text": f"Đã hoàn thành đơn hàng #{target_tid}: {t_type}{p_desc}!",
+                            })
+                        elif st == "CANCELLED":
+                            self.push("notification", {
+                                "level": "warn",
+                                "text": f"Đơn hàng #{target_tid} đã bị hủy bỏ.",
+                            })
+                        elif st == "FAILED":
+                            self.push("notification", {
+                                "level": "error",
+                                "text": f"Đơn hàng #{target_tid} không thành công: {task_info.get('error') or 'Lỗi thực thi'}",
+                            })
+                self.active_task_id = 0
 
             elif curr_state == "ESTOP":
                 self.push("notification", {
@@ -492,18 +529,28 @@ class WebBridge(Node):
 
             self.prev_state = curr_state
 
-        # 2. Phát hiện lỗi mới phát sinh
-        if curr_error and curr_error != self.prev_last_error:
-            self.push("notification", {
-                "level": "warn",
-                "text": f"Nhiệm vụ #{curr_task_id} gặp lỗi: {curr_error}",
-            })
-            self.prev_last_error = curr_error
+        # Cập nhật mã lỗi trước đó
+        self.prev_last_error = curr_error
 
         # 3. Tần số phát dữ liệu robot giới hạn ở ~10 Hz (cứ >= 0.1s gửi 1 lần)
         if now - self.last_push_time >= 0.1:
             self.last_push_time = now
             self.push("robot", self.get_robot_status())
+
+    def _check_inventory_update(self):
+        """Kiểm tra giao dịch kho mới từ CSDL và tự động broadcast 'inventory' lên giao diện Web."""
+        try:
+            cur = self.db.conn.cursor()
+            cur.execute("SELECT max(id) FROM transactions;")
+            row = cur.fetchone()
+            latest_tx = row[0] if (row and row[0] is not None) else 0
+            if latest_tx != self.last_tx_id:
+                self.last_tx_id = latest_tx
+                inv = self.db.get_inventory()
+                self.push("inventory", inv)
+                self.get_logger().info(f"[WebBridge] Tự động cập nhật tồn kho lên Web (giao dịch mới tx_id={latest_tx}).")
+        except Exception as e:
+            pass
 
     def _check_low_stock(self):
         """Kiểm tra và bắn thông báo nếu mặt hàng chạm ngưỡng tồn thấp."""
@@ -518,38 +565,249 @@ class WebBridge(Node):
         except Exception as e:
             self.get_logger().warn(f"Lỗi kiểm tra low stock: {e}")
 
-    # ── Điều khiển E-Stop ────────────────────────────────────────────────────
+    # ── Điều khiển E-Stop & Tự Động Về HOME (Bài 8b/Yêu Cầu) ──────────────────
+    def is_robot_running(self) -> Tuple[bool, str]:
+        """Kiểm tra xem robot có đang chuyển động hoặc đang thực thi nhiệm vụ hay không."""
+        with self.lock:
+            if getattr(self, "is_navigating_home", False):
+                return True, "Robot đang di chuyển về trạm HOME sau E-Stop"
+            st = str(self.latest_status.get("state", "IDLE")).upper()
+            lin = abs(float(self.latest_status.get("linear_speed", 0.0)))
+            ang = abs(float(self.latest_status.get("angular_speed", 0.0)))
+            teleop = getattr(self, "is_teleop_active", False)
+
+        if lin > 0.01 or ang > 0.01 or teleop:
+            return True, f"Robot đang chuyển động (v={lin:.2f} m/s, w={ang:.2f} rad/s)"
+
+        if st not in ("IDLE", "DONE", "OFFLINE"):
+            return True, f"Robot đang hoạt động ở trạng thái '{st}'"
+
+        try:
+            tasks = self.db.get_tasks(limit=10)
+            for t in tasks:
+                if t.get("status") in ("IN_PROGRESS", "EXECUTING"):
+                    return True, f"Nhiệm vụ #{t.get('task_id')} đang được xử lý"
+        except Exception:
+            pass
+
+        return False, ""
+
     def trigger_estop(self):
         """Kích hoạt E-Stop dừng khẩn cấp."""
         msg = Bool(data=True)
         self.pub_estop.publish(msg)
         with self.lock:
             self.is_estopped = True
+            self.is_navigating_home = False
             self.latest_status["state"] = "ESTOP"
             self.latest_status["linear_speed"] = 0.0
             self.latest_status["angular_speed"] = 0.0
+
+        # Phát dừng ngay lập tức
+        stop_cmd = Twist()
+        for _ in range(3):
+            self.pub_teleop.publish(stop_cmd)
+
         self.push("notification", {
             "level": "error",
-            "text": "Lệnh DỪNG KHẨN CẤP (E-STOP) đã được kích hoạt từ Web!",
+            "text": "Lệnh DỪNG KHẨN CẤP (E-STOP) đã được kích hoạt! Robot đóng băng tại chỗ.",
         })
         self.push("robot", self.get_robot_status())
 
     def reset_estop(self):
-        """Giải phóng E-Stop sau khi xác nhận an toàn."""
+        """Giải phóng E-Stop sau khi xác nhận an toàn, sau đó tự động điều hướng robot về trạm HOME."""
         msg = Empty()
         self.pub_estop_reset.publish(msg)
         with self.lock:
             self.is_estopped = False
-            self.latest_status["state"] = "IDLE"
+            self.is_navigating_home = True
+            self.latest_status["state"] = "NAV_HOME"
+            self.latest_status["is_estopped"] = False
+
         self.push("notification", {
             "level": "info",
-            "text": "Đã khôi phục trạng thái E-Stop. Robot sẵn sàng nhận lệnh mới.",
+            "text": "Đã giải phóng E-Stop! Robot đang tự động di chuyển về trạm HOME để sẵn sàng hoạt động tiếp.",
         })
         self.push("robot", self.get_robot_status())
+
+        # Khởi chạy luồng đưa robot về HOME an toàn
+        threading.Thread(target=self._navigate_home_after_estop, daemon=True).start()
+
+    def _navigate_home_after_estop(self):
+        """Tiến trình điều khiển đưa robot trở về trạm HOME (-2.4, 0.0) sau khi E-Stop kết thúc."""
+        try:
+            self.get_logger().info("Bắt đầu điều hướng đưa robot về trạm HOME sau khi giải tỏa E-Stop...")
+
+            # 1. Phát goal_pose lên Nav2 nếu có Nav2
+            goal_msg = PoseStamped()
+            goal_msg.header.frame_id = "map"
+            goal_msg.header.stamp = self.get_clock().now().to_msg()
+            goal_msg.pose.position.x = -2.40
+            goal_msg.pose.position.y = 0.00
+            goal_msg.pose.position.z = 0.00
+            goal_msg.pose.orientation.z = 0.00
+            goal_msg.pose.orientation.w = 1.00
+            self.pub_goal_pose.publish(goal_msg)
+
+            # 2. Vòng lặp điều khiển di chuyển an toàn về HOME
+            t0 = time.time()
+            rate_hz = 20.0
+            dt = 1.0 / rate_hz
+            timeout_sec = 40.0
+
+            while time.time() - t0 < timeout_sec:
+                if self.is_estopped or not self.is_navigating_home:
+                    self.get_logger().warn("Quá trình về HOME bị ngắt do E-STOP hoặc hủy bỏ!")
+                    break
+
+                with self.lock:
+                    curr_x = float(self.latest_status.get("x", -2.40))
+                    curr_y = float(self.latest_status.get("y", 0.00))
+                    curr_yaw = float(self.latest_status.get("yaw", 0.00))
+
+                dist_to_home = math.hypot(curr_x - (-2.40), curr_y - 0.00)
+                if dist_to_home <= 0.10 and abs(curr_yaw) <= 0.25:
+                    self.get_logger().info("Robot đã tới trạm HOME an toàn.")
+                    break
+
+                cmd = Twist()
+                speed_linear = 0.20
+                speed_angular = 0.60
+
+                if curr_y > 0.40:
+                    # Đang ở sâu trạm IN: lùi thẳng ra hành lang chính (y -> 0.0)
+                    cmd.linear.x = -speed_linear
+                    step_dx = 0.0
+                    step_dy = -speed_linear * dt
+                    step_dyaw = 0.0
+                elif curr_y < -0.40:
+                    # Đang ở sâu trạm OUT: lùi thẳng ra hành lang chính (y -> 0.0)
+                    cmd.linear.x = -speed_linear
+                    step_dx = 0.0
+                    step_dy = speed_linear * dt
+                    step_dyaw = 0.0
+                else:
+                    # Ở hành lang chính: tiến thẳng về (-2.40, 0.00)
+                    target_dx = -2.40 - curr_x
+                    target_dy = 0.00 - curr_y
+                    dist_xy = math.hypot(target_dx, target_dy)
+
+                    if dist_xy > 0.08:
+                        desired_angle = math.atan2(target_dy, target_dx)
+                        angle_diff = (desired_angle - curr_yaw + math.pi) % (2 * math.pi) - math.pi
+                        
+                        if abs(angle_diff) > 0.45:
+                            # Xoay tại chỗ hướng về mục tiêu
+                            cmd.linear.x = 0.04
+                            cmd.angular.z = min(speed_angular, max(-speed_angular, angle_diff * 2.2))
+                        else:
+                            # Tiến thẳng về đích kèm căn chỉnh góc
+                            cmd.linear.x = min(speed_linear, max(0.08, dist_xy * 0.9))
+                            cmd.angular.z = min(speed_angular, max(-speed_angular, angle_diff * 1.8))
+                        
+                        step_dx = math.cos(curr_yaw) * cmd.linear.x * dt
+                        step_dy = math.sin(curr_yaw) * cmd.linear.x * dt
+                        step_dyaw = cmd.angular.z * dt
+                    else:
+                        # Đã tới gần tọa độ HOME: dừng tiến, chỉnh góc yaw về 0
+                        yaw_diff = (0.0 - curr_yaw + math.pi) % (2 * math.pi) - math.pi
+                        if abs(yaw_diff) <= 0.20:
+                            break
+                        cmd.linear.x = 0.0
+                        cmd.angular.z = min(speed_angular, max(-speed_angular, yaw_diff * 2.0))
+                        step_dx = 0.0
+                        step_dy = 0.0
+                        step_dyaw = cmd.angular.z * dt
+
+                # Phát vận tốc tới xe
+                self.pub_teleop.publish(cmd)
+
+                with self.lock:
+                    if not self.has_tf_pose:
+                        self.latest_status["x"] = round(curr_x + step_dx, 3)
+                        self.latest_status["y"] = round(curr_y + step_dy, 3)
+                        self.latest_status["yaw"] = round(curr_yaw + step_dyaw, 3)
+                    self.latest_status["linear_speed"] = round(abs(cmd.linear.x), 2)
+                    self.latest_status["angular_speed"] = round(abs(cmd.angular.z), 2)
+
+                rx_now = self.latest_status["x"]
+                ry_now = self.latest_status["y"]
+                if math.hypot(rx_now - self.last_trail_x, ry_now - self.last_trail_y) >= 0.05:
+                    self.last_trail_x = rx_now
+                    self.last_trail_y = ry_now
+                    self.trail.append([round(rx_now, 3), round(ry_now, 3)])
+                    if len(self.trail) > 1000:
+                        self.trail.pop(0)
+                    self.push("trail", {"points": self.trail})
+
+                self.push("robot", self.get_robot_status())
+                time.sleep(dt)
+
+            # Dừng hoàn toàn
+            stop_twist = Twist()
+            for _ in range(3):
+                self.pub_teleop.publish(stop_twist)
+                time.sleep(0.02)
+
+            with self.lock:
+                self.is_navigating_home = False
+                self.latest_status["linear_speed"] = 0.0
+                self.latest_status["angular_speed"] = 0.0
+                if not self.is_estopped:
+                    if not self.has_tf_pose:
+                        self.latest_status["x"] = -2.40
+                        self.latest_status["y"] = 0.00
+                        self.latest_status["yaw"] = 0.00
+                    self.latest_status["state"] = "IDLE"
+
+            if not self.is_estopped:
+                self.db.add_event("INFO", "Robot đã về trạm HOME an toàn sau khi giải tỏa E-Stop. Sẵn sàng tiếp tục hoạt động.")
+                self.push("notification", {
+                    "level": "success",
+                    "text": "✅ Robot đã về trạm HOME an toàn! Sẵn sàng tiếp tục hoạt động.",
+                })
+                self.push("robot", self.get_robot_status())
+
+        except Exception as e:
+            self.get_logger().error(f"Lỗi khi đưa robot về HOME sau E-stop: {e}")
+            with self.lock:
+                self.is_navigating_home = False
+                if not self.is_estopped:
+                    self.latest_status["state"] = "IDLE"
+            self.push("robot", self.get_robot_status())
+
+    # ── Công Tắc Kích Hoạt Di Chuyển Robot (Robot Motion Enable) ───────────────
+    def set_robot_enabled(self, enabled: bool) -> bool:
+        """Bật/tắt công tắc cho phép robot di chuyển (Enable switch). Không cho phép tắt khi đang chạy."""
+        if not enabled and self.is_robot_enabled:
+            is_running, reason = self.is_robot_running()
+            if is_running:
+                raise RuntimeError(f"Không thể tắt Enable khi robot đang chạy! ({reason})")
+
+        with self.lock:
+            self.is_robot_enabled = bool(enabled)
+            self.latest_status["is_enabled"] = self.is_robot_enabled
+            if not self.is_robot_enabled:
+                stop_cmd = Twist()
+                self.pub_teleop.publish(stop_cmd)
+                self.is_teleop_active = False
+
+        status_text = "ĐÃ BẬT (ENABLED)" if self.is_robot_enabled else "ĐÃ TẮT (DISABLED)"
+        self.push("notification", {
+            "level": "success" if self.is_robot_enabled else "warn",
+            "text": f"Công tắc kích hoạt di chuyển robot: {status_text}.",
+        })
+        self.push("robot", self.get_robot_status())
+        return self.is_robot_enabled
 
     # ── Teleop & Watchdog An Toàn (Bài 8b.5) ──────────────────────────────────
     def send_teleop(self, vx: float, vy: float, wz: float) -> bool:
         """Phát lệnh vận tốc thủ công, giới hạn an toàn <= 0.25 m/s, <= 0.6 rad/s."""
+        if self.is_estopped:
+            return False
+        if not self.is_robot_enabled:
+            return False
+
         cmd = Twist()
         cmd.linear.x = max(-0.25, min(0.25, float(vx)))
         cmd.linear.y = max(-0.25, min(0.25, float(vy)))
@@ -559,6 +817,17 @@ class WebBridge(Node):
         with self.lock:
             self.last_teleop_time = time.time()
             self.is_teleop_active = (abs(cmd.linear.x) > 0.001 or abs(cmd.linear.y) > 0.001 or abs(cmd.angular.z) > 0.001)
+            if not self.has_tf_pose and self.is_teleop_active:
+                dt = 0.08
+                curr_yaw = self.latest_status.get("yaw", 0.0)
+                dx = (math.cos(curr_yaw) * cmd.linear.x - math.sin(curr_yaw) * cmd.linear.y) * dt
+                dy = (math.sin(curr_yaw) * cmd.linear.x + math.cos(curr_yaw) * cmd.linear.y) * dt
+                dyaw = cmd.angular.z * dt
+                self.latest_status["x"] = round(self.latest_status.get("x", -2.40) + dx, 3)
+                self.latest_status["y"] = round(self.latest_status.get("y", 0.00) + dy, 3)
+                self.latest_status["yaw"] = round(curr_yaw + dyaw, 3)
+                self.latest_status["linear_speed"] = round(math.hypot(cmd.linear.x, cmd.linear.y), 2)
+                self.latest_status["angular_speed"] = round(abs(cmd.angular.z), 2)
         return True
 
     def teleop_watchdog(self):
@@ -609,7 +878,7 @@ class WebBridge(Node):
 
             meta = self.live_map_meta
             res_val = meta.get("resolution", 0.025)
-            ox_val = meta.get("origin_x", -3.5)
+            ox_val = meta.get("origin_x", -4.3)
             oy_val = meta.get("origin_y", -2.5)
             with open(yaml_path, "w", encoding="utf-8") as f:
                 f.write(f"image: {map_name}.pgm\n")
@@ -667,6 +936,11 @@ class WebBridge(Node):
         slot_id: Optional[str] = None,
     ) -> Tuple[bool, int, str]:
         """Gửi lệnh nhập/xuất tới Task Manager qua ROS service (hoặc CSDL trực tiếp nếu có ô chỉ định)."""
+        if task_type.upper() == "INBOUND":
+            current_stock = self.db.get_item_stock(item_code)
+            if current_stock > 0:
+                return False, 0, f"Mặt hàng '{item_code}' đã có {current_stock} hộp trong kho! Chỉ mặt hàng chưa có hàng mới được nhập."
+
         # Nếu có ô chỉ định cụ thể, ghi trực tiếp vào CSDL để truyền kèm slot_id
         if slot_id or not self.cli_submit.wait_for_service(timeout_sec=0.5):
             first_id = 0
@@ -716,7 +990,11 @@ class WebBridge(Node):
             st = dict(self.latest_status)
             if self.is_estopped:
                 st["state"] = "ESTOP"
+            elif getattr(self, "is_navigating_home", False):
+                st["state"] = "NAV_HOME"
             st["is_estopped"] = self.is_estopped
+            st["is_enabled"] = self.is_robot_enabled
+            st["is_navigating_home"] = getattr(self, "is_navigating_home", False)
             return st
 
     def get_live_map_meta(self) -> Dict[str, Any]:
@@ -748,14 +1026,14 @@ class WebBridge(Node):
         self._process_image(msg, is_dock=True)
 
     def cb_dock_raw_image(self, msg: Image):
-        if time.time() - self.last_dock_img_time > 0.5:
+        if time.time() - self.last_dock_img_time > 0.05:
             self._process_image(msg, is_dock=True)
 
     def cb_hand_debug_image(self, msg: Image):
         self._process_image(msg, is_dock=False)
 
     def cb_hand_raw_image(self, msg: Image):
-        if time.time() - self.last_hand_img_time > 0.5:
+        if time.time() - self.last_hand_img_time > 0.05:
             self._process_image(msg, is_dock=False)
 
     def _process_image(self, msg: Image, is_dock: bool):
@@ -784,13 +1062,13 @@ class WebBridge(Node):
         with self.lock:
             if self.latest_dock_jpeg:
                 return self.latest_dock_jpeg
-        return make_placeholder_frame("DOCK CAMERA: Đang kết nối...")
+        return make_placeholder_frame("DOCK CAMERA: Dang ket noi...")
 
     def get_hand_frame(self) -> bytes:
         with self.lock:
             if self.latest_hand_jpeg:
                 return self.latest_hand_jpeg
-        return make_placeholder_frame("HAND CAMERA: Đang kết nối...")
+        return make_placeholder_frame("HAND CAMERA: Dang ket noi...")
 
     def get_vision_telemetry(self) -> Dict[str, Any]:
         with self.lock:
@@ -808,7 +1086,7 @@ class WebBridge(Node):
         req = SetBool.Request()
         req.data = bool(state)
         self.cli_gripper.call_async(req)
-        return True, "Đã gửi lệnh bật hút" if state else "Đã gửi lệnh nhả hút"
+        return True, "Đã kích hoạt servo đóng kẹp chặt hộp" if state else "Đã kích hoạt servo mở má kẹp nhả hàng"
 
     def trigger_arm_pose(self, pose_name: str) -> Tuple[bool, str]:
         POSES = {
@@ -820,8 +1098,8 @@ class WebBridge(Node):
             "PRE_SLOT_2": [0.265, -0.8697, 2.6281, -1.7584],
             "OBSERVE_2": [0.265, -0.5796, 1.3609, -0.7813],
             "TOUCH_2": [0.265, -0.5796, 1.3609, -0.7813],
-            "TRAY_HOVER": [0.160, -1.5860, -2.2536, 0.6980],
-            "TRAY_TOUCH": [0.015, -1.5860, -2.2536, 0.6980],
+            "TRAY_HOVER": [0.220, -1.4828, -2.3505, 0.6917],
+            "TRAY_TOUCH": [0.009, -1.4828, -2.3505, 0.6917],
             "PRE_SLOT_TIER_1": [0.015, -0.8697, 2.6281, -1.7584],
             "OBSERVE_TIER_1": [0.015, -0.5796, 1.3609, -0.7813],
             "TOUCH_TIER_1": [0.015, -0.5796, 1.3609, -0.7813],

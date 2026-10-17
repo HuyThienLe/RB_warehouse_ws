@@ -145,8 +145,12 @@ class InventoryDB:
                         for item in items:
                             self.conn.execute(
                                 """
-                                INSERT OR IGNORE INTO items(item_code, name, box_tag_id, low_stock_threshold)
-                                VALUES (?, ?, ?, ?);
+                                INSERT INTO items(item_code, name, box_tag_id, low_stock_threshold)
+                                VALUES (?, ?, ?, ?)
+                                ON CONFLICT(item_code) DO UPDATE SET
+                                    name = excluded.name,
+                                    box_tag_id = excluded.box_tag_id,
+                                    low_stock_threshold = excluded.low_stock_threshold;
                                 """,
                                 (
                                     item["item_code"],
@@ -182,7 +186,7 @@ class InventoryDB:
                     with self.conn:
                         # Đồng bộ lại trạng thái toàn bộ ô kệ về EMPTY để tránh hàng ảo từ phiên chạy cũ
                         self.conn.execute("UPDATE slots SET state = 'EMPTY', quantity = 0, item_code = NULL, stored_at = NULL, reserved_by_task = NULL;")
-                        self.conn.execute("UPDATE tasks SET status = 'CANCELLED' WHERE status IN ('QUEUED', 'IN_PROGRESS');")
+                        self.conn.execute("UPDATE tasks SET status = 'CANCELLED' WHERE status IN ('QUEUED', 'RUNNING');")
                         for box in inv_data:
                             box_id = box["box_id"]
                             slot_tag = box.get("slot_id")
@@ -229,6 +233,16 @@ class InventoryDB:
                     self.conn.rollback()
                     self.add_event("WARN", f"Nhiệm vụ {task_id}: Không tìm thấy mã hàng '{item_code}'")
                     return None, None, "ITEM_NOT_FOUND"
+
+                # 1b. Kiểm tra tồn kho: Hàng nào có hàng rồi thì không được nhập nữa
+                cur.execute(
+                    "SELECT count(*) FROM slots WHERE state = 'FULL' AND item_code = ?;",
+                    (item_code,),
+                )
+                if cur.fetchone()[0] > 0:
+                    self.conn.rollback()
+                    self.add_event("WARN", f"Nhiệm vụ {task_id}: Mặt hàng '{item_code}' đã có trên kệ, không thể nhập thêm (ALREADY_IN_STOCK)")
+                    return None, None, "ALREADY_IN_STOCK"
 
                 # 2. Tìm tất cả các ô đang EMPTY
                 cur.execute(
@@ -636,7 +650,15 @@ class InventoryDB:
     def get_transactions(self, limit: int = 50) -> List[Dict[str, Any]]:
         cur = self.conn.cursor()
         cur.execute(
-            "SELECT * FROM transactions ORDER BY id DESC LIMIT ?;", (limit,)
+            """
+            SELECT tr.id, tr.task_id, tr.type, tr.item_code,
+                   coalesce(i.name, tr.item_code) as item_name,
+                   tr.slot_id, tr.delta, tr.ts
+            FROM transactions tr
+            LEFT JOIN items i ON tr.item_code = i.item_code
+            ORDER BY tr.id DESC LIMIT ?;
+            """,
+            (limit,),
         )
         return [dict(r) for r in cur.fetchall()]
 
@@ -647,15 +669,20 @@ class InventoryDB:
 
     def get_tasks(self, status: Optional[str] = None, limit: int = 50) -> List[Dict[str, Any]]:
         cur = self.conn.cursor()
+        query = """
+            SELECT t.task_id, t.type, t.item_code,
+                   coalesce(i.name, t.item_code) as item_name,
+                   t.slot_id, t.priority, t.status,
+                   t.created_at, t.started_at, t.finished_at, t.error
+            FROM tasks t
+            LEFT JOIN items i ON t.item_code = i.item_code
+        """
         if status:
-            cur.execute(
-                "SELECT * FROM tasks WHERE status = ? ORDER BY task_id DESC LIMIT ?;",
-                (status.upper(), limit),
-            )
+            query += " WHERE t.status = ? ORDER BY t.task_id DESC LIMIT ?;"
+            cur.execute(query, (status.upper(), limit))
         else:
-            cur.execute(
-                "SELECT * FROM tasks ORDER BY task_id DESC LIMIT ?;", (limit,)
-            )
+            query += " ORDER BY t.task_id DESC LIMIT ?;"
+            cur.execute(query, (limit,))
         return [dict(r) for r in cur.fetchall()]
 
     def get_item_stock(self, item_code: str) -> int:
@@ -665,6 +692,32 @@ class InventoryDB:
             (item_code,),
         )
         return cur.fetchone()[0]
+
+    def is_item_in_warehouse(self, item_code: str) -> bool:
+        """Kiểm tra xem mặt hàng đã có trên kệ hoặc đang có nhiệm vụ nhập kho chưa."""
+        with self.lock:
+            cur = self.conn.cursor()
+            cur.execute(
+                "SELECT count(*) FROM slots WHERE state IN ('FULL', 'RESERVED') AND item_code = ?;",
+                (item_code,),
+            )
+            if cur.fetchone()[0] > 0:
+                return True
+            cur.execute(
+                "SELECT count(*) FROM tasks WHERE type = 'INBOUND' AND item_code = ? AND status IN ('QUEUED', 'RUNNING');",
+                (item_code,),
+            )
+            return cur.fetchone()[0] > 0
+
+    def get_active_inbound_tasks(self, item_code: str) -> List[int]:
+        """Lấy danh sách ID các nhiệm vụ INBOUND đang chờ hoặc đang chạy của mã hàng."""
+        with self.lock:
+            cur = self.conn.cursor()
+            cur.execute(
+                "SELECT task_id FROM tasks WHERE type = 'INBOUND' AND item_code = ? AND status IN ('QUEUED', 'RUNNING') ORDER BY task_id ASC;",
+                (item_code,),
+            )
+            return [row[0] for row in cur.fetchall()]
 
     def get_free_slots_count(self) -> int:
         cur = self.conn.cursor()

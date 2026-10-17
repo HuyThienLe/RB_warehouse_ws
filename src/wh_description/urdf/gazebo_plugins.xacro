@@ -21,23 +21,37 @@
     </plugin>
   </gazebo>
 
-  <!-- Parallel Gripper Attachment Plugin (Gazebo object attacher) -->
+  <!-- Parallel Gripper Attachment Plugin (Gazebo object attacher with zero vibration) -->
   <gazebo>
-    <plugin name="parallel_gripper" filename="libgazebo_ros_vacuum_gripper.so">
+    <plugin name="parallel_gripper" filename="libwh_gripper_attacher.so">
       <ros>
         <namespace>gripper</namespace>
         <remapping>switch:=switch_raw</remapping>
         <remapping>grasping:=grasping_raw</remapping>
       </ros>
       <link_name>gripper_grasp_link</link_name>
-      <max_distance>0.08</max_distance>
+      <max_distance>0.15</max_distance>
       <fixed>ground_plane</fixed>
+      <fixed>table_in</fixed>
+      <fixed>table_out</fixed>
+      <fixed>station_tray_in</fixed>
+      <fixed>station_tray_out</fixed>
       <fixed>rack_a_level_1_plank</fixed>
       <fixed>rack_a_level_2_plank</fixed>
       <fixed>rack_b_level_1_plank</fixed>
       <fixed>rack_b_level_2_plank</fixed>
       <fixed>shelf_tray_0</fixed>
       <fixed>shelf_tray_1</fixed>
+      <fixed>shelf_tray_2</fixed>
+      <fixed>shelf_tray_3</fixed>
+      <fixed>shelf_tray_4</fixed>
+      <fixed>shelf_tray_5</fixed>
+      <fixed>shelf_tray_6</fixed>
+      <fixed>shelf_tray_7</fixed>
+      <fixed>shelf_tray_8</fixed>
+      <fixed>shelf_tray_9</fixed>
+      <fixed>shelf_tray_10</fixed>
+      <fixed>shelf_tray_11</fixed>
     </plugin>
   </gazebo>
 

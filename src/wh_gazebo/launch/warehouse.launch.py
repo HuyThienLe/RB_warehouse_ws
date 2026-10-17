@@ -173,6 +173,13 @@ def generate_launch_description():
         output="screen"
     )
 
+    gripper_controller_spawner = Node(
+        package="controller_manager",
+        executable="spawner",
+        arguments=["gripper_controller", "--controller-manager-timeout", "30"],
+        output="screen"
+    )
+
     delay_jsb_after_spawn = RegisterEventHandler(
         event_handler=OnProcessExit(
             target_action=spawn_robot_node,
@@ -184,7 +191,7 @@ def generate_launch_description():
     delay_arm_after_jsb = RegisterEventHandler(
         event_handler=OnProcessExit(
             target_action=joint_state_broadcaster_spawner,
-            on_exit=[arm_controller_spawner]
+            on_exit=[arm_controller_spawner, gripper_controller_spawner]
         ),
         condition=IfCondition(LaunchConfiguration("spawn_robot"))
     )

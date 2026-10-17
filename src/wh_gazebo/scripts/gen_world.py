@@ -585,7 +585,14 @@ def _build_dynamic_obstacle(name="dynamic_obstacle", x=-0.40, y=0.0, size_xy=0.2
 # ── World template ────────────────────────────────────────────────────────────
 def build_world(slots: dict) -> str:
     wh_dim = WH["dimensions"]
-    lx, ly = wh_dim["length_x"], wh_dim["width_y"]
+    x_min = float(wh_dim.get("x_min", -wh_dim["length_x"] / 2.0))
+    x_max = float(wh_dim.get("x_max", wh_dim["length_x"] / 2.0))
+    y_min = float(wh_dim.get("y_min", -wh_dim["width_y"] / 2.0))
+    y_max = float(wh_dim.get("y_max", wh_dim["width_y"] / 2.0))
+    lx = x_max - x_min
+    ly = y_max - y_min
+    cx_wh = (x_min + x_max) / 2.0
+    cy_wh = (y_min + y_max) / 2.0
     wall_h = WH["walls"]["height"]
     wall_t = WH["walls"]["thickness"]
 
@@ -594,19 +601,19 @@ def build_world(slots: dict) -> str:
     # ── Tường bao ─────────────────────────────────────────────────────────────
     # Bắc (y+)
     parts.append(_static_box("wall_north", lx + wall_t*2, wall_t, wall_h,
-                              0, ly/2 + wall_t/2, wall_h/2,
+                              cx_wh, y_max + wall_t/2, wall_h/2,
                               color="0.75 0.75 0.80 1.0", cast_shadow="false"))
     # Nam (y-)
     parts.append(_static_box("wall_south", lx + wall_t*2, wall_t, wall_h,
-                              0, -ly/2 - wall_t/2, wall_h/2,
+                              cx_wh, y_min - wall_t/2, wall_h/2,
                               color="0.75 0.75 0.80 1.0", cast_shadow="false"))
     # Đông (x+)
     parts.append(_static_box("wall_east", wall_t, ly, wall_h,
-                              lx/2 + wall_t/2, 0, wall_h/2,
+                              x_max + wall_t/2, cy_wh, wall_h/2,
                               color="0.75 0.75 0.80 1.0", cast_shadow="false"))
     # Tây (x-)
     parts.append(_static_box("wall_west", wall_t, ly, wall_h,
-                              -lx/2 - wall_t/2, 0, wall_h/2,
+                              x_min - wall_t/2, cy_wh, wall_h/2,
                               color="0.75 0.75 0.80 1.0", cast_shadow="false"))
 
     # ── Kệ ────────────────────────────────────────────────────────────────────
@@ -714,12 +721,12 @@ def build_world(slots: dict) -> str:
       <static>true</static>
       <link name="link">
         <collision name="col">
-          <geometry><plane><normal>0 0 1</normal><size>8.0 6.0</size></plane></geometry>
+          <geometry><plane><normal>0 0 1</normal><size>10.0 6.0</size></plane></geometry>
           <surface><friction><ode><mu>1.0</mu><mu2>1.0</mu2></ode></friction></surface>
         </collision>
         <visual name="vis">
           <cast_shadows>false</cast_shadows>
-          <geometry><plane><normal>0 0 1</normal><size>8.0 6.0</size></plane></geometry>
+          <geometry><plane><normal>0 0 1</normal><size>10.0 6.0</size></plane></geometry>
           <material>
             <ambient>0.85 0.85 0.85 1</ambient>
             <diffuse>0.85 0.85 0.85 1</diffuse>

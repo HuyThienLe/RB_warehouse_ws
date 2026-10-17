@@ -1,63 +1,64 @@
-# items_seed.yaml – Danh mục mặt hàng mẫu
+# items_seed.yaml – Danh mục mặt hàng mẫu chuẩn Đồ Án Tốt Nghiệp (Kho linh kiện & Thiết bị máy tính)
 items:
   - item_code: "ITEM_20"
-    name: "Bánh quy bơ hộp thiếc"
+    name: "Laptop Dell Inspiron 15"
     box_tag_id: 20
     low_stock_threshold: 1
 
   - item_code: "ITEM_21"
-    name: "Nước tăng lực lon"
+    name: "Laptop ASUS Zenbook 14"
     box_tag_id: 21
     low_stock_threshold: 1
 
   - item_code: "ITEM_22"
-    name: "Sữa tươi tiệt trùng"
+    name: "Laptop Lenovo ThinkPad E14"
     box_tag_id: 22
     low_stock_threshold: 1
 
   - item_code: "ITEM_23"
-    name: "Dầu ăn thực vật chai"
+    name: "Bo Mạch Chủ ASUS ROG Strix"
     box_tag_id: 23
     low_stock_threshold: 1
 
   - item_code: "ITEM_24"
-    name: "Mì ăn liền tôm chua cay"
+    name: "Card Đồ Họa MSI Gaming RTX 4060"
     box_tag_id: 24
     low_stock_threshold: 1
 
   - item_code: "ITEM_25"
-    name: "Gia vị hạt nêm đóng gói"
+    name: "Vi Xử Lý Intel Core i7 14700K"
     box_tag_id: 25
     low_stock_threshold: 1
 
   - item_code: "ITEM_26"
-    name: "Trà xanh đóng chai"
+    name: "Ổ Cứng SSD Samsung 990 Pro 1TB"
     box_tag_id: 26
     low_stock_threshold: 1
 
   - item_code: "ITEM_27"
-    name: "Cà phê rang xay đóng túi"
+    name: "Thanh RAM Kingston Fury 16GB"
     box_tag_id: 27
     low_stock_threshold: 1
 
   - item_code: "ITEM_28"
-    name: "Nước khoáng thiên nhiên"
+    name: "Nguồn Máy Tính Corsair RM750e"
     box_tag_id: 28
     low_stock_threshold: 1
 
   - item_code: "ITEM_29"
-    name: "Nước ngọt có ga lon"
+    name: "Màn Hình Dell UltraSharp 24 inch"
     box_tag_id: 29
     low_stock_threshold: 1
 
   - item_code: "ITEM_32"
-    name: "Sữa chua uống tiệt trùng"
+    name: "Bàn Phím Cơ Không Dây Logitech G Pro"
     box_tag_id: 32
     low_stock_threshold: 1
 
   - item_code: "ITEM_33"
-    name: "Khăn giấy lụa cao cấp"
+    name: "Chuột Gaming Razer DeathAdder V3"
     box_tag_id: 33
     low_stock_threshold: 1
+
 
 

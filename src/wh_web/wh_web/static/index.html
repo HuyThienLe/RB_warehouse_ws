@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Kho Thông Minh – Điều Phối Robot</title>
-  <link rel="stylesheet" href="style.css?v=3.1">
+  <title>Kho Thông Minh – Điều Phối Robot AGV</title>
+  <link rel="stylesheet" href="style.css?v=4.0">
 </head>
 <body>
-  <!-- Header cố định -->
+  <!-- Header cố định & Thanh điều hướng 2 trang -->
   <header class="app-header">
     <div class="header-left">
       <div class="brand-logo">
@@ -26,7 +26,36 @@
       </div>
     </div>
 
+    <!-- Thanh Chuyển Đổi 2 Trang Độc Quyền (Segmented Pill Tabs) -->
+    <nav class="header-nav-tabs">
+      <button class="header-tab-btn active" id="btn-page-robot" onclick="switchPage('page-robot', this)">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="18" height="18" rx="2"/>
+          <circle cx="8.5" cy="8.5" r="1.5"/>
+          <polyline points="21 15 16 10 5 21"/>
+        </svg>
+        <span>1. Giám Sát Robot</span>
+      </button>
+      <button class="header-tab-btn" id="btn-page-warehouse" onclick="switchPage('page-warehouse', this)">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+          <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+          <line x1="12" y1="22.08" x2="12" y2="12"/>
+        </svg>
+        <span>2. Kho & Điều Phối</span>
+      </button>
+    </nav>
+
     <div class="header-right">
+      <!-- Công Tắc Kích Hoạt Robot (Enable Switch) ở Header -->
+      <div class="header-enable-toggle" id="header-enable-wrap" title="Công tắc kích hoạt di chuyển robot (Enable)">
+        <span class="enable-label" id="header-enable-label">ENABLE</span>
+        <label class="switch">
+          <input type="checkbox" id="header-robot-enable" onchange="toggleRobotEnable(this.checked)">
+          <span class="slider round"></span>
+        </label>
+      </div>
+
       <!-- Chỉ báo Chế độ vận hành (Mapping vs Navigation) -->
       <span class="mode-badge navigation" id="mode-badge" title="Chế độ vận hành hệ thống">NAV MODE</span>
 
@@ -63,18 +92,25 @@
     </div>
   </div>
 
-  <!-- Nội dung các Tab -->
+  <!-- NỘI DUNG CHÍNH: CHỈ ĐÚNG 2 TRANG -->
   <main class="app-main">
-    <!-- TAB 1: TỔNG QUAN (Map & Trạng thái Robot & SLAM) -->
-    <section class="tab-pane active" id="tab-overview">
-      <div class="pane-grid-2">
-        <!-- Bản đồ 2D Canvas -->
+    
+    <!-- ====================================================================
+         TRANG 1: GIÁM SÁT & VẬN HÀNH ROBOT (DIGITAL TWIN, MAP, VISION & CONTROL)
+         ==================================================================== -->
+    <section class="tab-pane active" id="page-robot">
+      <!-- ====================================================================
+           HÀNG 1: BẢN ĐỒ KHO 2D VÀ HỆ THỐNG 2 CAMERA THỊ GIÁC (XẾP NGANG NHAU)
+           ==================================================================== -->
+      <div class="visual-monitoring-row">
+        <!-- KHUNG 1: BẢN ĐỒ KHO 2D THỜI GIAN THỰC -->
         <div class="card map-card">
           <div class="card-header">
             <div class="map-title-group">
               <h2>Bản đồ Kho (Thời gian thực)</h2>
               <span class="badge" id="map-mode-label">NAV</span>
             </div>
+
             <div class="map-controls">
               <span class="badge" id="map-coords">(-2.40, 0.00)</span>
               <button class="btn-icon" onclick="zoomMap(1.2)" title="Phóng to">+</button>
@@ -93,7 +129,15 @@
           </div>
 
           <div class="canvas-container" id="canvas-container">
+            <div class="system-lock-overlay" id="map-lock-overlay">
+              <div class="lock-overlay-content">
+                <span class="lock-icon">🔒</span>
+                <strong>BẢN ĐỒ KHO TẠM KHÓA</strong>
+                <p>Bật công tắc <b>ENABLE</b> ở góc trên để mở khóa bản đồ và điều hướng robot.</p>
+              </div>
+            </div>
             <canvas id="map-canvas" width="280" height="200"></canvas>
+            
             <div class="map-legend">
               <span class="legend-item"><span class="dot empty"></span> Ô Trống</span>
               <span class="legend-item"><span class="dot full"></span> Có Hàng</span>
@@ -106,273 +150,527 @@
           </div>
         </div>
 
-        <!-- Cột Phải: Trạng Thái Robot & Điều Khiển SLAM/Teleop -->
-        <div class="overview-right-col">
-          <!-- Thẻ trạng thái Robot -->
-          <div class="card robot-card">
-            <div class="card-header">
-              <h2>Trạng thái Robot AGV-SCARA</h2>
-              <span class="status-pill idle" id="robot-state-badge">IDLE</span>
+        <!-- KHUNG 2: HỆ THỐNG 2 CAMERA THỊ GIÁC (XẾP NGANG HÀNG VỚI MAP) -->
+        <div class="card vision-cameras-card">
+          <div class="card-header">
+            <div class="camera-title-group">
+              <h2>Hệ Thống 2 Camera Thị Giác (Live Streams)</h2>
+              <span class="badge highlight">DOCK & HAND CAM</span>
             </div>
 
-            <div class="metrics-grid">
-              <div class="metric-box">
-                <span class="metric-label">Nhiệm vụ đang chạy</span>
-                <span class="metric-value highlight" id="robot-task-id">#0</span>
-              </div>
-              <div class="metric-box">
-                <span class="metric-label">Ô kệ thao tác</span>
-                <span class="metric-value" id="robot-slot-id">--</span>
-              </div>
-              <div class="metric-box">
-                <span class="metric-label">Hộp trên khay xe</span>
-                <span class="metric-value" id="robot-holding-box">Không</span>
-              </div>
-              <div class="metric-box">
-                <span class="metric-label">Góc quay Yaw</span>
-                <span class="metric-value" id="robot-yaw">0.0°</span>
-              </div>
-            </div>
-
-            <div class="speed-indicator">
-              <div class="speed-row">
-                <span>Vận tốc dài:</span>
-                <strong id="robot-speed-linear">0.00 m/s</strong>
-              </div>
-              <div class="speed-row">
-                <span>Vận tốc góc:</span>
-                <strong id="robot-speed-angular">0.00 rad/s</strong>
-              </div>
-            </div>
-
-            <!-- Lỗi gần nhất nếu có -->
-            <div class="error-notice hidden" id="robot-error-box">
-              <span class="error-title">Thông báo sự cố:</span>
-              <span class="error-text" id="robot-error-text"></span>
+            <div class="camera-controls">
+              <button class="btn-sm btn-secondary" onclick="refreshVisionStreams()" title="Làm mới luồng video">🔄 Làm Mới Cam</button>
             </div>
           </div>
 
-          <!-- Thẻ Điều Khiển SLAM & Teleop -->
-          <div class="card slam-card" id="slam-card">
-            <div class="card-header">
-              <h2>Điều Khiển Dựng Map SLAM</h2>
-              <span class="badge" id="slam-status-badge">Sẵn sàng</span>
-            </div>
-
-            <div class="slam-actions-grid">
-              <button class="btn-sm btn-primary" onclick="openSaveMapModal()">
-                💾 Lưu Bản Đồ
-              </button>
-              <button class="btn-sm btn-secondary" id="btn-auto-mapper" onclick="toggleAutoMapper()">
-                🤖 Tự Động Quét
-              </button>
-              <button class="btn-sm btn-secondary" onclick="serializeSlamMap()">
-                📦 Serialize Map
-              </button>
-              <button class="btn-sm btn-danger-soft" onclick="openClearSlamModal()">
-                🗑️ Xóa Phiên SLAM
-              </button>
-            </div>
-
-            <!-- Khối Điều Khiển Teleop -->
-            <div class="teleop-section">
-              <div class="teleop-header">
-                <h3>Điều Khiển Robot Thủ Công (Teleop)</h3>
-                <span class="teleop-hint">Giữ nút để chạy (≤0.25 m/s, ≤0.6 rad/s)</span>
+          <div class="cameras-lock-wrapper" style="position: relative;">
+            <div class="system-lock-overlay" id="camera-lock-overlay">
+              <div class="lock-overlay-content">
+                <span class="lock-icon">🔒</span>
+                <strong>CAMERA THỊ GIÁC TẠM DỪNG</strong>
+                <p>Bật công tắc <b>ENABLE</b> ở góc trên để xem luồng video trực tiếp từ robot.</p>
               </div>
-              <div class="teleop-dpad">
-                <div class="teleop-row">
-                  <button class="btn-teleop" id="btn-teleop-rot-left" title="Xoay Trái">↺</button>
-                  <button class="btn-teleop" id="btn-teleop-fwd" title="Tiến">▲</button>
-                  <button class="btn-teleop" id="btn-teleop-rot-right" title="Xoay Phải">↻</button>
+            </div>
+
+            <!-- 2 CAMERA ĐỂ NGANG NHAU (HORIZONTAL DUAL CAMERAS) -->
+            <div class="dual-cameras-horizontal-grid">
+            <!-- CAMERA 1: DOCK CAMERA (GẦM XE) -->
+            <div class="camera-feed-card">
+              <div class="camera-feed-header">
+                <div class="cam-feed-title">
+                  <span class="pulse-dot"></span>
+                  <span class="camera-badge">CAMERA GẦM (DOCK)</span>
                 </div>
-                <div class="teleop-row">
-                  <button class="btn-teleop" id="btn-teleop-left" title="Trái">◄</button>
-                  <button class="btn-teleop btn-teleop-stop" id="btn-teleop-stop" title="Dừng">■</button>
-                  <button class="btn-teleop" id="btn-teleop-right" title="Phải">►</button>
+                <div class="cam-feed-meta">
+                  <span class="badge" id="dock-cam-fps">30 FPS</span>
+                  <button class="btn-icon" onclick="snapshotCamera('dock')" title="Chụp ảnh">📷</button>
                 </div>
-                <div class="teleop-row">
-                  <div class="teleop-spacer"></div>
-                  <button class="btn-teleop" id="btn-teleop-bwd" title="Lùi">▼</button>
-                  <div class="teleop-spacer"></div>
+              </div>
+              <div class="camera-feed-box">
+                <img id="dock-stream-img" src="/api/vision/dock/stream" alt="Dock Camera Stream" class="camera-stream-img" onerror="onStreamError(this, 'dock')">
+                <div class="camera-overlay">
+                  <div class="cam-crosshair"></div>
+                  <div class="cam-tags-hud" id="dock-tags-hud">
+                    <span class="hud-item">Đang quét ArUco Tag (0-11, 30, 31)...</span>
+                  </div>
                 </div>
+              </div>
+              <div class="camera-feed-footer">
+                <span>Mục tiêu: <strong>Dò trạm & Ô kệ</strong></span>
+              </div>
+            </div>
+
+            <!-- CAMERA 2: HAND CAMERA (TAY GẮP SCARA) -->
+            <div class="camera-feed-card">
+              <div class="camera-feed-header">
+                <div class="cam-feed-title">
+                  <span class="pulse-dot"></span>
+                  <span class="camera-badge highlight">CAMERA TAY GẮP (HAND)</span>
+                </div>
+                <div class="cam-feed-meta">
+                  <span class="badge" id="hand-cam-fps">30 FPS</span>
+                  <button class="btn-icon" onclick="snapshotCamera('hand')" title="Chụp ảnh">📷</button>
+                </div>
+              </div>
+              <div class="camera-feed-box">
+                <img id="hand-stream-img" src="/api/vision/hand/stream" alt="Hand Camera Stream" class="camera-stream-img" onerror="onStreamError(this, 'hand')">
+                <div class="camera-overlay">
+                  <div class="cam-crosshair"></div>
+                  <div class="cam-tags-hud" id="hand-tags-hud">
+                    <span class="hud-item">Đang quét ArUco Hộp (20-39)...</span>
+                  </div>
+                </div>
+              </div>
+              <div class="camera-feed-footer">
+                <span>Trạng thái kẹp: <strong id="cam-grasp-status">Chưa gắp</strong></span>
               </div>
             </div>
           </div>
 
-          <!-- Thẻ Giám Sát Vị Trí Hàng Vào / Ra (Trạm IN & OUT) -->
-          <div class="card stations-card">
-            <div class="card-header">
-              <h2>Vị Trí Hàng Vào / Ra (Trạm IN - OUT)</h2>
-              <span class="badge highlight">2 Trạm Sẵn Sàng</span>
+          <!-- Dải Thẻ ArUco Nhận Diện Gọn Gàng -->
+          <div class="tags-detected-strip mt-3">
+            <div class="strip-header">
+              <span class="strip-title">Thẻ ArUco Đang Nhận Diện Trong Khung Hình:</span>
+              <span class="badge" id="tags-count-badge">0 Thẻ</span>
+            </div>
+            <div class="table-responsive mini-table-container">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Loại</th>
+                    <th>Cam</th>
+                    <th>Khoảng cách</th>
+                  </tr>
+                </thead>
+                <tbody id="vision-tags-table-body">
+                  <tr><td colspan="4" class="text-center">Chưa phát hiện mã ArUco.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+      </div>
+
+      <!-- ====================================================================
+           HÀNG 2: NHIỆM VỤ ĐANG THỰC THI (NẰM TRỰC TIẾP DƯỚI MAP VÀ CAMERA)
+           ==================================================================== -->
+      <div class="card active-task-card full-width-task-card mt-4" id="active-task-container">
+        <div class="card-header">
+          <div class="task-title-group">
+            <h2>Nhiệm Vụ Đang Thực Thi</h2>
+            <span class="badge" id="active-task-badge">Không có</span>
+          </div>
+          <button class="btn-sm btn-secondary" onclick="fetchTasks()" title="Làm mới hàng đợi">🔄 Làm Mới Hàng Đợi</button>
+        </div>
+
+        <div class="active-task-split-view">
+          <!-- Cột Trái: Trạng thái & Tiến độ FSM Nhiệm Vụ Đang Chạy -->
+          <div class="active-task-running-box">
+            <div class="sub-section-title">Tiến Độ Thực Thi FSM</div>
+            <div id="active-task-body">
+              <div class="empty-state">Hiện không có nhiệm vụ nào đang chạy.</div>
+            </div>
+          </div>
+
+          <!-- Cột Phải: Hàng Đợi Chờ Xử Lý -->
+          <div class="active-task-queue-box">
+            <div class="queue-header">
+              <div class="sub-section-title">Hàng Đợi Chờ Xử Lý</div>
+            </div>
+            <div class="table-responsive mini-queue-container">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Mã</th>
+                    <th>Loại</th>
+                    <th>Mặt hàng</th>
+                    <th>Ưu tiên</th>
+                    <th>Trạng thái</th>
+                    <th>Hành động</th>
+                  </tr>
+                </thead>
+                <tbody id="tasks-queue-body">
+                  <tr><td colspan="6" class="text-center">Hàng đợi trống.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ====================================================================
+           HÀNG 3: BẢNG VẬN HÀNH ROBOT (TRẠM IN-OUT, TRẠNG THÁI AGV, TELEOP SLAM)
+           ==================================================================== -->
+      <div class="robot-cockpit-row mt-4">
+        <!-- CỘT 1: VỊ TRÍ TIẾP NHẬN & XUẤT HÀNG (TRẠM IN - OUT) -->
+        <div class="card stations-card">
+          <div class="card-header">
+            <h2>Vị Trí Hàng Vào / Ra (Trạm IN - OUT)</h2>
+            <span class="badge highlight">2 Trạm Sẵn Sàng</span>
+          </div>
+
+          <div class="stations-grid">
+            <!-- Trạm Hàng Vào (IN) -->
+            <div class="station-box station-in-box">
+              <div class="station-header">
+                <span class="station-badge in">TRẠM IN (HÀNG VÀO)</span>
+                <span class="station-tag">Tag #30</span>
+              </div>
+              <div class="station-coords">Tọa độ bàn: <strong>(-2.40, 1.25)</strong> • Dài: 0.85m</div>
+              <p class="station-desc">Nơi cấp phôi/hàng vào kho (6 vị trí phôi: ITEM_26..ITEM_33). Robot gắp từ trạm IN cất lên kệ.</p>
+              <div class="station-slots-mini" id="station-in-slots-view">
+                <div class="mini-slot-chip in-ready"><span>#26</span><span class="chip-label">-2.70</span></div>
+                <div class="mini-slot-chip in-ready"><span>#27</span><span class="chip-label">-2.58</span></div>
+                <div class="mini-slot-chip in-ready"><span>#28</span><span class="chip-label">-2.46</span></div>
+                <div class="mini-slot-chip in-ready"><span>#29</span><span class="chip-label">-2.34</span></div>
+                <div class="mini-slot-chip in-ready"><span>#32</span><span class="chip-label">-2.22</span></div>
+                <div class="mini-slot-chip in-ready"><span>#33</span><span class="chip-label">-2.10</span></div>
+              </div>
+              <div class="station-action-row">
+                <button class="btn-sm btn-primary flex-1" onclick="quickNavToInbound()">📥 Nhập Kệ</button>
+                <button class="btn-sm btn-secondary flex-1" onclick="replenishInboundStation()" title="Tiếp phôi mới">🔄 Tiếp Phôi</button>
+              </div>
             </div>
 
-            <div class="stations-grid">
-              <!-- Trạm Hàng Vào (IN) -->
-              <div class="station-box station-in-box">
-                <div class="station-header">
-                  <span class="station-badge in">TRẠM IN (HÀNG VÀO)</span>
-                  <span class="station-tag">Tag #30</span>
-                </div>
-                <div class="station-coords">Tọa độ bàn: <strong>(-2.40, 1.25)</strong> • Dài: 0.85m</div>
-                <p class="station-desc">Nơi cấp phôi/hàng vào kho (6 vị trí phôi: ITEM_26..ITEM_33). Robot đến trạm IN gắp phôi và xếp lên các ô kệ trống.</p>
-                <div class="station-slots-mini" id="station-in-slots-view">
-                  <div class="mini-slot-chip in-ready"><span>#26</span><span class="chip-label">-2.70</span></div>
-                  <div class="mini-slot-chip in-ready"><span>#27</span><span class="chip-label">-2.58</span></div>
-                  <div class="mini-slot-chip in-ready"><span>#28</span><span class="chip-label">-2.46</span></div>
-                  <div class="mini-slot-chip in-ready"><span>#29</span><span class="chip-label">-2.34</span></div>
-                  <div class="mini-slot-chip in-ready"><span>#32</span><span class="chip-label">-2.22</span></div>
-                  <div class="mini-slot-chip in-ready"><span>#33</span><span class="chip-label">-2.10</span></div>
-                </div>
-                <div class="station-action-row">
-                  <button class="btn-sm btn-primary flex-1" onclick="quickNavToInbound()">
-                    📥 Nhập Kệ
-                  </button>
-                  <button class="btn-sm btn-secondary flex-1" onclick="replenishInboundStation()" title="Bổ sung thêm 6 phôi mới vào trạm IN">
-                    🔄 Tiếp Phôi
-                  </button>
-                </div>
+            <!-- Trạm Hàng Ra (OUT) -->
+            <div class="station-box station-out-box">
+              <div class="station-header">
+                <span class="station-badge out">TRẠM OUT (HÀNG RA)</span>
+                <span class="station-tag">Tag #31</span>
               </div>
-
-              <!-- Trạm Hàng Ra (OUT) -->
-              <div class="station-box station-out-box">
-                <div class="station-header">
-                  <span class="station-badge out">TRẠM OUT (HÀNG RA)</span>
-                  <span class="station-tag">Tag #31</span>
-                </div>
-                <div class="station-coords">Tọa độ bàn: <strong>(-2.40, -1.25)</strong> • Dài: 0.85m</div>
-                <p class="station-desc">Nơi trả hàng xuất kho (6 vị trí trả hàng riêng biệt chống đè hộp). Khi đầy 6 hộp, bấm nút dọn bàn để tiếp tục xuất.</p>
-                <div class="station-slots-mini" id="station-out-slots-view">
-                  <div class="mini-slot-chip out-empty"><span>O-0</span><span class="chip-label">-2.70</span></div>
-                  <div class="mini-slot-chip out-empty"><span>O-1</span><span class="chip-label">-2.58</span></div>
-                  <div class="mini-slot-chip out-empty"><span>O-2</span><span class="chip-label">-2.46</span></div>
-                  <div class="mini-slot-chip out-empty"><span>O-3</span><span class="chip-label">-2.34</span></div>
-                  <div class="mini-slot-chip out-empty"><span>O-4</span><span class="chip-label">-2.22</span></div>
-                  <div class="mini-slot-chip out-empty"><span>O-5</span><span class="chip-label">-2.10</span></div>
-                </div>
-                <div class="station-action-row">
-                  <button class="btn-sm btn-primary flex-1" onclick="quickNavToOutbound()">
-                    📤 Xuất Trạm
-                  </button>
-                  <button class="btn-sm btn-secondary flex-1" onclick="clearOutboundStation()" title="Dọn sạch hàng đã xuất trên bàn OUT">
-                    🧹 Dọn Bàn
-                  </button>
-                </div>
+              <div class="station-coords">Tọa độ bàn: <strong>(-2.40, -1.25)</strong> • Dài: 0.85m</div>
+              <p class="station-desc">Nơi trả hàng xuất kho (6 vị trí riêng biệt chống đè hộp). Khi đầy 6 hộp, bấm dọn bàn để tiếp tục xuất.</p>
+              <div class="station-slots-mini" id="station-out-slots-view">
+                <div class="mini-slot-chip out-empty"><span>O-0</span><span class="chip-label">-2.70</span></div>
+                <div class="mini-slot-chip out-empty"><span>O-1</span><span class="chip-label">-2.58</span></div>
+                <div class="mini-slot-chip out-empty"><span>O-2</span><span class="chip-label">-2.46</span></div>
+                <div class="mini-slot-chip out-empty"><span>O-3</span><span class="chip-label">-2.34</span></div>
+                <div class="mini-slot-chip out-empty"><span>O-4</span><span class="chip-label">-2.22</span></div>
+                <div class="mini-slot-chip out-empty"><span>O-5</span><span class="chip-label">-2.10</span></div>
+              </div>
+              <div class="station-action-row">
+                <button class="btn-sm btn-primary flex-1" onclick="quickNavToOutbound()">📤 Xuất Trạm</button>
+                <button class="btn-sm btn-secondary flex-1" onclick="clearOutboundStation()" title="Dọn sạch hàng đã xuất">🧹 Dọn Bàn</button>
               </div>
             </div>
+          </div>
+        </div>
+
+        <!-- CỘT 2: TRẠNG THÁI ROBOT AGV-SCARA -->
+        <div class="card robot-card">
+          <div class="card-header">
+            <h2>Trạng thái Robot AGV-SCARA</h2>
+            <span class="status-pill idle" id="robot-state-badge">IDLE</span>
+          </div>
+
+          <div class="metrics-grid">
+            <div class="metric-box">
+              <span class="metric-label">Nhiệm vụ đang chạy</span>
+              <span class="metric-value highlight" id="robot-task-id">#0</span>
+            </div>
+            <div class="metric-box">
+              <span class="metric-label">Ô kệ thao tác</span>
+              <span class="metric-value" id="robot-slot-id">--</span>
+            </div>
+            <div class="metric-box">
+              <span class="metric-label">Hộp trên khay xe</span>
+              <span class="metric-value" id="robot-holding-box">Không</span>
+            </div>
+            <div class="metric-box">
+              <span class="metric-label">Góc quay Yaw</span>
+              <span class="metric-value" id="robot-yaw">0.0°</span>
+            </div>
+          </div>
+
+          <div class="speed-indicator">
+            <div class="speed-row">
+              <span>Vận tốc dài:</span>
+              <strong id="robot-speed-linear">0.00 m/s</strong>
+            </div>
+            <div class="speed-row">
+              <span>Vận tốc góc:</span>
+              <strong id="robot-speed-angular">0.00 rad/s</strong>
+            </div>
+          </div>
+
+          <div class="error-notice hidden" id="robot-error-box">
+            <span class="error-title">Thông báo sự cố:</span>
+            <span class="error-text" id="robot-error-text"></span>
+          </div>
+        </div>
+
+        <!-- CỘT 3: ĐIỀU KHIỂN ROBOT THỦ CÔNG & SLAM -->
+        <div class="card slam-card" id="slam-card">
+          <div class="card-header">
+            <h2>Điều Khiển Robot Thủ Công & SLAM</h2>
+            <span class="badge" id="slam-status-badge">Sẵn sàng</span>
+          </div>
+
+          <!-- Công Tắc Kích Hoạt Động Cơ Di Chuyển (Robot Motion Enable) -->
+          <div class="robot-enable-card-box" id="robot-enable-card-box">
+            <div class="enable-info-group">
+              <span class="enable-main-title">Công Tắc Di Chuyển (Enable):</span>
+              <span class="badge enable-status-badge disabled" id="robot-enable-badge">🔒 ĐÃ KHÓA (OFF)</span>
+            </div>
+            <label class="switch switch-lg" title="Bật/Tắt kích hoạt di chuyển robot">
+              <input type="checkbox" id="robot-enable-switch" onchange="toggleRobotEnable(this.checked)">
+              <span class="slider round"></span>
+            </label>
+          </div>
+          <div class="enable-hint-text" id="enable-hint-text">
+            ⚠️ Động cơ đang khóa. Bật công tắc Enable để cho phép robot di chuyển.
+          </div>
+
+          <div class="teleop-section locked" id="teleop-section">
+            <div class="teleop-lock-overlay" onclick="onTeleopLockClicked()" title="Bật công tắc Enable bên trên để điều khiển robot!">
+              <span class="badge lock-overlay-badge">🔒 ĐÃ KHÓA DI CHUYỂN</span>
+            </div>
+            <div class="teleop-header">
+              <h3>D-Pad Di Chuyển</h3>
+              <span class="teleop-hint">Giữ nút để chạy (≤0.25 m/s)</span>
+            </div>
+            <div class="teleop-dpad">
+              <div class="teleop-row">
+                <button class="btn-teleop" id="btn-teleop-rot-left" title="Xoay Trái">↺</button>
+                <button class="btn-teleop" id="btn-teleop-fwd" title="Tiến">▲</button>
+                <button class="btn-teleop" id="btn-teleop-rot-right" title="Xoay Phải">↻</button>
+              </div>
+              <div class="teleop-row">
+                <button class="btn-teleop" id="btn-teleop-left" title="Trái">◄</button>
+                <button class="btn-teleop btn-teleop-stop" id="btn-teleop-stop" title="Dừng">■</button>
+                <button class="btn-teleop" id="btn-teleop-right" title="Phải">►</button>
+              </div>
+              <div class="teleop-row">
+                <div class="teleop-spacer"></div>
+                <button class="btn-teleop" id="btn-teleop-bwd" title="Lùi">▼</button>
+                <div class="teleop-spacer"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="slam-actions-grid mt-3">
+            <button class="btn-sm btn-primary" onclick="openSaveMapModal()" style="width: 100%;">
+              💾 Lưu Bản Đồ SLAM
+            </button>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- TAB: CAMERA & THỊ GIÁC (Vision & Image Processing) -->
-    <section class="tab-pane" id="tab-vision">
-      <div class="card vision-header-card">
-        <div class="card-header">
-          <div>
-            <h2>Xử Lý Ảnh & Giám Sát Thị Giác (Live Vision Streams)</h2>
-            <p class="section-subtitle">Luồng video trực tiếp từ Dock Camera (dò trạm & ô kệ) và Hand Camera (dò hộp hàng & tay gắp)</p>
-          </div>
-          <div class="vision-actions">
-            <button class="btn-sm btn-secondary" onclick="refreshVisionStreams()">🔄 Làm mới luồng</button>
-            <span class="live-indicator"><span class="pulse-dot"></span> LIVE MJPEG</span>
-          </div>
+    <!-- ====================================================================
+         TRANG 2: KHO HÀNG & ĐIỀU PHỐI (2 TRỤC NHẬP/XUẤT, KỆ A/B, TỒN KHO & LỊCH SỬ)
+         ==================================================================== -->
+    <section class="tab-pane" id="page-warehouse">
+      <!-- Cảnh báo khóa khi ở chế độ Mapping -->
+      <div class="mapping-mode-warning hidden" id="mapping-order-warning">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="8" x2="12" y2="12"/>
+          <line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        <div>
+          <strong>CHẾ ĐỘ QUÉT BẢN ĐỒ (MAPPING) ĐANG HOẠT ĐỘNG</strong>
+          <p>Hệ thống không nhận nhiệm vụ kho trong lúc đang dựng bản đồ SLAM. Vui lòng chuyển sang chế độ Navigation để điều phối hàng hóa.</p>
         </div>
       </div>
 
-      <div class="vision-streams-grid">
-        <!-- Luồng Camera Gầm (Dock Camera) -->
-        <div class="card camera-card">
-          <div class="card-header">
-            <div class="camera-title-group">
-              <span class="camera-badge">CAMERA GẦM (DOCK)</span>
-              <h3>Dò Trạm Vào/Ra & Ô Kệ</h3>
+      <!-- 1. 2 TRỤC ĐIỀU PHỐI ĐỘC LẬP: NHẬP KHO & XUẤT KHO -->
+      <div class="dispatch-wrapper" style="position: relative;">
+        <div class="system-lock-overlay" id="dispatch-lock-overlay">
+          <div class="lock-overlay-content">
+            <span class="lock-icon">🔒</span>
+            <strong>HỆ THỐNG ĐIỀU PHỐI ĐANG KHÓA</strong>
+            <p>Bật công tắc <b>ENABLE</b> ở thanh tiêu đề để mở khóa lập lệnh Nhập kho & Xuất kho.</p>
+          </div>
+        </div>
+
+        <div class="dispatch-two-axes">
+        <!-- TRỤC 1: NHẬP KHO (INBOUND) -->
+        <div class="card dispatch-axis-card axis-inbound">
+          <div class="axis-header">
+            <div class="axis-icon-badge badge-inbound">
+              <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M12 4v16m0 0l-6-6m6 6l6-6"/>
+              </svg>
             </div>
-            <div class="camera-meta">
-              <span class="badge" id="dock-cam-fps">30 FPS</span>
-              <button class="btn-icon" onclick="snapshotCamera('dock')" title="Tải ảnh tức thời">📷</button>
+            <div>
+              <div class="axis-tag tag-inbound">TRỤC 1: ĐIỀU PHỐI NHẬP KHO</div>
+              <h2>Nhập Hàng Vào Kệ (Trạm IN ➔ Kệ)</h2>
+              <p class="axis-desc">Lấy thùng hàng tại trạm tiếp nhận IN và cất trữ an toàn vào ô kệ trống</p>
             </div>
           </div>
-          <div class="camera-feed-wrapper">
-            <img id="dock-stream-img" src="/api/vision/dock/stream" alt="Dock Camera Stream" class="camera-stream-img" onerror="onStreamError(this, 'dock')">
-            <div class="camera-overlay">
-              <div class="cam-crosshair"></div>
-              <div class="cam-tags-hud" id="dock-tags-hud">
-                <span class="hud-item">Đang quét ArUco Tag (0-11, 30, 31)...</span>
+
+          <div class="axis-rule-pill rule-inbound">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            <span>Quy tắc WMS: Chỉ nhập mặt hàng <strong>chưa có trong kho</strong> (Tồn = 0). Hàng đã có trên kệ không được nhập thêm.</span>
+          </div>
+
+          <form id="inbound-form" onsubmit="event.preventDefault();">
+            <div class="form-group">
+              <label for="inbound-item-code">Mặt Hàng Cần Nhập:</label>
+              <select id="inbound-item-code" class="form-control" onchange="updateInboundPreview()">
+                <option value="">-- Đang nạp danh mục --</option>
+              </select>
+            </div>
+
+            <div class="form-group" id="inbound-slot-group">
+              <label for="inbound-slot-id">Ô Kệ Đích Nhập Hàng (Tùy chọn):</label>
+              <select id="inbound-slot-id" class="form-control">
+                <option value="">-- Tự động chọn ô tối ưu (chi phí thấp nhất) --</option>
+              </select>
+              <small class="form-hint">Mặc định WMS tự động chọn ô trống gần trạm IN nhất để tối ưu thời gian di chuyển.</small>
+            </div>
+
+            <!-- Thẻ đo lường nhanh Nhập kho -->
+            <div class="axis-metrics-grid">
+              <div class="axis-metric-item">
+                <span class="metric-label">Tồn kho hiện tại:</span>
+                <strong id="inbound-preview-stock" class="metric-value">0 hộp</strong>
+              </div>
+              <div class="axis-metric-item">
+                <span class="metric-label">Ô trống khả dụng:</span>
+                <strong id="inbound-free-slots" class="metric-value">0 ô</strong>
               </div>
             </div>
-          </div>
-          <div class="camera-details">
-            <div class="cam-info-row">
-              <span>Độ phân giải: <strong>640×480</strong></span>
-              <span>Góc nhìn: <strong>80° FOV</strong></span>
-              <span>Mục tiêu: <strong>Kệ 0-11 • Trạm IN 30 • Trạm OUT 31</strong></span>
-            </div>
-          </div>
-        </div>
 
-        <!-- Luồng Camera Tay Gắp (Hand Camera) -->
-        <div class="card camera-card">
-          <div class="card-header">
-            <div class="camera-title-group">
-              <span class="camera-badge highlight">CAMERA TAY GẮP (HAND)</span>
-              <h3>Dò Hộp Hàng & Căn Chỉnh Gắp</h3>
-            </div>
-            <div class="camera-meta">
-              <span class="badge" id="hand-cam-fps">30 FPS</span>
-              <button class="btn-icon" onclick="snapshotCamera('hand')" title="Tải ảnh tức thời">📷</button>
-            </div>
-          </div>
-          <div class="camera-feed-wrapper">
-            <img id="hand-stream-img" src="/api/vision/hand/stream" alt="Hand Camera Stream" class="camera-stream-img" onerror="onStreamError(this, 'hand')">
-            <div class="camera-overlay">
-              <div class="cam-crosshair"></div>
-              <div class="cam-tags-hud" id="hand-tags-hud">
-                <span class="hud-item">Đang quét ArUco Tag hộp (20-39)...</span>
+            <!-- Banner tính hợp lệ nhập kho -->
+            <div id="inbound-eligibility-banner" class="eligibility-banner banner-no-stock"></div>
+
+            <div class="form-row-compact">
+              <div class="form-group flex-1">
+                <label>Số lượng nhập:</label>
+                <div class="quantity-picker">
+                  <button type="button" class="btn-qty" onclick="changeInboundQty(-1)">-</button>
+                  <input type="number" id="inbound-quantity" class="qty-input" value="1" min="1" max="10" readonly>
+                  <button type="button" class="btn-qty" onclick="changeInboundQty(1)">+</button>
+                </div>
+              </div>
+
+              <div class="form-group flex-2">
+                <label>Độ ưu tiên:</label>
+                <div class="priority-selector">
+                  <label class="priority-opt">
+                    <input type="radio" name="inbound-priority" value="0">
+                    <span>0 (Thấp)</span>
+                  </label>
+                  <label class="priority-opt">
+                    <input type="radio" name="inbound-priority" value="1" checked>
+                    <span>1 (Bình thường)</span>
+                  </label>
+                  <label class="priority-opt">
+                    <input type="radio" name="inbound-priority" value="2">
+                    <span>2 (Khẩn cấp)</span>
+                  </label>
+                </div>
               </div>
             </div>
-          </div>
-          <div class="camera-details">
-            <div class="cam-info-row">
-              <span>Độ phân giải: <strong>640×480</strong></span>
-              <span>Góc nhìn: <strong>Eye-in-Hand</strong></span>
-              <span>Trạng thái gắp: <strong id="cam-grasp-status">Chưa gắp</strong></span>
+
+            <button type="button" id="btn-submit-inbound" class="btn-submit btn-inbound btn-axis-action" onclick="submitInboundOrder()">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M12 4v16m0 0l-6-6m6 6l6-6"/>
+              </svg>
+              <span>XÁC NHẬN NHẬP KHO (TRẠM IN ➔ KỆ)</span>
+            </button>
+          </form>
+        </div>
+
+        <!-- TRỤC 2: XUẤT KHO (OUTBOUND) -->
+        <div class="card dispatch-axis-card axis-outbound">
+          <div class="axis-header">
+            <div class="axis-icon-badge badge-outbound">
+              <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M12 20V4m0 0l-6 6m6-6l6 6"/>
+              </svg>
+            </div>
+            <div>
+              <div class="axis-tag tag-outbound">TRỤC 2: ĐIỀU PHỐI XUẤT KHO</div>
+              <h2>Xuất Hàng Ra Trạm (Kệ ➔ Trạm OUT)</h2>
+              <p class="axis-desc">Lấy thùng hàng từ ô kệ mang ra bàn giao tại trạm trả hàng OUT</p>
             </div>
           </div>
+
+          <div class="axis-rule-pill rule-outbound">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            <span>Quy tắc WMS: Chỉ xuất các mặt hàng <strong>đã có sẵn trong kho</strong> (Tồn > 0). Hàng tồn 0 không thể xuất.</span>
+          </div>
+
+          <form id="outbound-form" onsubmit="event.preventDefault();">
+            <div class="form-group">
+              <label for="outbound-item-code">Mặt Hàng Cần Xuất:</label>
+              <select id="outbound-item-code" class="form-control" onchange="updateOutboundPreview()">
+                <option value="">-- Đang nạp danh mục --</option>
+              </select>
+            </div>
+
+            <!-- Thẻ đo lường nhanh Xuất kho & Vị trí kệ -->
+            <div class="axis-metrics-grid">
+              <div class="axis-metric-item">
+                <span class="metric-label">Hàng có sẵn trên kệ:</span>
+                <strong id="outbound-preview-stock" class="metric-value">0 hộp</strong>
+              </div>
+              <div class="axis-metric-item">
+                <span class="metric-label">Vị trí ô kệ lưu trữ:</span>
+                <strong id="outbound-preview-slot" class="metric-value">Chưa chọn</strong>
+              </div>
+            </div>
+
+            <!-- Banner tính hợp lệ xuất kho -->
+            <div id="outbound-eligibility-banner" class="eligibility-banner banner-in-stock"></div>
+
+            <div class="form-row-compact">
+              <div class="form-group flex-1">
+                <label>Số lượng xuất:</label>
+                <div class="quantity-picker">
+                  <button type="button" class="btn-qty" onclick="changeOutboundQty(-1)">-</button>
+                  <input type="number" id="outbound-quantity" class="qty-input" value="1" min="1" max="10" readonly>
+                  <button type="button" class="btn-qty" onclick="changeOutboundQty(1)">+</button>
+                </div>
+              </div>
+
+              <div class="form-group flex-2">
+                <label>Độ ưu tiên:</label>
+                <div class="priority-selector">
+                  <label class="priority-opt">
+                    <input type="radio" name="outbound-priority" value="0">
+                    <span>0 (Thấp)</span>
+                  </label>
+                  <label class="priority-opt">
+                    <input type="radio" name="outbound-priority" value="1" checked>
+                    <span>1 (Bình thường)</span>
+                  </label>
+                  <label class="priority-opt">
+                    <input type="radio" name="outbound-priority" value="2">
+                    <span>2 (Khẩn cấp)</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <button type="button" id="btn-submit-outbound" class="btn-submit btn-outbound btn-axis-action" onclick="submitOutboundOrder()">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M12 20V4m0 0l-6 6m6-6l6 6"/>
+              </svg>
+              <span>XÁC NHẬN XUẤT KHO (KỆ ➔ TRẠM OUT)</span>
+            </button>
+          </form>
         </div>
       </div>
-
-      <!-- Bảng Thống kê Nhận diện Dấu ArUco Thời Gian Thực -->
-      <div class="card mt-4">
-        <div class="card-header">
-          <h2>Danh Sách Dấu ArUco Đang Nhận Diện Được</h2>
-          <span class="badge" id="tags-count-badge">0 Thẻ nhìn thấy</span>
-        </div>
-        <div class="table-responsive">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>ID Tag</th>
-                <th>Phân loại</th>
-                <th>Nguồn Camera</th>
-                <th>Khoảng cách tới tay/xe</th>
-                <th>Sai số tái chiếu • Cập nhật</th>
-              </tr>
-            </thead>
-            <tbody id="vision-tags-table-body">
-              <tr><td colspan="5" class="text-center">Chưa phát hiện mã ArUco nào trong tầm nhìn hiện tại.</td></tr>
-            </tbody>
-          </table>
-        </div>
       </div>
-    </section>
 
-    <!-- TAB 2: KHO HÀNG (Racks Grid & Items Summary) -->
-    <section class="tab-pane" id="tab-inventory">
-      <div class="card">
+      <!-- 2. SƠ ĐỒ VỊ TRÍ Ô KỆ (12 Ô) - KỆ A & KỆ B -->
+      <div class="card mt-4 shelf-grid-card">
         <div class="card-header">
-          <h2>Sơ đồ Vị trí Ô Kệ (12 Ô)</h2>
-          <div class="rack-stats" id="rack-stats-text">0/12 Có hàng</div>
+          <div class="shelf-title-group">
+            <h2>Sơ Đồ Vị Trí Ô Kệ (12 Ô Lưu Trữ)</h2>
+            <div class="rack-stats" id="rack-stats-text">0/12 Có hàng</div>
+          </div>
+          <div class="shelf-legend-compact">
+            <span class="legend-badge-item"><span class="badge-dot empty"></span> Ô Trống (Click để chọn Nhập)</span>
+            <span class="legend-badge-item"><span class="badge-dot full"></span> Có Hàng (Click để chọn Xuất)</span>
+            <span class="legend-badge-item"><span class="badge-dot reserved"></span> Đang Khóa</span>
+          </div>
         </div>
 
         <div class="racks-container">
@@ -396,329 +694,117 @@
         </div>
       </div>
 
-      <!-- Bảng Mặt hàng & Ngưỡng Tồn -->
-      <div class="card mt-4">
-        <div class="card-header">
-          <h2>Danh mục Mặt hàng & Tồn kho</h2>
-          <button class="btn-sm" onclick="fetchInventory()">Làm mới</button>
-        </div>
-        <div class="table-responsive">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Mã hàng</th>
-                <th>Tên sản phẩm</th>
-                <th>Tag ArUco</th>
-                <th>Tồn kho</th>
-                <th>Ngưỡng cảnh báo</th>
-                <th>Tình trạng</th>
-              </tr>
-            </thead>
-            <tbody id="items-table-body">
-              <tr><td colspan="6" class="text-center">Đang nạp dữ liệu...</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-
-    <!-- TAB 3: NHẬP / XUẤT (Order Dispatch) -->
-    <section class="tab-pane" id="tab-orders">
-      <div class="card order-card">
-        <div class="card-header">
-          <h2>Tạo Lệnh Điều Phối Hàng Hóa</h2>
-        </div>
-
-        <!-- Cảnh báo khóa khi ở chế độ Mapping -->
-        <div class="mapping-mode-warning hidden" id="mapping-order-warning">
-          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="10"/>
-            <line x1="12" y1="8" x2="12" y2="12"/>
-            <line x1="12" y1="16" x2="12.01" y2="16"/>
-          </svg>
-          <div>
-            <strong>CHẾ ĐỘ QUÉT BẢN ĐỒ (MAPPING) ĐANG HOẠT ĐỘNG</strong>
-            <p>Hệ thống không nhận nhiệm vụ kho trong lúc đang dựng bản đồ SLAM. Vui lòng chuyển sang chế độ Navigation để điều phối hàng hóa.</p>
-          </div>
-        </div>
-
-        <form id="order-form" onsubmit="event.preventDefault();">
-          <div class="form-group">
-            <label for="order-item-code">Chọn Mặt Hàng:</label>
-            <select id="order-item-code" class="form-control" onchange="updateItemPreview()">
-              <option value="">-- Đang nạp danh mục --</option>
-            </select>
-          </div>
-
-          <div class="form-group" id="inbound-slot-group">
-            <label for="order-slot-id">Ô Kệ Đích Nhập Hàng (Tùy chọn):</label>
-            <select id="order-slot-id" class="form-control">
-              <option value="">-- Tự động chọn ô tối ưu (gần trạm nhất) --</option>
-            </select>
-            <small style="color: var(--text-muted, #888); font-size: 0.8rem; display: block; margin-top: 4px;">
-              Mặc định thuật toán WMS chọn ô trống chi phí thấp nhất. Bạn có thể chọn cụ thể ô bạn muốn.
-            </small>
-          </div>
-
-          <!-- Xem nhanh tồn kho mặt hàng -->
-          <div class="item-preview-box" id="item-preview-box">
-            <div class="preview-metric">
-              <span>Tồn hiện tại:</span>
-              <strong id="preview-stock">0</strong>
-            </div>
-            <div class="preview-metric">
-              <span>Ô trống khả dụng:</span>
-              <strong id="preview-free-slots">0</strong>
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label>Số lượng (1 - 10 hộp):</label>
-            <div class="quantity-picker">
-              <button type="button" class="btn-qty" onclick="changeQty(-1)">-</button>
-              <input type="number" id="order-quantity" class="qty-input" value="1" min="1" max="10" readonly>
-              <button type="button" class="btn-qty" onclick="changeQty(1)">+</button>
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label>Độ ưu tiên:</label>
-            <div class="priority-selector">
-              <label class="priority-opt">
-                <input type="radio" name="order-priority" value="0">
-                <span>0 (Thấp)</span>
-              </label>
-              <label class="priority-opt">
-                <input type="radio" name="order-priority" value="1" checked>
-                <span>1 (Bình thường)</span>
-              </label>
-              <label class="priority-opt">
-                <input type="radio" name="order-priority" value="2">
-                <span>2 (Khẩn cấp)</span>
-              </label>
-            </div>
-          </div>
-
-          <div class="order-actions">
-            <button type="button" class="btn-submit btn-inbound" onclick="submitInboundOrder()">
-              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M12 5v14M5 12l7 7 7-7"/>
-              </svg>
-              <span>LẤY HÀNG TRẠM IN BỎ LÊN KỆ (NHẬP KHO)</span>
-            </button>
-
-            <button type="button" class="btn-submit btn-outbound" onclick="submitOutboundOrder()">
-              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M12 19V5M5 12l7-7 7 7"/>
-              </svg>
-              <span>LẤY HÀNG TỪ KỆ XUẤT RA TRẠM OUT (XUẤT KHO)</span>
-            </button>
-          </div>
-        </form>
-      </div>
-
-      <!-- Thẻ Điều Khiển Tay Gắp & Cánh Tay Thủ Công -->
-      <div class="card mt-4 manual-arm-card">
-        <div class="card-header">
-          <div>
-            <h2>Điều Khiển Cánh Tay SCARA & Tay Gắp Thủ Công</h2>
-            <p class="section-subtitle">Can thiệp khẩn cấp hoặc kiểm tra lực hút / tư thế tay máy</p>
-          </div>
-          <span class="status-pill idle" id="manual-gripper-badge">Tay gắp: OFF</span>
-        </div>
-
-        <div class="manual-arm-body">
-          <!-- Điều khiển tay gắp -->
-          <div class="arm-control-group">
-            <h3>Cơ chế Bám dính / Hút chân không</h3>
-            <div class="btn-grid-2">
-              <button class="btn-arm-action btn-grip-on" onclick="triggerWebGripper(true)">
-                <span class="arm-btn-icon">🧲</span>
-                <div>
-                  <strong>BẬT TAY GẮP (HÚT/KẸP)</strong>
-                  <div class="btn-sub">Khóa cứng hộp gần nhất</div>
-                </div>
-              </button>
-              <button class="btn-arm-action btn-grip-off" onclick="triggerWebGripper(false)">
-                <span class="arm-btn-icon">❌</span>
-                <div>
-                  <strong>TẮT TAY GẮP (NHẢ HỘP)</strong>
-                  <div class="btn-sub">Ngắt hút để nhả hàng</div>
-                </div>
-              </button>
-            </div>
-          </div>
-
-          <!-- Các tư thế cánh tay nhanh -->
-          <div class="arm-control-group mt-3">
-            <h3>Tư Thế Cánh Tay Cấu Hình Sẵn (Presets)</h3>
-            <div class="arm-poses-grid">
-              <button class="btn-pose" onclick="triggerWebPose('STOW')">
-                <span>⌂</span> STOW (Gấp Gọn)
-              </button>
-              <button class="btn-pose" onclick="triggerWebPose('TRAY_HOVER')">
-                <span>📦</span> TRAY_HOVER (Treo Khay)
-              </button>
-              <button class="btn-pose" onclick="triggerWebPose('TRAY_TOUCH')">
-                <span>📥</span> TRAY_TOUCH (Khay Xe)
-              </button>
-              <button class="btn-pose" onclick="triggerWebPose('OBSERVE_TIER_1')">
-                <span>🔍</span> Kệ Tầng 1 (Hover)
-              </button>
-              <button class="btn-pose" onclick="triggerWebPose('TOUCH_TIER_1')">
-                <span>👇</span> Kệ Tầng 1 (Chạm Hộp)
-              </button>
-              <button class="btn-pose" onclick="triggerWebPose('OBSERVE_TIER_2')">
-                <span>🔍</span> Kệ Tầng 2 (Hover)
-              </button>
-              <button class="btn-pose" onclick="triggerWebPose('TOUCH_TIER_2')">
-                <span>👇</span> Kệ Tầng 2 (Chạm Hộp)
-              </button>
-              <button class="btn-pose" onclick="triggerWebPose('STATION_IN_HOVER')">
-                <span>📥</span> Vươn Trạm IN
-              </button>
-              <button class="btn-pose" onclick="triggerWebPose('STATION_OUT_HOVER')">
-                <span>📤</span> Vươn Trạm OUT
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- TAB 4: NHIỆM VỤ (Tasks Stepper & Queue) -->
-    <section class="tab-pane" id="tab-tasks">
-      <!-- Nhiệm vụ đang thực hiện -->
-      <div class="card active-task-card" id="active-task-container">
-        <div class="card-header">
-          <h2>Nhiệm Vụ Đang Thực Thi</h2>
-          <span class="badge" id="active-task-badge">Không có</span>
-        </div>
-
-        <div id="active-task-body">
-          <div class="empty-state">Hiện không có nhiệm vụ nào đang chạy.</div>
-        </div>
-      </div>
-
-      <!-- Hàng đợi nhiệm vụ -->
-      <div class="card mt-4">
-        <div class="card-header">
-          <h2>Hàng Đợi Chờ Xử Lý</h2>
-          <button class="btn-sm" onclick="fetchTasks()">Làm mới</button>
-        </div>
-        <div class="table-responsive">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Mã đơn</th>
-                <th>Loại</th>
-                <th>Mặt hàng</th>
-                <th>Ưu tiên</th>
-                <th>Trạng thái</th>
-                <th>Thời điểm</th>
-                <th>Hành động</th>
-              </tr>
-            </thead>
-            <tbody id="tasks-queue-body">
-              <tr><td colspan="7" class="text-center">Hàng đợi trống.</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-
-    <!-- TAB 5: LỊCH SỬ & THÔNG BÁO -->
-    <section class="tab-pane" id="tab-logs">
-      <div class="pane-grid-2">
-        <!-- Thông báo hệ thống thời gian thực -->
+      <!-- 3. PHẦN DƯỚI: 2 CỘT CÂN ĐỐI (BẢNG TỒN KHO & LỊCH SỬ GIAO DỊCH) -->
+      <div class="pane-grid-2 mt-4">
+        <!-- Cột Trái: Bảng Mặt Hàng & Tồn Kho Thực Tế -->
         <div class="card">
           <div class="card-header">
-            <h2>Thông Báo Thời Gian Thực</h2>
-            <button class="btn-sm" onclick="clearNotifications()">Xóa</button>
+            <h2>Danh Mục Mặt Hàng & Tồn Kho</h2>
+            <button class="btn-sm" onclick="fetchInventory()">Làm mới</button>
           </div>
-          <div class="notifications-feed" id="notifications-feed">
-            <div class="notif-empty">Chưa có thông báo mới.</div>
+          <div class="table-responsive" style="max-height: 440px;">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Mã hàng</th>
+                  <th>Tên sản phẩm</th>
+                  <th>Tag #</th>
+                  <th>Tồn kho</th>
+                  <th>Cảnh báo</th>
+                  <th>Tình trạng</th>
+                </tr>
+              </thead>
+              <tbody id="items-table-body">
+                <tr><td colspan="6" class="text-center">Đang nạp dữ liệu tồn kho...</td></tr>
+              </tbody>
+            </table>
           </div>
         </div>
 
-        <!-- Lịch sử giao dịch biến động tồn kho -->
-        <div class="card">
+        <!-- Cột Phải: Lịch Sử Đơn Hàng & Biến Động Kho -->
+        <div class="card history-card">
           <div class="card-header">
-            <h2>Lịch Sử Giao Dịch Gần Nhất</h2>
-            <button class="btn-sm" onclick="fetchTransactions()">Làm mới</button>
+            <div class="history-title-group">
+              <h2>Lịch Sử Đơn Hàng & Biến Động</h2>
+              <div class="history-subtabs">
+                <button class="subtab-btn active" id="btn-tab-orders-history" onclick="switchHistoryTab('orders')">📋 Đơn Hàng</button>
+                <button class="subtab-btn" id="btn-tab-tx-history" onclick="switchHistoryTab('transactions')">🔄 Biến Động</button>
+              </div>
+            </div>
+            <button class="btn-sm" onclick="refreshHistoryData()">Làm mới</button>
           </div>
-          <div class="table-responsive" style="max-height: 400px;">
+
+          <!-- Bảng 1: Lịch sử đơn hàng (Tasks) -->
+          <div class="table-responsive" id="order-history-table-container" style="max-height: 440px;">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Mã đơn</th>
+                  <th>Loại</th>
+                  <th>Sản phẩm</th>
+                  <th>Ô kệ</th>
+                  <th>Trạng thái</th>
+                  <th>Thời gian</th>
+                </tr>
+              </thead>
+              <tbody id="order-history-body">
+                <tr><td colspan="6" class="text-center">Đang nạp dữ liệu đơn hàng...</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Bảng 2: Lịch sử biến động tồn kho (Transactions) -->
+          <div class="table-responsive hidden" id="tx-table-container" style="max-height: 440px;">
             <table class="data-table">
               <thead>
                 <tr>
                   <th>Đơn</th>
                   <th>Loại</th>
-                  <th>Mã hàng</th>
+                  <th>Sản phẩm</th>
                   <th>Ô kệ</th>
                   <th>Biến động</th>
                   <th>Thời gian</th>
                 </tr>
               </thead>
               <tbody id="tx-table-body">
-                <tr><td colspan="6" class="text-center">Đang nạp dữ liệu...</td></tr>
+                <tr><td colspan="6" class="text-center">Đang nạp dữ liệu biến động...</td></tr>
               </tbody>
             </table>
           </div>
         </div>
       </div>
+
+      <!-- Thông báo hệ thống thời gian thực (Feed thu gọn cuối trang) -->
+      <div class="card mt-4">
+        <div class="card-header">
+          <h2>Nhật Ký Sự Kiện Hệ Thống Gần Đây</h2>
+          <button class="btn-sm" onclick="clearNotifications()">Xóa nhật ký</button>
+        </div>
+        <div class="notifications-feed" id="notifications-feed" style="max-height: 180px;">
+          <div class="notif-empty">Chưa có thông báo mới.</div>
+        </div>
+      </div>
     </section>
   </main>
 
-  <!-- Bottom Navigation Bar (Tối ưu cho ngón tay trên điện thoại) -->
+  <!-- Bottom Navigation Bar (Chỉ có 2 nút to tối ưu cho di động) -->
   <nav class="app-bottom-nav">
-    <button class="nav-item active" onclick="switchTab('tab-overview', this)">
+    <button class="nav-item active" onclick="switchPage('page-robot', this)">
       <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
-        <rect x="3" y="3" width="7" height="7"/>
-        <rect x="14" y="3" width="7" height="7"/>
-        <rect x="14" y="14" width="7" height="7"/>
-        <rect x="3" y="14" width="7" height="7"/>
+        <rect x="3" y="3" width="18" height="18" rx="2"/>
+        <circle cx="8.5" cy="8.5" r="1.5"/>
+        <polyline points="21 15 16 10 5 21"/>
       </svg>
-      <span>Tổng quan</span>
+      <span>1. Giám Sát Robot</span>
     </button>
 
-    <button class="nav-item" onclick="switchTab('tab-vision', this)">
-      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-        <circle cx="12" cy="13" r="4"/>
-      </svg>
-      <span>Thị giác</span>
-    </button>
-
-    <button class="nav-item" onclick="switchTab('tab-inventory', this)">
+    <button class="nav-item" onclick="switchPage('page-warehouse', this)">
       <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+        <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+        <line x1="12" y1="22.08" x2="12" y2="12"/>
       </svg>
-      <span>Kho hàng</span>
-    </button>
-
-    <button class="nav-item" onclick="switchTab('tab-orders', this)">
-      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
-        <circle cx="12" cy="12" r="10"/>
-        <line x1="12" y1="8" x2="12" y2="16"/>
-        <line x1="8" y1="12" x2="16" y2="12"/>
-      </svg>
-      <span>Nhập/Xuất</span>
-    </button>
-
-    <button class="nav-item" onclick="switchTab('tab-tasks', this)">
-      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
-        <polyline points="9 11 12 14 22 4"/>
-        <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
-      </svg>
-      <span>Nhiệm vụ</span>
-    </button>
-
-    <button class="nav-item" onclick="switchTab('tab-logs', this)">
-      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
-        <circle cx="12" cy="12" r="10"/>
-        <polyline points="12 6 12 12 16 14"/>
-      </svg>
-      <span>Lịch sử</span>
+      <span>2. Kho & Điều Phối</span>
     </button>
   </nav>
 
@@ -764,28 +850,6 @@
     </div>
   </div>
 
-  <!-- Modal Xóa Phiên SLAM -->
-  <div class="modal-backdrop hidden" id="clear-slam-modal">
-    <div class="modal-card">
-      <div class="modal-header">
-        <h3>Xác nhận xóa phiên dựng SLAM</h3>
-      </div>
-      <div class="modal-body">
-        <p class="text-warn">CẢNH BÁO: Hành động này sẽ đặt lại toàn bộ lưới bản đồ đang dựng và xóa lịch sử quỹ đạo hiện tại!</p>
-        <div class="checkbox-group">
-          <label>
-            <input type="checkbox" id="chk-confirm-clear-slam" onchange="toggleClearSlamBtn()">
-            <span>Tôi chắc chắn muốn xóa và đặt lại phiên SLAM.</span>
-          </label>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn-secondary" onclick="closeClearSlamModal()">Hủy bỏ</button>
-        <button class="btn-primary" id="btn-do-clear-slam" disabled onclick="confirmClearSlam()" style="background: var(--color-danger); color: #fff;">Xác nhận xóa</button>
-      </div>
-    </div>
-  </div>
-
   <!-- Modal Xác Nhận Gửi Mục Tiêu Nav2 Khi Chạm Bản Đồ -->
   <div class="modal-backdrop hidden" id="nav-goal-modal">
     <div class="modal-card">
@@ -805,6 +869,6 @@
   <!-- Toast Notification Container -->
   <div class="toast-container" id="toast-container"></div>
 
-  <script src="app.js?v=3.1"></script>
+  <script src="app.js?v=4.1"></script>
 </body>
 </html>

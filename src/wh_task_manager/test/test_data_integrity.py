@@ -206,6 +206,15 @@ def test_no_two_tasks_hold_same_slot(test_node):
     assert slot2_info["reserved_by_task"] == t2
 
 
+def test_inbound_already_in_stock_rejected(test_node):
+    """Kiểm tra mặt hàng đã có hàng trên kệ không được nhập thêm (Quy tắc nghiệp vụ)."""
+    db = test_node.db
+    # ITEM_20 đã có 2 hộp trên kệ (A-2-1 và B-0-1)
+    s, tag, err = db.reserve_slot_for_inbound("ITEM_20", task_id=999)
+    assert err == "ALREADY_IN_STOCK"
+    assert s is None
+
+
 # ── TEST 5: Hai lệnh xuất cùng mã hàng đồng thời không chọn trùng ô (FIFO) ──
 def test_concurrent_outbound_fifo_different_slots(test_node):
     """Kiểm tra hai lệnh xuất cùng mã hàng chọn 2 ô khác nhau theo đúng thứ tự FIFO."""
